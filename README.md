@@ -121,7 +121,6 @@ this value is the less variation will be accepted in angle differences. The calc
 in degrees, so values 35 and 43 would be considered different when the parameter is 5 or 10 but the same when the parameter is 15.
 
 ## Examples
-### ex1
 A square of width 2 centered in a 10x10 grid of granularity 2:
 ```
 /* ex1.cpp */
@@ -140,7 +139,6 @@ int main(void) {
 }
 ```
 ![ex1](https://github.com/user-attachments/assets/68575122-e1fa-40e9-aced-72784beefbc0)
-### ex2
 Apologies, I was too lazy to use an actual graphics library. Same square and grid size, but a granularity of 1:
 ```
 /* ex2.cpp */
@@ -159,7 +157,6 @@ int main(void) {
 }
 ```
 ![ex2](https://github.com/user-attachments/assets/8f535b56-4632-4125-9cad-2ebfa93e85d1)
-### ex3
 Now the granularity at 0.1:
 ```
 /* ex3.cpp */
@@ -178,7 +175,6 @@ int main(void) {
 }
 ```
 ![ex3](https://github.com/user-attachments/assets/024f018a-e4c5-4a21-a2b2-aab86a08ce36)
-### ex4
 Hopefully that does a good job of showing the changes. The numbers are the danger/weight of each
 grid section in hex. Here is the map I will use to show the mapping. The origin and size of our entity
 is in magenta and the destination is green:
@@ -211,7 +207,6 @@ int main(void) {
 }
 ```
 ![ex4](https://github.com/user-attachments/assets/e19218e0-246c-4c0c-aafb-884b50d08359)
-### ex5
 Now we will attempt to map to the destination. Values shaded yellow/orange are explored positions and the magenta
 is the final chosen route:
 ```
@@ -240,7 +235,6 @@ int main(void) {
 }
 ```
 ![ex5](https://github.com/user-attachments/assets/1416ca4a-edc7-49dc-a940-0df634afa63c)
-### ex6
 Doubling the size of the entity gives:
 ```
 /* ex6.cpp */
@@ -268,7 +262,6 @@ int main(void) {
 }
 ```
 ![ex6](https://github.com/user-attachments/assets/6a1d609a-6943-4cac-9d97-faac2deb23e4)
-### ex7
 Now back to the old size, we will increase the turning radius from 0.5 to 2.00:
 ```
 /* ex7.cpp */
@@ -296,7 +289,6 @@ int main(void) {
 }
 ```
 ![ex7_001](https://github.com/user-attachments/assets/9d52b62f-047c-4ca4-b312-db0d185d6964)
-### ex8
 Here you can see that the entity was unable to make it around the corner and through that gap. When it
 reaches that situation, it drives straight back until it has the proper angle and then proceeds through the gap
 to the destination. You can see that the pathfinding is not perfect as well. It overshoots the destination
