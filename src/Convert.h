@@ -8,7 +8,9 @@
 
 class Convert {
 public:
+   /* takes a double in feet and returns the value in meters */
    static double feetToMeters(double);
+   /* takes a double in meters and returns the value in feet */
    static double metersToFeet(double);
 };
 

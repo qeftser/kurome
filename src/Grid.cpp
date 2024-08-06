@@ -62,7 +62,7 @@ void Grid::updateGrid(int type, int danger, double dist1, double dist2, double p
          roundOut(posX,dist1,x,width);
          roundOut(posY,dist2,y,height);
          x -= (width/2);
-         y -= (width/2);
+         y -= (height/2);
          for (int i = x; i <= width+x; ++i) {
             if (i < 0 || i > sizeX) continue;
             for (int j = y; j <= height+y; ++j) {
@@ -101,6 +101,7 @@ void Grid::updateGrid(int type, int danger, double dist1, double dist2, double p
                   grid[xL][i] = avgWeights(grid[xL][i],danger,weight);
                }
             }
+            xGP = xG; xLP = xL;
          }
       break;
    }
@@ -166,7 +167,7 @@ int Grid::getCost(const Entity * const e, Frame * f) {
          roundOut(f->posX,e->dist1,x,width);
          roundOut(f->posY,e->dist2,y,height);
          x -= (width/2);
-         y -= (width/2);
+         y -= (height/2);
          for (int i = x; i <= width+x; ++i) {
             if (i < 0 || i > sizeX) continue;
             for (int j = y; j <= height+y; ++j) {

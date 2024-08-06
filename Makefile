@@ -11,10 +11,27 @@ SRC_FILES := $(wildcard src/*.cpp)
 H_FILES := $(wildcard src/*.h)
 OBJ_FILES := $(SRC_FILES:.c=.o)
 
-all: $(OUTPUT)
+all: ex1 ex2 ex3 ex4 ex5 ex6 ex7 ex8
 
 $(OUTPUT): $(OBJ_FILES) Makefile
 	$(CC) $(OBJ_FILES) $(H_FILES) $(LD_FLAGS) -o ./bin/$@ && chmod -c u+x ./bin/$@
+
+ex1: $(OBJ_FILES) Makefile
+	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e
+ex2: $(OBJ_FILES) Makefile
+	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e
+ex3: $(OBJ_FILES) Makefile
+	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e
+ex4: $(OBJ_FILES) Makefile
+	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e
+ex5: $(OBJ_FILES) Makefile
+	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e
+ex6: $(OBJ_FILES) Makefile
+	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e
+ex7: $(OBJ_FILES) Makefile
+	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e
+ex8: $(OBJ_FILES) Makefile
+	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e
 
 .cpp.o:
 	$(CC) -c $(CC_FLAGS) $< -o $@
