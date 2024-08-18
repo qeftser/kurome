@@ -310,6 +310,7 @@ void Grid::mapEntity(const MovingEntity * const e, double destX, double destY) {
       for (int i = 1; i < GRID_MAP_FRAME_SLICES; ++i) {
          nFrame = childFrame(curr,e,aStep*i*-1,destX,destY);
          if (inBounds(nFrame->posX,nFrame->posY) && visited.insert(getFrameId(nFrame)).second) {
+            marks[roundOutBottom(nFrame->posX)][roundOutBottom(nFrame->posY)] = 1;
             //printf("Child: %f,(%f,%f)\n",nFrame->angle,nFrame->posX,nFrame->posY);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
@@ -321,6 +322,7 @@ void Grid::mapEntity(const MovingEntity * const e, double destX, double destY) {
       for (int i = 0; i < GRID_MAP_FRAME_SLICES; ++i) {
          nFrame = childFrame(curr,e,(aStep*i)+PI,destX,destY);
          if (inBounds(nFrame->posX,nFrame->posY) && visited.insert(getFrameId(nFrame)).second) {
+            marks[roundOutBottom(nFrame->posX)][roundOutBottom(nFrame->posY)] = 1;
             //printf("Child: %f,(%f,%f)\n",nFrame->angle,nFrame->posX,nFrame->posY);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
@@ -332,6 +334,7 @@ void Grid::mapEntity(const MovingEntity * const e, double destX, double destY) {
       for (int i = 1; i < GRID_MAP_FRAME_SLICES; ++i) {
          nFrame = childFrame(curr,e,(aStep*i*-1)+PI,destX,destY);
          if (inBounds(nFrame->posX,nFrame->posY) && visited.insert(getFrameId(nFrame)).second) {
+            marks[roundOutBottom(nFrame->posX)][roundOutBottom(nFrame->posY)] = 1;
             //printf("Child: %f,(%f,%f)\n",nFrame->angle,nFrame->posX,nFrame->posY);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);

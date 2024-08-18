@@ -5,16 +5,16 @@ CC := g++
 # other variables
 OUTPUT := tst.e
 CC_FLAGS := -g -O3 -Wall -Wextra -Wpedantic
-LD_FLAGS := -O3
+LD_FLAGS := -O3 
 
 SRC_FILES := $(wildcard src/*.cpp)
 H_FILES := $(wildcard src/*.h)
 OBJ_FILES := $(SRC_FILES:.c=.o)
 
-all: ex1 ex2 ex3 ex4 ex5 ex6 ex7 ex8
-
 $(OUTPUT): $(OBJ_FILES) Makefile
 	$(CC) $(OBJ_FILES) $(H_FILES) $(LD_FLAGS) -o ./bin/$@ && chmod -c u+x ./bin/$@
+
+all: ex1 ex2 ex3 ex4 ex5 ex6 ex7 ex8
 
 ex1: $(OBJ_FILES) Makefile
 	$(CC) $(OBJ_FILES) $(H_FILES) ./examples/$@.cpp $(LD_FLAGS) -o ./bin/$@.e && chmod -c u+x ./bin/$@.e

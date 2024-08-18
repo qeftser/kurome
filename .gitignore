@@ -31,3 +31,6 @@
 *.out
 *.app
 *.e
+
+# Python stuff
+*.pyc
