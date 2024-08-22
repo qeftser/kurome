@@ -23,7 +23,7 @@ The grid will automatically resize based on the window size.
  * c - clear the entire grid
  * r - populate the grid with random shapes
  * m - map from the bottom left of the grid to the top right
- * x - cycle between generating a a random set of shapes and slowly mapping through it
+ * x - cycle between generating a random set of shapes and slowly mapping through it
 
 # Adding/WIP
 
