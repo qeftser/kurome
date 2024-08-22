@@ -248,12 +248,13 @@ class Grid:
 
             if ((self.round_out_top(curr.posX) == destXG or self.round_out_bottom(curr.posX) == destXL) and \
                 (self.round_out_top(curr.posY) == destYG or self.round_out_bottom(curr.posY) == destYL)):
+                ret = curr
                 while curr != None:
                     self.marks[self.round_out_bottom(curr.posX),self.round_out_bottom(curr.posY)] = 2
                     curr = curr.prev
                 self.print()
                 self.marks = numpy.zeros((self.sizeX+1,self.sizeY+1))
-                return
+                return ret
 
             # up left
             for i in range(0,GRID_MAP_FRAME_SLICES):

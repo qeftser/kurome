@@ -6,13 +6,14 @@ dynamic map generation/update/navigation using arbitrary granularity
 
 ## Description
 
-the last few meetings I have been a part of we discussed varying the 
-amount of granularity we use in the mapping, as well as being able to
-map the robot to back up if it doesn't have the turning radius to get
-around an obstacle. This set of classes can preform both of those actions.
+This is a ongoing project to write a mapping interface
+that works well for the team's project. Below is an
+explanation of the current implimentation. All examples
+can be found in the cpp directory, though there is a
+python impilmentation in the py folder if you prefer that.
 
-I haven't done it yet, but I will bind it up to python and ros2 if we think
-it would be useful. 
+All details on the GUI for the project are in the README
+in the vcpp folder.
 
 ## Usage
 
