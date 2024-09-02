@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <random>
+#include <set>
 #include <iterator>
 #include <eigen-3.4.0/Eigen/Dense>
 
@@ -9,23 +10,6 @@ class Entity;
 
 extern int errno_kurome;
 #define errnok errno_kurome
-
-/* Default weight for adding an entity
- * to the grid */
-#define KUROME_GRID_NEW_VALUE_WEIGHT   0.6
-/* Number of slices we consider when drawing a circle.
- * can be increased somewhat if we want adding circles
- * to be faster */
-#define KUROME_GRID_CIRCLE_GRANULARITY 0.025
-/* How many children to create from a node in the 
- * A* mapping. It is roughly this value * 4. */
-#define KUROME_GRID_MAP_FRAME_SLICES   8
-/* Distance moved by each subsequent step in the
- * mapping algoritm */
-#define KUROME_GRID_MAP_FRAME_STEP     0.25
-/* Granularity to view different routes at in the
- * mapping algorithm */
-#define KUROME_GRID_MAP_ANGLE_SLICING  20
 
 /* pi/2 */
 #define PI_1l2 1.57079632679
@@ -64,7 +48,7 @@ private:
    double                     sizeX;
    double                     sizeY;
    double                     unitSize;
-   std::vector<Entity *>      entities;
+   std::set<Entity *>         entities;
    std::default_random_engine generator;
    
 
@@ -152,9 +136,14 @@ public:
 
 class Entity {
 public:
-   double xpos;
-   double ypos;
+   double posx;
+   double posy;
    double xwid;
    double ywid;
    int    type;
+   int    val;
+   
+   Entity(double, double, double, double, int, int);
+   Entity(double, double, int);
 };
+

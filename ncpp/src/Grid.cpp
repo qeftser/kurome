@@ -11,7 +11,7 @@ Grid::Grid(double unitSize, double sizeX, double sizeY) {
    this->blocksX  = root(sizeX);
    this->blocksY  = root(sizeX);
    this->blocks = Eigen::MatrixXi(this->blocksX,this->blocksY);
-   this->entities = std::vector<Entity *>();
+   this->entities = std::set<Entity *>();
    this->generator = std::default_random_engine(clock());
    clear();
 }
@@ -223,10 +223,60 @@ int * Grid::getIdxPtr(int xpos, int ypos) {
 }
 
 int Grid::addEntity(Entity * e) {
+   EllipseIterator ei = EllipseIterator(e,this);
+   RectIterator ri = RectIterator(e,this);
+   switch (e->type) {
+      case KUROME_TYPE_PONT:
+         setIdx(e->posx,e->posy,e->val);
+         break;
+      case KUROME_TYPE_ELPS:
+         while (!ei.done) {
+            *ei = avgWeights(e->val,*ei);
+            ++ei;
+         }
+         break;
+      case KUROME_TYPE_RECT:
+         while (!ri.done) {
+            *ri = avgWeights(e->val,*ei);
+            ++ri;
+         }
+         break;
+      default:
+         errnok = KUROME_ETYPE;
+         return -1;
+         break;
+   }
+   if (!entities.count(e))
+      entities.insert(e);
    return 0;
 }
 
 int Grid::remEntity(Entity * e) {
+   EllipseIterator ei = EllipseIterator(e,this);
+   RectIterator ri = RectIterator(e,this);
+   switch (e->type) {
+      case KUROME_TYPE_PONT:
+         setIdx(e->posx,e->posy,0);
+         break;
+      case KUROME_TYPE_ELPS:
+         while (!ei.done) {
+            *ei = (*ei - e->val < 0 ? 0 : *ei - e->val);
+            ++ei;
+         }
+         break;
+      case KUROME_TYPE_RECT:
+         while (!ri.done) {
+            *ri = (*ri - e->val < 0 ? 0 : *ri - e->val);
+            ++ri;
+         }
+         break;
+      default:
+         errnok = KUROME_ETYPE;
+         return -1;
+         break;
+   }
+   if (entities.count(e))
+      entities.erase(e);
    return 0;
 }
 

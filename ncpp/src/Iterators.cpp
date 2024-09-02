@@ -38,10 +38,10 @@ RectIterator::RectIterator(Entity * e, Grid * g) {
    }
 #endif
    this->g    = g;
-   this->srtx = g->roob(e->xpos-(e->xwid/2.0));
-   this->endx = g->root(e->xpos+(e->xwid/2.0));
-   this->srty = g->roob(e->ypos-(e->ywid/2.0));
-   this->endy = g->root(e->ypos+(e->ywid/2.0));
+   this->srtx = g->roob(e->posx-(e->xwid/2.0));
+   this->endx = g->root(e->posx+(e->xwid/2.0));
+   this->srty = g->roob(e->posy-(e->ywid/2.0));
+   this->endy = g->root(e->posy+(e->ywid/2.0));
    this->posx = srtx;
    this->posy = srty-1;
    val        = NULL;
@@ -137,8 +137,8 @@ EllipseIterator::EllipseIterator(Entity * e, Grid * g) {
    this->k           = -granularity;
    this->wrad        = e->xwid;
    this->hrad        = e->ywid;
-   this->x           = e->xpos;
-   this->y           = e->ypos;
+   this->x           = e->posx;
+   this->y           = e->posy;
    this->xP          = -999;
    this->val         = NULL;
    this->done        = false;
