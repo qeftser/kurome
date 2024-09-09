@@ -11,7 +11,9 @@ RectIterator::RectIterator(double srtx, double endx, double srty, double endy, G
    this->endy = g->root(endy);
    this->posx = srtx;
    this->posy = srty-1;
-   val        = NULL;
+   memset(&info,0,sizeof(struct ShapeIteratorInfo));
+   info.posy = (posy*g->getUnitSize())+(g->getUnitSize()/2.0000001);
+   info.posx = (posx*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    done       = false;
    operator++();
 }
@@ -24,7 +26,9 @@ RectIterator::RectIterator(const RectIterator & other) {
    this->endy = other.endy;
    this->posx = other.srtx;
    this->posy = other.srty;
-   this->val  = other.val;
+   memcpy(&this->info,&other.info,sizeof(struct ShapeIteratorInfo));
+   info.posy = (posy*g->getUnitSize())+(g->getUnitSize()/2.0000001);
+   info.posx = (posx*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    this->done = other.done;
 }
 
@@ -32,7 +36,7 @@ RectIterator::RectIterator(Entity * e, Grid * g) {
 #ifndef KUROME_NOCHECK
    if (e->type != KUROME_TYPE_RECT) {
       errnok = KUROME_ETYPE;
-      val = NULL;
+      info.val = NULL;
       done = true;
       return;
    }
@@ -44,25 +48,56 @@ RectIterator::RectIterator(Entity * e, Grid * g) {
    this->endy = g->root(e->posy+(e->ywid/2.0));
    this->posx = srtx;
    this->posy = srty-1;
-   val        = NULL;
+   memset(&info,0,sizeof(struct ShapeIteratorInfo));
+   info.posy = (posy*g->getUnitSize())+(g->getUnitSize()/2.0000001);
+   info.posx = (posx*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    done       = false;
    operator++();
 }
 
+RectIterator::RectIterator(double offx, double offy, Entity * e, Grid * g) {
+#ifndef KUROME_NOCHECK
+   if (e->type != KUROME_TYPE_RECT) {
+      errnok = KUROME_ETYPE;
+      info.val = NULL;
+      done = true;
+      return;
+   }
+#endif
+   this->g    = g;
+   this->srtx = g->roob((offx-(e->xwid/2.0)));
+   this->endx = g->root((offx+(e->xwid/2.0)));
+   this->srty = g->roob((offy-(e->ywid/2.0)));
+   this->endy = g->root((offy+(e->ywid/2.0)));
+   this->posx = srtx;
+   this->posy = srty-1;
+   memset(&info,0,sizeof(struct ShapeIteratorInfo));
+   info.posy = (posy*g->getUnitSize())+(g->getUnitSize()/2.0000001);
+   info.posx = (posx*g->getUnitSize())+(g->getUnitSize()/2.0000001);
+   done       = false;
+   operator++();
+}
+
+
 RectIterator & RectIterator::operator++() {
+   double full = g->getUnitSize();
+   double half = full/2.00001;
    do {
       ++posy;
+      info.posy = (posy*full)+half;
       if (posy > endy) {
          ++posx;
+         info.posx = (posx*full)+half;
          posy = srty;
+         info.posy = (posy*full)+half;
          if (posx > endx) {
             done = true;
-            val = NULL;
+            info.val = NULL;
             return *this;
          }
       }
    } while (!g->inBounds(posx,posy));
-   val = g->getIdxPtr(posx,posy);
+   info.val = g->getIdxPtr(posx,posy);
    return *this;
 }
 
@@ -87,7 +122,11 @@ bool RectIterator::operator!=(const RectIterator & other) {
 }
 
 int & RectIterator::operator*() {
-   return *val;
+   return *info.val;
+}
+
+struct ShapeIteratorInfo & RectIterator::locinfo() {
+   return info;
 }
 
 EllipseIterator::EllipseIterator(double wrad, double hrad, double x, double y, Grid * g) {
@@ -99,7 +138,7 @@ EllipseIterator::EllipseIterator(double wrad, double hrad, double x, double y, G
    this->x           = x;
    this->y           = y;
    this->xP          = -999;
-   this->val         = NULL;
+   memset(&this->info,0,sizeof(struct ShapeIteratorInfo));
    this->done        = false;
    this->xC          = -999;
    this->yG          = 0;
@@ -116,7 +155,7 @@ EllipseIterator::EllipseIterator(const EllipseIterator & other) {
    this->x           = other.x;
    this->y           = other.y;
    this->xP          = other.xP;
-   this->val         = other.val;
+   memcpy(&this->info,&other.info,sizeof(struct ShapeIteratorInfo));
    this->done        = other.done;
    this->xC          = other.xC;
    this->yG          = other.yG;
@@ -128,7 +167,7 @@ EllipseIterator::EllipseIterator(Entity * e, Grid * g) {
    if (e->type != KUROME_TYPE_ELPS) {
       errnok = KUROME_ETYPE;
       done = true;
-      val = NULL;
+      info.val = NULL;
       return;
    }
 #endif
@@ -140,32 +179,61 @@ EllipseIterator::EllipseIterator(Entity * e, Grid * g) {
    this->x           = e->posx;
    this->y           = e->posy;
    this->xP          = -999;
-   this->val         = NULL;
+   memset(&this->info,0,sizeof(struct ShapeIteratorInfo));
    this->done        = false;
    this->xC          = -999;
    this->yG          = 0;
    this->yL          = 0;
+   operator++();
+}
+
+EllipseIterator::EllipseIterator(double offx, double offy, Entity * e, Grid * g) {
+#ifndef KUROME_NOCHECK
+   if (e->type != KUROME_TYPE_ELPS) {
+      errnok = KUROME_ETYPE;
+      done = true;
+      info.val = NULL;
+      return;
+   }
+#endif
+   this->g           = g;
+   this->granularity = g->getUnitSize()/g->getXBlocks();
+   this->k           = -granularity;
+   this->wrad        = e->xwid;
+   this->hrad        = e->ywid;
+   this->x           = offx;
+   this->y           = offy;
+   this->xP          = -999;
+   memset(&this->info,0,sizeof(struct ShapeIteratorInfo));
+   this->done        = false;
+   this->xC          = -999;
+   this->yG          = 0;
+   this->yL          = 0;
+   operator++();
 }
 
 EllipseIterator & EllipseIterator::operator++() {
    do {
       ++yL;
+      info.posy += g->getUnitSize();
       if (yL > yG) {
          do {
             xP = xC;
             k+=granularity;
             if (k > PI) {
                done = true;
-               val = NULL;
+               info.val = NULL;
                return *this;
             }
-            xC = g->roor(x + (cos(k) * wrad));
-            yG = g->root(y + (sin(k) * hrad));
-            yL = g->roob(y + (sin(k+PI) * hrad))-1;
+            info.posx = (x + (cos(k) * wrad));
+            info.posy = (y + (sin(k+PI) * hrad));
+            xC = g->roor(info.posx);
+            yG = g->roor(y + (sin(k) * hrad));
+            yL = g->roor(info.posy);
          } while (xC == xP);
       }
    } while (!g->inBounds(xC,yL));
-   val = g->getIdxPtr(xC,yL);
+   info.val = g->getIdxPtr(xC,yL);
    return *this;
 }
 
@@ -184,11 +252,11 @@ bool EllipseIterator::operator==(const EllipseIterator & other) {
        x           == other.x           &&
        y           == other.y           &&
        xP          == other.xP          &&
-       val         == other.val         &&
        done        == other.done        &&
        xC          == other.xC          &&
        yG          == other.yG          &&
-       yL          == other.yL)
+       yL          == other.yL          &&
+       memcmp(&this->info,&other.info,sizeof(struct ShapeIteratorInfo)) == 0)
       return true;
    return false;
 }
@@ -198,6 +266,9 @@ bool EllipseIterator::operator!=(const EllipseIterator & other) {
 }
 
 int & EllipseIterator::operator*() {
-   return *val;
+   return *info.val;
 }
 
+struct ShapeIteratorInfo & EllipseIterator::locinfo() {
+   return info;
+}

@@ -2,8 +2,6 @@
 #include "Kurome.h"
 #include <stdio.h>
 
-extern int errno_kurome;
-
 Grid::Grid(double unitSize, double sizeX, double sizeY) {
    this->unitSize = unitSize;
    this->sizeX    = sizeX;
@@ -12,6 +10,7 @@ Grid::Grid(double unitSize, double sizeX, double sizeY) {
    this->blocksY  = root(sizeX);
    this->blocks = Eigen::MatrixXi(this->blocksX,this->blocksY);
    this->entities = std::set<Entity *>();
+   this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
    clear();
 }
@@ -19,7 +18,7 @@ Grid::Grid(double unitSize, double sizeX, double sizeY) {
 void Grid::clear() {
    for (int i = 0; i < blocksX; ++i)
       for (int j = 0; j < blocksY; ++j)
-         blocks(i,j) = 0;
+         blocks(i,j) = KUROME_UNDETERMINED;
 }
 
 /* kinda slow ... */
@@ -134,7 +133,12 @@ void Grid::info() {
 void Grid::print() {
    for (int j = 0; j < blocksY; ++j) {
       for (int i = 0; i < blocksX; ++i) {
-         if (blocks(i,j))
+         /*
+         if (blocks(i,j) == KUROME_UNDETERMINED) {
+            printf("zz\033[0m");
+         }
+         */
+         if (blocks(i,j) > 0x0f)
             printf("\033[31m");
          printf("%02x\033[0m",blocks(i,j));
       }
@@ -155,6 +159,8 @@ int Grid::changeUnitSize(double newSize) {
    this->blocks = Eigen::MatrixXi(this->blocksX,this->blocksY);
    for (Entity * e : entities) 
       addEntity(e);
+   for (Sample * s : samples)
+      apply(s);
    return 0;
 }
 
@@ -252,8 +258,8 @@ int Grid::addEntity(Entity * e) {
 }
 
 int Grid::remEntity(Entity * e) {
-   EllipseIterator ei = EllipseIterator(e,this);
-   RectIterator ri = RectIterator(e,this);
+   EllipseIterator ei(EllipseIterator(e,this));
+   RectIterator ri(RectIterator(e,this));
    switch (e->type) {
       case KUROME_TYPE_PONT:
          setIdx(e->posx,e->posy,0);
@@ -282,4 +288,32 @@ int Grid::remEntity(Entity * e) {
 
 int Grid::getXBlocks() {
    return blocksX;
+}
+
+int Grid::apply(Sample * sample) {
+   if (!sample)
+      return 0;
+   EllipseIterator ei = EllipseIterator(&sample->orgin,this);
+   RectIterator ri = RectIterator(&sample->orgin,this);
+   switch(sample->orgin.type) {
+      case KUROME_TYPE_ELPS:
+         while (!ei.done) {
+            *ei = sample->localVal(ei.locinfo().posx,ei.locinfo().posy);
+            ++ei;
+         }
+         break;
+      case KUROME_TYPE_RECT:
+         while (!ri.done) {
+            *ri = sample->localVal(ri.locinfo().posx,ri.locinfo().posy);
+            ++ri;
+         }
+         break;
+      default:
+         errnok = KUROME_ETYPE;
+         return -1;
+         break;
+   }
+   if (!samples.count(sample))
+      samples.insert(sample);
+   return 0;
 }

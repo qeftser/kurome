@@ -1,19 +1,48 @@
 
 #include "Kurome.h"
+#include "SimWaiter.hpp"
+#include "NILRotAStarMapper.hpp"
+
+#include <stdlib.h>
+#include <unistd.h>
 
 int main(void) {
    
-   Grid * g = new Grid(0.5,100,100);
+   Grid g{1,200,200};
 
-   g->info();
+   Grid env{0.5,200,200};
+   env.clear();
+   Entity fov{0,0,8,8,KUROME_TYPE_RECT,0};
+   Entity me{10,10,3,3,KUROME_TYPE_ELPS,20};
+   Entity goal{190,190,1,1,KUROME_TYPE_PONT,0};
 
-   RectIterator iter = RectIterator(00.0,30.0,00.0,30.0,g);
-   while (!iter.done) {
-      *iter = 9;
-      ++iter;
+   env.print();
+
+   Waiter * w = new SimWaiter(env,fov,me);
+
+   Mapper * m = new NILRotAStarMapper();
+   
+   Agent OO7 = Agent(me,goal,*w,*m,g);
+
+   getchar();
+   for (int i = 0; i < 1000; ++i) {
+      OO7.waiter.prepare();
+      OO7.environment.apply(OO7.waiter.serve());
+      OO7.mapper.callback(0);
+      Frame f = OO7.mapper.nextPoint();
+      OO7.self.posx = f.posx;
+      OO7.self.posy = f.posy;
+
+      if (((OO7.self.posx-OO7.goal.posx)*(OO7.self.posx-OO7.goal.posy))+
+          ((OO7.self.posy-OO7.goal.posy)*(OO7.self.posy-OO7.goal.posy)) < 5)
+         return 0;
+
+      OO7.environment.addEntity(&OO7.self);
+      OO7.environment.print();
+      OO7.environment.remEntity(&OO7.self);
+
+      getchar();
    }
-
-   g->print();
 
    return 0;
 }
