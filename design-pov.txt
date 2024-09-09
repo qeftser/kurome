@@ -1,0 +1,225 @@
+
+# Design Explanation for Kurome V.2
+
+I will call it V.2 because I wrote another version already :)
+This file is supposed to be an explaination of why I did what
+I did so that people can offer feedback and we not want to curl
+up into a ball when we have to write about it later on. Though we
+will probably still want to do it. I will organize it by class
+in an order that will make sense to me. This will probably 
+(hopefully) end up being a good document for people who want
+to look at or modify the software as it will explain why
+everything is as it is. Here we go. 
+
+# Agent 
+
+   This class is the one that holds all the data. If this set of classes
+   is liked and approved, I will likely go ahead and wrap it or create
+   a parent class that impliments the Action interface for ROS2. This will
+   allow different mapping requests to be spooled up by the conscious of
+   the robot. I guess the mapping happens in the subconscious. So this is 
+   basically just a container, but it outlines the expected use of the 
+   classes, so I will explain each member. 
+
+   ## Entity Self
+
+      This represents the position and hitbox of our robot. It is used
+      to determine where we are and what we are touching in the world. 
+      This may need to be updated by an exterior process in the final
+      design when the robot moves.
+
+   ## Entity Goal
+
+      This represets the position and area of 'goal space' that the robot
+      is trying to get to. The mapper needs this data to figure out where
+      to go, and the agent needs this data to know when it has gotten where
+      it is trying to go. This member will likely not need to be updated for
+      the duration of the Agent's life, even as the position changes and the
+      mapping reruns.
+
+   ## Waiter Waiter
+
+      I will explain waiters later on. Also this will likely be extended to 
+      a vector of waiters going forward. Basically a waiter is the class that
+      provides data from sensors to the grid. See the Waiter section for a full
+      explaination.
+
+   ## Mapper Mapper
+
+      I will explain mappers later on as well. The name is pretty self explainatory,
+      but the goal of the mapper is to map the environment and determine the safest
+      and fastest route to the destination. See the mapper section for a full explaination.
+
+   ## Grid Environment
+
+      This is the best representation of our environment as we know it. It is continually
+      updated and mapped on by waiters and mappers. I will explain the Grid class in the 
+      grid section.
+
+   That is the basis of the Agent class. The expected use is to cycle until the goal is
+   reached, which can be determined in some implimentation-specific manner. At the beginning
+   of each cycle the waiter (or waiters if there are more than one) is queried and the data
+   it has is retrived and served to the environment, that uses it to update and add new obstacles
+   or terrain to itself. After that, the mapper fires and is queried to return the
+   next movement (small movement) that the robot should make to meet the goal. This data would
+   be sent off to another node in ROS2's action interface, but in simulation the entity self
+   will just be manually updated to reflect the change in position. With the entity updated
+   to reflect the new position we can repeat the cycle. So basically it goes: check for goal,
+   update map data, map over new data, return first step in new best mapping. Until the goal
+   is reached. I tried to design the system to be as modular and have as little interdependancy
+   that would slow progress down in future additions. This likely results in code that is less
+   efficiant, but that is acceptable for the added organization and extensability that I believe
+   this framework offers.
+
+# Entity
+
+   This could be considered a simpler class in terms of what it needs to do. It's design is
+   simply to be a container that defines a hitbox or area or section or any other 'Entity' that
+   has a position and some kind of shape. The avilable shapes are points, rectangles, and ellipses.
+   In my opinion, these three shapes will comprise all the shapes that will be encountered in this
+   project. More complex polygons can be dealt with by stretching a similar shape over them. Other
+   than a constructor, the Entity class had no methods. A few operators, like + or = may be added 
+   later on, but the goal is to keep it minial. The Entity is supposed to be simple enough that
+   it can be used to represent multiple things. 
+
+   The Entity class is used to represet a few things in this framework. The first is the hitbox of
+   the robot. The Entity Self in Agent will define the area that is checked for collision when
+   searching in a mapper. It is also used to track the position of the robot. The class is also
+   used to define shapes in the environment, obstacles to be avoided. In an actual implimentation,
+   or a live use case, Entitys will never be dynamically added to a Grid to be avoided, but the
+   option is nice for simulation maps. The Entity class is also used in the Sample class to
+   define the area that the given sample has come from. This can be used to map the data into
+   the environment. As mentioned in the Agent class, the Entity class is also used to define
+   the goal space that the robot is trying to reach. 
+
+   Entities are nice for defining areas, but how do we look around in the area to determine
+   what is there? How can we do this efficently and in a way that is extensible and has
+   low overhead? This is where the shape iterators come into play.
+
+# RectIterator
+
+   This is the first of two shape iterators. Shape iterators are pretty cool to be honest,
+   and they do a lot of work to make other operations pretty simple. A shape iterator needs
+   a Grid class object and a set of dimensions to be initialised. The dimensions can be 
+   provided raw, via a Entity, or with an Entity and a set of coordinates to map it to. These
+   three options seem to cover all the bases I have seen so far. The gist of the ShapeIterators
+   is pretty simple. They will iterate over the given grid, outlining the shape based on the 
+   parameters they are given. For the RectIterator, the shape iterated will be a rectangle.
+   The order is seen unimportant in terms of how each Grid value is traversed. The iterators
+   do allow you extract the value at the current point and the universal coordinates that
+   the iterator is currently at. These two data points encompass all of the needs I have 
+   encountered so far.
+
+   This is a very nice design decision, as it allows a lot of variation in terms of what
+   the iterators can be used for. Filling in a square when adding an Entity? Just map a
+   RectIterator over it and fill each of the squares with the Entity's weight. Need to
+   determine the total cost of a certain location for weighted A*? Use a RectIterator 
+   over the robot's hitbox and sum the values. There are other cases. I have noticed
+   that I keep writing some very similar switch statements to determine if the iterator
+   is a Rect or Ellipse, so I might do some moving to get a single ShapeIterator, but
+   for now there are two. The iterators are powerful, and they have some more powerful
+   uses - I will show one of them later on in the Sample class. 
+
+# EllipseIterator
+
+   Basically the same as a RectIterator but moves in the shape of a circle or ellipse. 
+   See above for details and design decisions.
+
+# Grid
+   
+   This is conceptually a very simple class, but it has some pretty powerful properties
+   as a result. The Grid class is in it's simplest form a matrix that represents the
+   environment that the robot is traversing. Each entry coresponds to a 'weight' or 
+   danger/cost value for moving over the entry. These values help the robot in determining 
+   the path to take in an environment. The Grid doesn't have any set units, the values it
+   uses are arbitrary. This means that an arbitrary 'unit size' can be used, and can be 
+   used for mapping all Entitys and Samples to the Grid. This means you could define a 
+   Grid that is 10 meters by 10 meters, and use a unit size of 0.01 to use centimeters
+   as the unit of measure. This would allocate 1000000 entries in a matrix that is 1000
+   by 1000. Pretty crazy. This is powerful in that it doesn't set one kind of sizing in
+   stone, and allows the mixing of different sizings when mapping onto the Grid.
+
+   I got kind of off topic - maybe? Basically the Grid can take in Samples and Entitys
+   and uses them to update itself. The Samples and Entitys don't need to use the same
+   units of measure as the Grid, it can handle these descrepencies gracefully. This
+   makes the Grid class pretty robust against lots of variation in measurment scales,
+   which should come in handy if multiple sensors are used.
+
+# Sample
+
+   This is another pretty important class. A sample holds an Entity, which indicates
+   the size of the sample and where it was taken from. It also holds a matrix which
+   has the values that the sample collected, and a unitSize value, showing the 
+   size of units used by the sensor/provider in question. Samples can be directly
+   applied to Grids via the apply method. This is actually pretty simple. Sample has
+   a simgle method, localVal, which maps global coordinates into the sample space
+   and sample values. This combined with the ability for the shape iterators to 
+   return their locations allow an efficient way to map the sample values onto
+   a Grid by establising an iterator over the Sample's entity and using the 
+   localVal to index into the entries in the data that corespond to the entries
+   in the Grid. This design creates a pretty robust design. The Samples can be of 
+   any kind of unit size, and as long as they are in bounds they can map into the
+   Grid in question. 
+
+   The main goal of this class is to coerce the data provided by Waiters into
+   something that could easily be used by a Grid class. This class kind of 
+   just came into being as a result of that need, and it turned out to 
+   work pretty well. 
+
+# Waiter
+   
+   This is one of the two classes in this set meant to be extensible. The basic idea
+   of a Waiter is to be a provider of Samples to the Grid representing the environment.
+   A Waiter will prepare and dish a Sample. The client, or user then serves the Sample,
+   most commonly to the Grid, or polls to see if any Samples are avaliable. Like me at
+   costco. The idea is to wrap any sort of terrain or mapping software a a Waiter and
+   have them each use services or nodes to subscribe to different sensor outputs and
+   use this to produce samples. Earlier I said that I was pretty sure I would extend
+   the Actor class to accept more than one waiter, one for each sensor. I am still 
+   not sure if this would be a good idea though.
+
+   The Waiter class is abstract, and has one virtual function, perpare. This function
+   has the job of getting some kind of data and putting it into a Sample class. Any
+   implimentation of Waiter must make sure to call dish to add the Sample, otherwise
+   I am guessing there will be some race conditions later on. I would prefer not to
+   debug that, so please use dish in prepare. The goal with this class was to create
+   something extensible that could handle a simulation environment, as well as 
+   a varity of actual sensors and sensor data. I think this class achives this.
+
+# Mapper
+
+   This is the second of the extensible classes. As the name suggests, this class
+   has the goal of mapping through the environment to the goal. However, it is 
+   completely up to the implimentor to decide how the mapping is done, if the 
+   mapping is done fully and not repeated, or partially and continually repeated.
+   Two virtual functions are required for any mapper: nextPoint, which returns
+   a Frame class value that determines the next step to take, and callback, which
+   is used to inform the algorithm that some kind of event has happened and it
+   might have to take action. 
+
+   The goal with this class was to create a mapping agent that could handle all 
+   kinds of different pathing algorithms without needing to change the calls or
+   anything about the other classes. I think that the two virtual functions
+   provide just enough structure to achive this goal. This class should allow 
+   basically all kinds of mapping alogrithms to be used. 
+
+# Frame
+
+   This is a utility class meant to be used in Mappers. It contains many of the
+   same things as the Entity class, but also has a number and weight, and a pointer
+   to the previous step in this chain of frames. There are also a nice set of 
+   operators defined for the frame, which should make implimenting mappers much
+   eaiser. A Frame is returned from the nextPoint method. This is then used to
+   update the Agent's position, or sent off to HQ for other processes to move 
+   the robot. Either one is file, the system is robust enough to do it.
+
+# Final Thoughts
+
+The overall goal of this project was to create a framework that was extensible and
+simple to work in. I personally think I have acomplished that, at least at a decent
+level. What you have is a dynamically sized environment that can accept dynamically
+sized input from a variety of sensors and can swap mapping algorithms in and out 
+pretty frequently. I would greatly appriciate any feedback or improvements to this,
+as it could probably get better :). Also I wrote this in vim (get rekt) so if 
+there are any spelling errors, that is why. It is not my bad spelling skills. Of
+course not.
