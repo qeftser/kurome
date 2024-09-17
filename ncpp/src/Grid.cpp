@@ -317,3 +317,31 @@ int Grid::apply(Sample * sample) {
       samples.insert(sample);
    return 0;
 }
+
+int Grid::toStruct(struct grid_struct ** gs) {
+   printf("grid: tostruct call\n");
+   (*gs)->unitSize = unitSize;
+   (*gs)->blocksX = blocks.rows();
+   (*gs)->blocksY = blocks.cols();
+   (*gs)->sizeX = sizeX;
+   (*gs)->sizeY = sizeY;
+   int size = sizeof(grid_struct)+(sizeof(int)*(*gs)->blocksX*(*gs)->blocksY);
+   *gs = (struct grid_struct *)realloc(*gs,size);
+   for (int i = 0; i < (*gs)->blocksX*(*gs)->blocksY; ++i)
+      (*gs)->matrix[i] = blocks(i/(*gs)->blocksX,i%(*gs)->blocksX);
+   printf("grid: size: %d\n",size);
+   return size;
+}
+
+Grid::Grid(struct grid_struct * gs)
+   : blocksX(gs->blocksX), blocksY(gs->blocksY), 
+     sizeX(gs->sizeX), sizeY(gs->sizeY), unitSize(gs->unitSize) {
+   this->blocks = Eigen::MatrixXi(this->blocksX,this->blocksY);
+   this->entities = std::set<Entity *>();
+   this->samples = std::set<Sample *>();
+   this->generator = std::default_random_engine(clock());
+   clear();
+   for (int i = 0; i < gs->blocksX*gs->blocksY; ++i)
+      blocks(i/gs->blocksX,i%gs->blocksX) = gs->matrix[i];
+}
+

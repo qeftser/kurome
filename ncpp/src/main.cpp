@@ -22,12 +22,15 @@ int main(void) {
 
    Mapper * m = new NILRotAStarMapper();
    
-   Agent OO7 = Agent(me,goal,*w,*m,g);
+   Agent OO7 = Agent(me,goal,*m,g);
+   OO7.waiters.push_back(w);
 
    getchar();
    for (int i = 0; i < 1000; ++i) {
-      OO7.waiter.prepare();
-      OO7.environment.apply(OO7.waiter.serve());
+      for (Waiter * w : OO7.waiters) {
+         w->prepare();
+         OO7.environment.apply(w->serve());
+      }
       OO7.mapper.callback(0);
       Frame f = OO7.mapper.nextPoint();
       OO7.self.posx = f.posx;

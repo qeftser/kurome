@@ -43,7 +43,7 @@ public:
          currPaths.pop();
 
          if (curr->dist2(dest) < step*3) {
-            memcpy(&best,curr,sizeof(Frame));
+            best = Frame(curr);
             return;
          }
 

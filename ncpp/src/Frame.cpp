@@ -66,3 +66,11 @@ int Frame::cost(Entity & hitbox, Grid & env) {
    }
    return sum;
 }
+
+void Frame::toStruct(struct frame_struct * s) {
+   s->posx   = posx;
+   s->posy   = posy;
+   s->rot    = rot;
+   s->num    = num;
+   s->weight = weight;
+}
