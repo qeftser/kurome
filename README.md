@@ -1,336 +1,363 @@
+
 # Kurome
 
-dynamic map generation/update/navigation using arbitrary granularity
+Kurome as it is now is a set of classes and functions that provides a 
+framework for building the mapping software for the robot. The design
+allows the developer to focus on implimenting the mapping algorithms,
+and not on worrying about environment representation or absorbing
+sensor data. You still have to do some of that, but it is much less.
 
-**Examples at the bottom!**
+## Overview
 
-## Description
-
-This is a ongoing project to write a mapping interface
-that works well for the team's project. Below is an
-explanation of the current implimentation. All examples
-can be found in the cpp directory, though there is a
-python impilmentation in the py folder if you prefer that.
-
-All details on the GUI for the project are in the README
-in the vcpp folder.
-
-## Usage
-
-Create a Grid object
+The general structure of programs will look something like this:
 ```
-Grid * g = new Grid( < unit ( width/height of one square in the grid ) > ,
-                     < x size (not in units) > ,
-                     < y size (not in units) > );
-```
-
-So making a grid with
-```
-Grid * g = new Grid( 1, 25.27, 23.45);
-```
-or
-```
-Grid * g = new Grid( 0.1, 25.27, 23.45);
-```
-doesn't change the size of the grid, but it does increase the number of squares
-or nodes (the granularity) of the grid.   
-   
+int main(void) {
     
-Create an entity
+    /* define environment, hitbox, goal area */
+    Grid env    = Grid( ... );
+    Entity me   = Entity( ... );
+    Entity goal = Entity( ... );
+
+    /* setup waiters */
+    Waiter * w1 = new <Waiter Class Child>( ... );
+    Waiter * w1 = new <Waiter Class Child>( ... );
+    ...
+    Waiter * wN = new <Waiter Class Child>( ... );
+
+    /* setup mapping algorithm */
+    Mapper * m = new <Mapper Class Child>( ... );
+
+    /* define agent and add elements */
+    Agent agent = Agent(me,goal,*m,env);
+    agent.waiters.push_back(w1);
+    agent.waiters.push_back(w2);
+    ...
+    agent.waiters.push_back(wN);
+
+    /* launch server */
+    agent.launchServer( ... );
+
+    /* commence mapping / update loop */
+    while (1) {
+        /* apply new sensor data */
+        for (Waiter * w : agent.waiters)
+            if (w->poll())
+                agent.environment.apply(w->serve());
+
+        ...
+        /* update position based on movement */
+        ...
+
+        /* use mapping algorithm to get next movement */
+        agent.mapper.callback( ... );
+        Frame f = agent.mapper.nextPoint();
+
+        ...
+        /* communicate calculated movement to some other process */
+        ...
+
+        ...
+        /* check goal condition / wait for input */
+        ...
+
+        /* process some requests from clients */
+        agent.updateFromServer();
+
+        /* repeat */
+    }
+}
 ```
-/*
-
-Entity * e = new Entity( < danger > , < type > , < width/radius > ,
-                         < height > , < x pos > , < y pos > );
-*/
-
-/* Rectangle centered at (3,5) with area of 12 */
-Entity * rect = new Entity(10,ENTITY_TYPE_RECT,3,4,3,5);
-
-/* Circle with radius of 5 at (8,23.923) */
-Entity * circ = new Entity(24,ENTITY_TYPE_RECT,5,-1,8,23.923);
-
-/* Point at (4.20,6.96969) */
-Entity * point = new Entity(28,ENTITY_TYPE_POINT,-1,-1,4.20,6.96969);
+    
+There is a lot in there. It is all pretty straightforward though. First
+we define the environment we are in. This is the line:
 ```
+    Grid env = Grid( ... );
+```
+The full syntax for the grid definition is:
+```
+    Grid( < unit size >,
+          < x axis size >,
+          < y axis size > );
+```
+These are all floating point numbers. The unit size argument declares how 
+wide and long each unit of the grid should be. The x axis and y axis size 
+arguments determine the total width and length of the entire grid. The class
+will take these arguments and create a matrix representation of the environment.    
+    
+Next is the definition of the Entities, goal and me:
+```
+    Entity me   = Entity( ... );
+    Entity goal = Entity( ... );
+```
+The full syntax for the entity constructor is:
+```
+    Entity( < x position >,
+            < y position >,
+            < x width    >,
+            < y width    >,
+            < type       >,
+            < weight/val > );
+```
+The arguments passed to the entity class are enough to represent an arbitrary
+shape in realspace. The x position, y position, x width, and y width variables
+are all floating point numbers. The type argument is basically an enum which
+determines which shape to represent. Weight is used to define a weight for
+collisions. The parameter names are pretty straightforward. Here are some
+examples though:
+```
+    /* define a square at (1,1) that has a width of 2 */
+    Entity square = Entity(1,1,2,2,ENTITY_TYPE_RECT,0);
 
-These represent obstacles on the map. Note the positions and sizes can be at any accuracy,
-they are not tied to the grid unit size at all. The only types are rect,circle,and point, defined
-in the way you see above. The danger variable indicates the perceived danger of the location, how
-much we want to avoid it.   
+    /* define a rectangle at (5,7) that has a 
+     * width of 7 and a height of 5 */
+    Entity rectangle = Entity(5,7,7,5,ENTITY_TYPE_RECT,0);
+
+    /* define a circle at (20.243,3) with a radius of 2.7813 */
+    Entity circle = Entity(20.243,3,2.7813,2.7813,ENTITY_TYPE_ELPS,0);
+
+    /* define an ellipse at (3,9) with a width of 27 and a height of 81 */
+    Entity ellipse = Entity(3,9,27,81,ENTITY_TYPE_ELPS,0);
+
+```
+    
+The next lines of interest are the waiter definitions:
+```
+    Waiter * w1 = new <Waiter Class Child>( ... );
+    Waiter * w1 = new <Waiter Class Child>( ... );
+    ...
+    Waiter * wN = new <Waiter Class Child>( ... );
+
+```
+There is no real full definition to share because the waiter is designed to
+be extended to handle various sensors. This means that each waiter will likely
+have different constructers. I will explain the methods that the waiter class
+contains though:
+```
+    /* predefined */
+    void     waiter.dish(Sample * sample);
+    Sample * waiter.serve(void);
+    int      poll(void);
+
+    /* defined by child class */
+    void     waiter.prepare(void);
+```
+The method dish takes in a sample from a sensor and stores it. The method
+serve returns the latest dished sample. The dish method is designed to be
+called inside the prepare method. The prepare method is a child-defined
+method that produces the samples that will eventually be served. The user
+must define this method. If the last sample has just been served, or if
+there have been no samples dished, serve will return NULL. You can check for
+and avoid this case by calling poll to see if there is a sample avaliable. This
+behavior is shown in the start of the mapping loop:
+```
+    for (Waiter * w : agent.waiters)
+        if (w->poll())
+            agent.environment.apply(w->serve());
+```
+What this code is doing is going through all the waiters and serving the samples
+that are avaliable to the Grid class that we instantiated earlier.    
+    
+I will digress and talk about samples now because I mentioned them a lot above.
+If you are writing a Waiter child class, your main goal will be to coerce the 
+sensor data into a Sample class. A sample consists of an entity that shows the
+area the data was obtained from, a floating point number that represents the 
+unit size, with the same meaning as unit size in Grid, and a matrix that holds the
+actual data that the sensor found. Once the data is in this form, the Grid method
+apply can be used as so:
+```
+    grid.apply(sample);
+```
+This uses the entity and unit size to map the matrix of sensor data onto the grid 
+and update the mapping of the environment. This allows developers of the sensor
+wrappers to focus solely on producing the most useful sample from the data, instead
+of having to worry about how to represent the data in a map or with other sensors.
+This system also ends up being pretty modular. The grid doesn't care what the sensor
+is as long as it can produce a sample, and the waiter doesn't care what the grid does
+or looks like, it just makes the sample.   
    
+The next important code to cover is the mapper:
+```
+    Mapper * m = new <Mapper Class Child>( ... );
+
+```
+The mapper will also be a class that doesn't have a set constructor, as each mapper
+will be created as a child of the main mapper class. This class impliments a few
+critical functions:
+```
+    Frame nextPoint(void);
+    void  callback(int flags);
+```
+The callback function provides info to the mapper about what has happed since it's 
+last mapping (change in position, change of goal) via the flags argument. Callback
+also allows the mapper to recompute or preform more computation to determine which movement 
+will be the best in terms of reaching our goal. The nextPoint function returns a Frame
+that describes what position the mapper thinks it would be best to move to next. It is expected
+that this info can be passed to another process to facilitate the actual movement. I should
+also mention that the mapper class works by mapping over the Grid that the waiters feed into.   
    
-A subclass of the entity is WeightedEntity:
+A brief explaination of Frames. They are like entities without the shapes, and just contain
+a position and rotation. They also hold data like weight and num, and can be chained in linked
+lists. These fields are useful for mapping algorithms. This class contains a bunch of useful
+helper functions as well. If you do mapper implimentation you will use it a lot.
+
+This code should make more sense now:
 ```
-/*
+    /* use mapping algorithm to get next movement */
+    agent.mapper.callback( ... );
+    Frame f = agent.mapper.nextPoint();
 
-WeightedEntity * e = new WeightedEntity(< danger > , < type > , < width/radius > ,
-                                        < height > , < x pos >, < y pos > , < weight >);
-*/
+    ...
+    /* communicate calculated movement to some other process */
+    ...
 
-/* Same rectangle as above but weighted 0.9 */
-Entity * w_rect = new WeightedEntity(10,ENTITY_TYPE_RECT,3,4,3,5,0.9); 
-
-/* weight is between 0.0 and 1.0 */
 ```
-
-The weight changes the preference given to the danger in the entity when it is added to the grid 
-and the danger is combined with the danger value that the nodes previously had. In the normal entities
-a default value of 0.6 is used and is held in the macro **GRID_NEW_VALUE_WEIGHT**.   
    
+That is the basic overview of kurome. There are a lot of helpful methods and
+such that I didn't cover. I should have an api and some examples done soon which will help
+with that. Basically the developer will be responsible for writing the mapper and the waiters.
+Waiters are just a wrapper/formatter over a sensor class, and they use the Sample class to
+communicate with the grid. The mapper is the home of the actual mapping algorith, which 
+should use the grid to map the robot. This is done a loop until the goal is reached or
+some other situation occurs. It is all implimentation dependent. It is important to note that
+Kurome doesn't define classes for actually interfacing with sensor or motors, and also doesn't
+try to structure in what order or how often different things can be called. That is because those
+features are expected to be handled by other parts of the program, not by kurome. By keeping things
+modular, I expect that prototyping and simulations will be eaiser to write and perform.
 
-Add an entity to the grid
-```
-g->addEntity(rect);
-g->addEntity(circ);
-g->addEntity(point);
-g->addEntity(w_rect);
-```
+## Client/Server interaction
 
-This works for any entity type. It records the entity and then maps it to the grid based on the
-unit size of the grid. It will round out for shapes, so the grid squares covered will always be
-over a larger area than the entity's actual area. The smaller the unit size, the more accurate the
-representation will be. One note here is that when filling the circles the macro **GRID_CIRCLE_GRANULARITY**
-is used in the fill algorithm. This is set to 0.025 and should always be less than the granularity. Also
-I will mention that the program detects and avoids mapping out of bounds of a grid, so you don't have to
-worry about staying in bounds.   
+### Startup
+
+I didn't really cover it in the overview, but kurome also supports a simple model for client-server
+interaction. This is handled throught the methods launchServer, updateFromServer, and sendAll in Agent,
+and the class Reporter. Agent acts as the server and Reporter acts as the client. Once again, there
+is no interface baked into this, all that is supplied is the low level connection setup and the 
+hooks to be able to modify the actions taken when messages are sent and received. The basic behavior
+is to call
+```
+    agent.launchServer( < port > , < flags > );
+```
+on startup to get the server up and running. Port defines the port that the agent is accepting
+requests on, and flags advertizes the commands that the server is willing to accept. There is 
+no need to save the port or flags, as the server will automatically broadcast it to all clients
+on the subnet. From there the client program can define some way to look at the avaliable 
+connections and connect the one it wants.   
    
+On the client side we do:
+``` 
+    reporter.launchClient();
 
-Create an entity and map it:
+    ...
+    /* somehow select the agent we want to connect to */
+    ...
+
+    reporter.kcmdConnect( < numerical ip addr > );
 ```
-/*
+This gives us a connection to the agent.    
+    
+I will also discuss the Reporter class. Other than providing the client program, it holds a sort of replica
+of the data in an Agent class. The goal of the reporter is to use the messages that the agent sends it
+to construct a representation of what it thinks is happening in the agent.    
 
-MovingEntity * me = new MovingEntity( /* ... same as normal entity ... */ , < turn radius > );
+### Message passing
 
-*/
-
-/* a circle with a turning radius of 1 and a radius of 0.6. Sitting at (1.0,1.0) */
-MovingEntity * my_ufo = new MovingEntity(-1,ENTITY_TYPE_CIRCLE,0.6,-1,1,1,1.0);
-
-/* map and display the mapping to (5.0,5.0) */
-g->mapEntity(my_ufo);
+There a number of default messages and operations defined for passing data. It is pretty straightforward
+to impliment new ones though, all it takes is some digging though the code :). The way messages are expected
+to be passed between the Agent and Reporter are through their respective message queues. The reporter class
+has an object called reqs, and the Agent has a reqs object for each open connection in a set called conns.
+Any message enqueued in these queues will can be immediately considered to have been sent to its counterpart.
+The developer doesn't have to care at all about how the client and server are going to be communicating, it
+just needs to pass its messages to the message queue. Agent is similar but has things a little harder. 
+Each connection has its own queue, so we need to be more careful how we send messages out.   
+   
+It is hard to explain this without examples. Basically the lower level communication operates on a struct
+called kurome_basemsg to send and receive data. This struct contains the size of the total message and the
+type of message. This isn't very useful on its own, so messages that need to send more than just a type
+will have to define a struct that extends the basemsg struct. This is kind of mind-bending if you haven't
+done it before, so there are already a good number of message types defined. Adding more is still pretty
+simple though. Even with the structs there is still the issue of getting the classes to fit into the
+message structs so they can be passed over a network. It is kind of a pain to do this, especially with
+structs that have to be dynamically resized. Do deal with this there is a nice class called kcmd defined
+that has a static method for all the message types. These calls will take the data in its normal class form, 
+as well as the queue to add to. It will then do all the conversion and add the resulting message to the 
+queue. This is the preferred way to send data. As an example, to send a entity we want added to the
+environment from the Reporter, we would call:
+```
+    kcmd::addEntity(< our entity >, &reporter.reqs);
+```
+This would unbox our entity, format it, and send it off without us having to touch any of it. Pretty nice.   
+   
+Also, addressing the issue with multiple connections in the server, I have defined the method sendAll, which
+is another wrapper over some of the kcmd functions that will iterate through all the open connections, sending 
+the same message. For example, if we want to send our current grid to all connected clients, we could
+use the call:
+```
+    agent.sendAll(< our grid >);
 ```
 
-The entity size, shape, and turning radius are taken into account in the mapping. There are some parameters to note in the
-computation. **GRID_MAP_FRAME_SLICES** determines the number of different angles that are attempted in the search algorithm, 
-which is a modified A*. Roughly 4 \* **GRID_MAP_FRAME_SLICES** are created each step, increase this variable for higher angle
-granularity. **GRID_MAP_FRAME_STEP** is used to determine the distance moved in each step. You can decrease it for finer grained 
-movement, but if you do it too low the floating point calculations will go to zero and the mapping will fail. Finally, 
-**GRID_MAP_ANGLE_SLICING** is used when pruning for already visited positions and angles. Unlike normal A*, we need to keep track
-of the angle we are facing along with our position, and this is taken into account when checking for visited nodes. The higher
-this value is the less variation will be accepted in angle differences. The calculation is done (currAngle/GRID_MAP_ANGLE_SLICING)
-in degrees, so values 35 and 43 would be considered different when the parameter is 5 or 10 but the same when the parameter is 15.
+### Message processing
 
-## Examples
-A square of width 2 centered in a 10x10 grid of granularity 2:
+The above section explains how we go about sending our messages, but it doesn't explain what we do with them 
+as the server or client. This behavior is defined through a set of message-based callbacks. These callbacks
+are applied to messages automatically based the message type, and are called implicitly when the Reporter
+recives a message. To get any messages processed in the Agent, you would need to call updateFromServer as such:
 ```
-/* ex1.cpp */
+    /* process up to (< updates > - 1) messages */
+    agent.updateFromServer(< updates >);
 
-int main(void) {
-
-
-   Grid * g = new Grid(2,10,10);
-
-   Entity * e = new Entity(0x2f,ENTITY_TYPE_RECT,2,2,5,5);
-
-   g->addEntity(e);
-   g->print();
-
-   return 0;
-}
+    /* default is 13, so process 12 messages
+     * there is a limit to prevent a busy agent from
+     * never returning from this call                */
+    agent.updateFrmServer();
 ```
-![ex1](https://github.com/user-attachments/assets/68575122-e1fa-40e9-aced-72784beefbc0)
-Apologies, I was too lazy to use an actual graphics library. Same square and grid size, but a granularity of 1:
+
+There are a number of useful callbacks defined for the Agent and Reporter classes, but new callbacks can be added
+and existing callbacks can be changed quite easily. Both the Agent and Reporter have the function registerHandler,
+which has the definition:
 ```
-/* ex2.cpp */
+    /* reporter */
+    reporter.registerHandler(< message type > ,  < function >);
 
-int main(void) {
-
-
-   Grid * g = new Grid(1,10,10);
-
-   Entity * e = new Entity(0x2f,ENTITY_TYPE_RECT,2,2,5,5);
-
-   g->addEntity(e);
-   g->print();
-
-   return 0;
-}
+    /* agent */
+    agent.registerHandler(< message type > , < function >);
 ```
-![ex2](https://github.com/user-attachments/assets/8f535b56-4632-4125-9cad-2ebfa93e85d1)
-Now the granularity at 0.1:
+The function used in the registration call will end up being the one used to process every message of the given
+type that passes through. This also allows the system to easily extend to process new messages. There are some
+requirments on what functions can be passed though. Reporter requires the functions to have the template:
 ```
-/* ex3.cpp */
-
-int main(void) {
-
-
-   Grid * g = new Grid(0.1,10,10);
-
-   Entity * e = new Entity(0x2f,ENTITY_TYPE_RECT,2,2,5,5);
-
-   g->addEntity(e);
-   g->print();
-
-   return 0;
-}
+    < callback name >(struct kurome_basemsg * msg, Reporter * me);
 ```
-![ex3](https://github.com/user-attachments/assets/024f018a-e4c5-4a21-a2b2-aab86a08ce36)
-Hopefully that does a good job of showing the changes. The numbers are the danger/weight of each
-grid section in hex. Here is the map I will use to show the mapping. The origin and size of our entity
-is in magenta and the destination is green:
+The msg variable will need to be casted to the appropriate struct and then used. We do get access to the
+full reporter, so we can update our state and send messages back automatically if we wanted to.    
+    
+For Agent the function needs to be of the form:
 ```
-/* ex4.cpp */
-
-int main(void) {
-
-   Grid * g = new Grid(0.10,30.0,20.0);
-
-   MovingEntity * e3 = new MovingEntity(0xa3,ENTITY_TYPE_RECT,1.0,1.0,2.0,2.0,0.5);
-
-   Entity * e = new Entity(0x2f,ENTITY_TYPE_RECT,1.5,1.5,6.0,6.0);
-   Entity * e2 = new Entity(0x2f,ENTITY_TYPE_RECT,4.0,4.0,6.0,6.0);
-   Entity * e4 = new Entity(0x2f,ENTITY_TYPE_CIRCLE,4.0,1.0,10.0,10.0);
-   Entity * e5 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,8.0,10.0,1.0);
-   Entity * e6 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,4.5,13.0,18.0);
-   Entity * e7 = new Entity(0x08,ENTITY_TYPE_RECT,2.0,2.0,18.0,4.0);
-   g->addEntity(e);
-   g->addEntity(e2);
-   g->addEntity(e4);
-   g->addEntity(e5);
-   g->addEntity(e6);
-   g->addEntity(e7);
-   g->addEntity(e3);
-
-   g->print();
-
-   return 0;
-}
+    < callback name >(struct kurome_basemsg * msg, ll_queue<KB *> * from, Agent * me);
 ```
-![ex4](https://github.com/user-attachments/assets/e19218e0-246c-4c0c-aafb-884b50d08359)
-Now we will attempt to map to the destination. Values shaded yellow/orange are explored positions and the magenta
-is the final chosen route:
-```
-/* ex5.cpp */
+Because the server has multiple connections it is important that it knows where a connection came from
+in case it needs to reply. That is what the from variable is for, but other than that, the drill is 
+the same. The hope here is to allow a good amount of flexability if it is needed.
 
-int main(void) {
+### Closing statements
 
-   Grid * g = new Grid(0.10,30.0,20.0);
+There are a couple of things to note from this design. One is that the Agent and reporter can be started in
+the same process, same thread, if they needed to be. They spawn their connections in seperate threads so there
+is no blocking or stalling in the user processes. Also, it should be noted that there is no interface for all
+this defined. Like the rest of kurome, I have also opted for a more framework like approach for the communication
+model. You could easily wrap a cli or gui over this if need be.
 
-   MovingEntity * e3 = new MovingEntity(0xa3,ENTITY_TYPE_RECT,1.0,1.0,2.0,2.0,0.5);
+## Closing statements
 
-   Entity * e = new Entity(0x2f,ENTITY_TYPE_RECT,1.5,1.5,6.0,6.0);
-   Entity * e2 = new Entity(0x2f,ENTITY_TYPE_RECT,4.0,4.0,6.0,6.0);
-   Entity * e4 = new Entity(0x2f,ENTITY_TYPE_CIRCLE,4.0,1.0,10.0,10.0);
-   Entity * e5 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,8.0,10.0,1.0);
-   Entity * e6 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,4.5,13.0,18.0);
-   g->addEntity(e);
-   g->addEntity(e2);
-   g->addEntity(e4);
-   g->addEntity(e5);
-   g->addEntity(e6);
+More documentation to come. Please read through some of the code and tell me how it is looking though :).
 
-   g->mapEntity(e3,18.0,4.0);
+## Todo
 
-   return 0;
-}
-```
-![ex5](https://github.com/user-attachments/assets/1416ca4a-edc7-49dc-a940-0df634afa63c)
-Doubling the size of the entity gives:
-```
-/* ex6.cpp */
+ - unit tests
+ - rotations
+ - negative coordinates
+ - examples
+ - api docs
 
-int main(void) {
+## Name?
 
-   Grid * g = new Grid(0.10,30.0,20.0);
-
-   MovingEntity * e3 = new MovingEntity(0xa3,ENTITY_TYPE_RECT,2.0,2.0,2.0,2.0,0.5);
-
-   Entity * e = new Entity(0x2f,ENTITY_TYPE_RECT,1.5,1.5,6.0,6.0);
-   Entity * e2 = new Entity(0x2f,ENTITY_TYPE_RECT,4.0,4.0,6.0,6.0);
-   Entity * e4 = new Entity(0x2f,ENTITY_TYPE_CIRCLE,4.0,1.0,10.0,10.0);
-   Entity * e5 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,8.0,10.0,1.0);
-   Entity * e6 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,4.5,13.0,18.0);
-   g->addEntity(e);
-   g->addEntity(e2);
-   g->addEntity(e4);
-   g->addEntity(e5);
-   g->addEntity(e6);
-
-   g->mapEntity(e3,18.0,4.0);
-
-   return 0;
-}
-```
-![ex6](https://github.com/user-attachments/assets/6a1d609a-6943-4cac-9d97-faac2deb23e4)
-Now back to the old size, we will increase the turning radius from 0.5 to 2.00:
-```
-/* ex7.cpp */
-
-int main(void) {
-
-   Grid * g = new Grid(0.10,30.0,20.0);
-
-   MovingEntity * e3 = new MovingEntity(0xa3,ENTITY_TYPE_RECT,1.0,1.0,2.0,2.0,1.00);
-
-   Entity * e = new Entity(0x2f,ENTITY_TYPE_RECT,1.5,1.5,6.0,6.0);
-   Entity * e2 = new Entity(0x2f,ENTITY_TYPE_RECT,4.0,4.0,6.0,6.0);
-   Entity * e4 = new Entity(0x2f,ENTITY_TYPE_CIRCLE,4.0,1.0,10.0,10.0);
-   Entity * e5 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,8.0,10.0,1.0);
-   Entity * e6 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,4.5,13.0,18.0);
-   g->addEntity(e);
-   g->addEntity(e2);
-   g->addEntity(e4);
-   g->addEntity(e5);
-   g->addEntity(e6);
-
-   g->mapEntity(e3,18.0,4.0);
-
-   return 0;
-}
-```
-![ex7_001](https://github.com/user-attachments/assets/9d52b62f-047c-4ca4-b312-db0d185d6964)
-Here you can see that the entity was unable to make it around the corner and through that gap. When it
-reaches that situation, it drives straight back until it has the proper angle and then proceeds through the gap
-to the destination. You can see that the pathfinding is not perfect as well. It overshoots the destination
-and attempts to go backwards there. You can see some of the pathfinding issues if we add another obstacle
-in the path of our reverse:
-```
-/* ex8.cpp */
-
-int main(void) {
-
-   Grid * g = new Grid(0.10,30.0,20.0);
-
-   MovingEntity * e3 = new MovingEntity(0xa3,ENTITY_TYPE_RECT,1.0,1.0,2.0,2.0,2.00);
-
-   Entity * e = new Entity(0x2f,ENTITY_TYPE_RECT,1.5,1.5,6.0,6.0);
-   Entity * e2 = new Entity(0x2f,ENTITY_TYPE_RECT,4.0,4.0,6.0,6.0);
-   Entity * e4 = new Entity(0x2f,ENTITY_TYPE_CIRCLE,4.0,1.0,10.0,10.0);
-   Entity * e5 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,8.0,10.0,1.0);
-   Entity * e6 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,4.5,13.0,18.0);
-   Entity * e7 = new Entity(0x2f,ENTITY_TYPE_RECT,2.0,2.5,5.0,18.0);
-   g->addEntity(e);
-   g->addEntity(e2);
-   g->addEntity(e4);
-   g->addEntity(e5);
-   g->addEntity(e6);
-   g->addEntity(e7);
-
-   g->mapEntity(e3,18.0,4.0);
-
-   return 0;
-}
-```
-![ex8](https://github.com/user-attachments/assets/fa6c6087-2a04-4dfe-b8aa-71c7b145c500)
-That is all for now. You can compile the examples using make ex\[n\] (make ex1) and run the executables
-placed in ./bin. Also you can do make all (to make them all :))
-
-## name?
-
-https://myanimelist.net/character/65297/kurome
-
-
-
-
-
+https://myanimelist.net/character/65297/Kurome/

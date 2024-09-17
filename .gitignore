@@ -34,3 +34,4 @@
 
 # Python stuff
 *.pyc
+py/*
