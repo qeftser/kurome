@@ -1,8 +1,5 @@
 
 #include "Kurome.h"
-#include "kmsgs.h"
-#include "gsocket.h"
-#include "handlers.h"
 #include <fcntl.h>
 
 void kurome_agent_connection(gsock_fd fd, Agent * me) {

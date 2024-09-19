@@ -4,7 +4,8 @@
 #define DEFAULT_MESSAGE_HANDLERS
 
 #include "kmsgs.h"
-#include "Kurome.h"
+#include "Agent.h"
+#include "Reporter.h"
 
 /* default agent handlers */
 

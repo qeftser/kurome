@@ -22,6 +22,7 @@ typedef sockaddr gsockaddr;
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <errno.h>
 
 typedef int gsock_fd;

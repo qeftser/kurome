@@ -1,5 +1,5 @@
 
-#include "gsocket.h"
+#include "Kurome.h"
 
 #ifdef _WIN32
 
@@ -67,7 +67,7 @@ int greadr(gsock_fd s, void * buf, size_t len) {
    int n;
    size_t nr = 0;
 again:
-   n = recv(s,buf+nr,len-nr,0);
+   n = recv(s,(char *)buf+nr,len-nr,0);
    if (n == -1) {
       if (gerror() == GEINTR)
          goto again;
@@ -85,7 +85,7 @@ int gwriter(gsock_fd s, void * buf, size_t len) {
    int n;
    size_t nr = 0;
 again:
-   n = send(s,buf+nr,len-nr,0);
+   n = send(s,(char *)buf+nr,len-nr,0);
    if (n == -1) {
       if (gerror() == GEINTR)
          goto again;
@@ -100,7 +100,7 @@ again:
 int gnbread(gsock_fd s, gnbstate * nbs) {
    int n;
 again:
-   n = recv(s,nbs->buf+nbs->nr,nbs->len-nbs->nr,0);
+   n = recv(s,(char *)nbs->buf+nbs->nr,nbs->len-nbs->nr,0);
    if (n == -1) {
       if (gerror() == GEINTR)
          goto again;
@@ -117,7 +117,7 @@ again:
 int gnbwrite(gsock_fd s, gnbstate * nbs) {
    int n;
 again:
-   n = send(s,nbs->buf+nbs->nr,nbs->len-nbs->nr,0);
+   n = send(s,(char *)nbs->buf+nbs->nr,nbs->len-nbs->nr,0);
    if (n == -1) {
       if (gerror() == GEINTR)
          goto again;

@@ -1,6 +1,5 @@
 
 #include "Kurome.h"
-#include "kmsgs.h"
 
 struct kurome_basemsg * wrap_basemsg(void * ptr, int len) {
    struct kurome_basemsg * ret = (KB *)calloc(len+sizeof(KB),1);

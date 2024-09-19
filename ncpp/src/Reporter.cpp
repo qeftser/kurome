@@ -1,7 +1,5 @@
 
 #include "Kurome.h"
-#include "kmsgs.h"
-#include "handlers.h"
 #include <fcntl.h>
 
 template class ll_queue<KB *>;
