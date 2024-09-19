@@ -35,11 +35,11 @@ public:
    void   registerHandler(int, void (*)(struct kurome_basemsg *, ll_queue<KB *> *, Agent *));
 
    void setDefaultHandlers();
-   void sendAll(Entity *);
-   void sendAll(Entity *, int);
-   void sendAll(Sample *);
-   void sendAll(Grid *);
-   void sendAll(Grid *, int);
+   void sendAll(Entity &);
+   void sendAll(Entity &, int);
+   void sendAll(Sample &);
+   void sendAll(Grid &);
+   void sendAll(Grid &, int);
 };
 
 #endif

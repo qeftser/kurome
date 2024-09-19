@@ -223,13 +223,13 @@ void Agent::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_CHGFLAGS,kurome_agent_default_MSG_CHGFLAGS_handler);
 }
 
-void Agent::sendAll(Entity * e) {
+void Agent::sendAll(Entity & e) {
    for (ll_queue<KB *> * q : conns) {
       kcmd::entity(e,q);
    }
 }
 
-void Agent::sendAll(Entity * e, int mtype) {
+void Agent::sendAll(Entity & e, int mtype) {
    switch (mtype) {
       case KUROME_MSG_ADD_ENTITY:
          for (ll_queue<KB *> * q : conns) {
@@ -269,19 +269,19 @@ void Agent::sendAll(Entity * e, int mtype) {
    }
 }
 
-void Agent::sendAll(Sample * s) {
+void Agent::sendAll(Sample & s) {
    for (ll_queue<KB *> * q : conns) {
       kcmd::sample(s,q);
    }
 }
 
-void Agent::sendAll(Grid * g) {
+void Agent::sendAll(Grid & g) {
    for (ll_queue<KB *> * q : conns) {
       kcmd::grid(g,q);
    }
 }
 
-void Agent::sendAll(Grid * g, int mtype) {
+void Agent::sendAll(Grid & g, int mtype) {
    switch (mtype) {
       case KUROME_MSG_GRID:
          for (ll_queue<KB *> * q : conns) {
