@@ -7,13 +7,13 @@ void kurome_agent_default_MSG_ADD_ENTITY_handler(KB * msg, ll_queue<KB *> * from
    struct kurome_entitymsg * emsg = (struct kurome_entitymsg *)msg;
    Entity * e = new Entity(&emsg->e);
    me->environment.addEntity(e);
-   kcmd::entity(e,from);
+   kcmd::entity(*e,from);
 }
 
 void kurome_agent_default_MSG_MAPCALLBACK_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
    struct kurome_flagmsg * fm = (struct kurome_flagmsg *)msg;
    me->mapper.callback(fm->flag);
-   kcmd::mapperInfo(&me->mapper,from);
+   kcmd::mapperInfo(me->mapper,from);
 }
 
 void kurome_agent_default_MSG_SET_IDX_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
@@ -48,27 +48,27 @@ void kurome_agent_default_MSG_CHG_YBLOCKS_handler(KB * msg, ll_queue<KB *> * fro
 
 void kurome_agent_default_MSG_GET_GRID_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
    (void)msg;
-   kcmd::grid(&me->environment,from);
+   kcmd::grid(me->environment,from);
 }
 
 void kurome_agent_default_MSG_GET_FULLGRID_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
    (void)msg;
    if (me->full_env)
-      kcmd::fullGrid(me->full_env,from);
+      kcmd::fullGrid(*me->full_env,from);
 }
 
 void kurome_agent_default_MSG_CHGSELF_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
    struct kurome_entitymsg * emsg = (struct kurome_entitymsg *)msg;
    Entity * e = new Entity(&emsg->e);
    me->self = *e;
-   kcmd::self(e,from);
+   kcmd::self(*e,from);
 }
 
 void kurome_agent_default_MSG_CHGGOAL_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
    struct kurome_entitymsg * emsg = (struct kurome_entitymsg *)msg;
    Entity * e = new Entity(&emsg->e);
    me->goal = *e;
-   kcmd::goal(e,from);
+   kcmd::goal(*e,from);
 }
 
 void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
@@ -191,7 +191,16 @@ void kurome_reporter_default_MSG_SAMPLE_handler(KB * msg, Reporter * me) {
 
 void kurome_reporter_default_MSG_WAITERINFO_handler(KB * msg, Reporter * me) {
    struct kurome_waiterinfomsg * wim = (struct kurome_waiterinfomsg *)msg;
-   // not sure what to do here yet
+   int found = 0;
+   for (struct waiter_info & w : me->waiters) {
+      if (w.id == wim->wi.id) {
+         memcpy(&w,&wim->wi,sizeof(waiter_info));
+         found = 1;
+         break;
+      }
+   }
+   if (!found)
+      me->waiters.push_back(wim->wi);
 }
 
 void kurome_reporter_default_MSG_MAPPERINFO_handler(KB * msg, Reporter * me) {

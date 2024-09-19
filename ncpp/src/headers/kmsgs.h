@@ -56,6 +56,7 @@ struct entity_struct {
 
 struct waiter_info {
    char            name[40];
+   int             id;
    struct timeval  rate;
    struct timespec last;
 };
@@ -78,7 +79,7 @@ struct frame_struct {
 
 struct mapper_info {
    char            name[40];
-   char            state[20];
+   int             state;
    struct timespec last;
 };
 
