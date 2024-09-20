@@ -4,7 +4,7 @@
 
 #define KUROME_GRID_CLASS
 
-#include <eigen-3.4.0/Eigen/Dense>
+#include <Eigen/Dense>
 #include <random>
 #include <set>
 

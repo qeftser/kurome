@@ -4,7 +4,7 @@
 #define KUROME_CLASS_SAMPLE
 #include "Entity.hpp"
 #include <cmath>
-#include <eigen-3.4.0/Eigen/Dense>
+#include <Eigen/Dense>
 
 class Sample {
 public:

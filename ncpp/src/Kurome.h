@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <mutex>
 #include <thread>
-#include <eigen-3.4.0/Eigen/Dense>
+#include <Eigen/Dense>
 #include <stdatomic.h>
 #include <atomic>
 
