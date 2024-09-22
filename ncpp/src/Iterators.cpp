@@ -48,10 +48,11 @@ void RectIterator::setupVars(double xwid, double ywid, double offx, double offy,
    srty += (offy);
    posx = srtx - shiftyx;
    posy = srty - shiftyy;
+   printf("xx: %f xy: %f yx: %f yy: %f\n",shiftxx,shiftxy,shiftyx,shiftyy); 
 }
 
 RectIterator::RectIterator(Entity * e, Grid * g) 
-   : g(g), stepx(0), stepy(-1), done(false) {
+   : stepx(0), stepy(-1), g(g), done(false) {
 #ifndef KUROME_NOCHECK
    if (e->type != KUROME_TYPE_RECT) {
       errnok = KUROME_ETYPE;
@@ -65,7 +66,7 @@ RectIterator::RectIterator(Entity * e, Grid * g)
 }
 
 RectIterator::RectIterator(double offx, double offy, Entity * e, Grid * g) 
-   : g(g), stepx(0), stepy(-1), done(false) {
+   : stepx(0), stepy(-1), g(g), done(false) {
 #ifndef KUROME_NOCHECK
    if (e->type != KUROME_TYPE_RECT) {
       errnok = KUROME_ETYPE;
@@ -79,7 +80,7 @@ RectIterator::RectIterator(double offx, double offy, Entity * e, Grid * g)
 }
 
 RectIterator::RectIterator(double offx, double offy, double rot, Entity * e, Grid * g)
-   : g(g), stepx(0), stepy(-1), done(false) {
+   : stepx(0), stepy(-1), g(g), done(false) {
 #ifndef KUROME_NOCHECK
    if (e->type != KUROME_TYPE_RECT) {
       errnok = KUROME_ETYPE;
@@ -117,11 +118,11 @@ RectIterator & RectIterator::operator++() {
             return *this;
          }
       }
-   } while (!g->inBounds(posx,posy) || seen.count(((uint64_t)g->roor(posx)<<32)|g->roor(posy)));
+   } while (!g->inBounds(posx,posy) || seen.count((((uint64_t)g->roor(posx))<<32)|(g->roor(posy)&UINT_MAX)));
    info.posy = (g->roor(posy)*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    info.posx = (g->roor(posx)*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    info.val = g->getIdxPtr(posx,posy);
-   seen.insert(((uint64_t)g->roor(posx)<<32)|g->roor(posy));
+   seen.insert((((uint64_t)g->roor(posx))<<32)|(g->roor(posy)&UINT_MAX));
    return *this;
 }
 
@@ -249,50 +250,50 @@ void EllipseIterator::setupVars(double xwid, double ywid, double offx, double of
    double steps = std::ceil((xwid>ywid?xwid:ywid)/(g->getUnitSize()/2));
    shiftx = (shiftx - xs)/steps;
    shifty = (shifty - ys)/steps;
-   granularity = g->getUnitSize()/g->getXBlocks();
+   granularity = g->getUnitSize();
    k = -granularity;
-   xs = xe = 0;
-   ys = ye = 0;
-   offx = offx;
-   offy = offy;
+   xs = xe = 0.0;
+   ys = ye = 0.0;
+   this->offx = offx;
+   this->offy = offy;
 }
 
 EllipseIterator::EllipseIterator(double wrad, double hrad, double x, double y, Grid * g)
-   : g(g) {
+   : g(g), done(false) {
    setupVars(wrad,hrad,x,y,0.0);
    operator++();
 }
 
 EllipseIterator::EllipseIterator(Entity * e, Grid * g) 
-   : g(g) {
+   : g(g), done(false) {
    setupVars(e->xwid,e->ywid,e->posx,e->posy,e->rot);
    operator++();
 }
 
 EllipseIterator::EllipseIterator(double offx, double offy, Entity * e, Grid * g) 
-   : g(g) {
+   : g(g), done(false) {
    setupVars(e->xwid,e->ywid,offx,offy,e->rot);
    operator++();
 }
 
 EllipseIterator::EllipseIterator(double offx, double offy, double rot, Entity * e, Grid * g) 
-   : g(g) {
+   : g(g), done(false) {
    setupVars(e->xwid,e->ywid,offx,offy,rot);
    operator++();
 }
 
-EllipseIterator & EllipseIterator::operator++() {
+EllipseIterator & EllipseIterator::operator++(void) {
    do {
       ys -= shifty;
       xs -= shiftx;
-      if ((ye - ys) < 0 || (xe + xs) < 0) {
+      if ((ye - ys) < 0 || (xe - xs) < 0) {
          k+=granularity;
          if (k > PI) {
             done = true;
             info.val = NULL;
             return *this;
          }
-         double temp;
+         double temp = 0;
          xs = ((cosl(k) * wrad));
          temp = ((sinl(k+PI) * hrad));
          ye = ((sinl(k) * hrad));
@@ -301,11 +302,11 @@ EllipseIterator & EllipseIterator::operator++() {
          ys = (xs * srr + temp * crr) + offy;
          xs = (xs * crr - temp * srr) + offx;
       }
-   } while (!g->inBounds(xs,ys) || seen.count(((uint64_t)g->roor(xs)<<32|g->roor(ys))));
+   } while (!g->inBounds(xs,ys) || seen.count((((uint64_t)g->roor(xs))<<32|(g->roor(ys)&UINT_MAX))));
    info.posy = (g->roor(ys)*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    info.posx = (g->roor(xs)*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    info.val = g->getIdxPtr(xs,ys);
-   seen.insert(((uint64_t)g->roor(xs)<<32)|g->roor(ys));
+   seen.insert((((uint64_t)g->roor(xs))<<32)|(g->roor(ys)&UINT_MAX));
    return *this;
 }
 
@@ -313,7 +314,7 @@ EllipseIterator & EllipseIterator::operator++() {
 
 EllipseIterator::EllipseIterator(double wrad, double hrad, double x, double y, Grid * g) {
    this->g           = g;
-   this->granularity = g->getUnitSize()/g->getXBlocks();
+   this->granularity = g->getUnitSize()/g->getHighBlocks();
    this->k           = -granularity;
    this->wrad        = wrad;
    this->hrad        = hrad;
@@ -354,7 +355,7 @@ EllipseIterator::EllipseIterator(Entity * e, Grid * g) {
    }
 #endif
    this->g           = g;
-   this->granularity = g->getUnitSize()/g->getXBlocks();
+   this->granularity = g->getUnitSize()/g->getHighBlocks();
    this->k           = -granularity;
    this->wrad        = e->xwid/2.0;
    this->hrad        = e->ywid/2.0;
@@ -379,7 +380,7 @@ EllipseIterator::EllipseIterator(double offx, double offy, Entity * e, Grid * g)
    }
 #endif
    this->g           = g;
-   this->granularity = g->getUnitSize()/g->getXBlocks();
+   this->granularity = g->getUnitSize()/g->getHighBlocks();
    this->k           = -granularity;
    this->wrad        = e->xwid/2.0;
    this->hrad        = e->ywid/2.0;

@@ -14,12 +14,16 @@ class Sample;
 
 class Grid {
 private:
-   Eigen::MatrixXi            blocks;
-   int32_t                    blocksX;
-   int32_t                    blocksY;
-   double                     sizeX;
-   double                     sizeY;
+   int32_t                    blocksXmax;
+   int32_t                    blocksYmax;
+   int32_t                    blocksXmin;
+   int32_t                    blocksYmin;
+   double                     sizeXmax;
+   double                     sizeYmax;
+   double                     sizeXmin;
+   double                     sizeYmin;
    double                     unitSize;
+   Eigen::MatrixXi            blocks;
    std::default_random_engine generator;
    std::set<Entity *>         entities;
    std::set<Sample *>         samples;
@@ -27,6 +31,7 @@ private:
 public:
 
    Grid(double,double,double);
+   Grid(double,double,double,double,double);
    Grid(struct grid_struct *);
 
    /* normal operations */
@@ -48,8 +53,10 @@ public:
    void clear();
    void smooth();
    int  changeUnitSize(double);
-   int  changeSizeX(double);
-   int  changeSizeY(double);
+   int  changeSizeXmax(double);
+   int  changeSizeYmax(double);
+   int  changeSizeXmin(double);
+   int  changeSizeYmin(double);
 
    void  info();
    void  print();
@@ -63,7 +70,7 @@ public:
    double          getUnitSize();
    int *           getIdxPtr(int,int);
    int *           getIdxPtr(double,double);
-   int             getXBlocks();
+   int             getHighBlocks();
 
    int root(double);
    int roob(double);

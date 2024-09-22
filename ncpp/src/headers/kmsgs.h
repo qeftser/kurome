@@ -37,10 +37,14 @@
 #define KUROME_MSG_ALLENTITIES  14
 
 struct grid_struct {
-   int32_t blocksX;
-   int32_t blocksY;
-   double sizeX;
-   double sizeY;
+   int32_t blocksXmax;
+   int32_t blocksYmax;
+   int32_t blocksXmin;
+   int32_t blocksYmin;
+   double sizeXmax;
+   double sizeYmax;
+   double sizeXmin;
+   double sizeYmin;
    double unitSize;
    int matrix[];
 };

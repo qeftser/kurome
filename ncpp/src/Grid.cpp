@@ -2,13 +2,28 @@
 #include "Kurome.h"
 #include <stdio.h>
 
+#define oblocks(x,y) blocks(x-blocksXmin,y-blocksYmin)
+
 Grid::Grid(double unitSize, double sizeX, double sizeY) {
    this->unitSize = unitSize;
-   this->sizeX    = sizeX;
-   this->sizeY    = sizeY;
-   this->blocksX  = root(sizeX);
-   this->blocksY  = root(sizeX);
-   this->blocks = Eigen::MatrixXi(this->blocksX,this->blocksY);
+   blocksXmax = root(sizeX); blocksYmax = root(sizeY);
+   blocksXmin = blocksYmin = 0;
+   sizeXmax = sizeX; sizeYmax = sizeY;
+   sizeXmin = sizeYmin = 0.0;
+   this->blocks = Eigen::MatrixXi(blocksXmax-blocksXmin,blocksYmax-blocksYmin);
+   this->entities = std::set<Entity *>();
+   this->samples = std::set<Sample *>();
+   this->generator = std::default_random_engine(clock());
+   clear();
+}
+
+Grid::Grid(double unitSize, double sizeXmin, double sizeXmax, double sizeYmin, double sizeYmax) {
+   this->unitSize = unitSize;
+   this->sizeXmin = sizeXmin; this->sizeXmax = sizeXmax;
+   this->sizeYmin = sizeYmin; this->sizeYmax = sizeYmax;
+   blocksXmax = root(sizeXmax); blocksYmax = root(sizeYmax);
+   blocksXmin = roob(sizeXmin); blocksYmin = roob(sizeYmin);
+   this->blocks = Eigen::MatrixXi(blocksXmax-blocksXmin,blocksYmax-blocksYmin);
    this->entities = std::set<Entity *>();
    this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
@@ -16,29 +31,29 @@ Grid::Grid(double unitSize, double sizeX, double sizeY) {
 }
 
 void Grid::clear() {
-   for (int i = 0; i < blocksX; ++i)
-      for (int j = 0; j < blocksY; ++j)
+   for (int i = 0; i < blocksXmax-blocksXmin; ++i)
+      for (int j = 0; j < blocksYmax-blocksYmin; ++j)
          blocks(i,j) = KUROME_UNDETERMINED;
 }
 
 /* kinda slow ... */
 void Grid::smooth() {
-   for (int i = 1; i < blocksX-1; ++i)
-      for (int j = 1; j < blocksY-1; ++j)
+   for (int i = 1; i < (blocksXmax-blocksXmin)-1; ++i)
+      for (int j = 1; j < (blocksYmax-blocksYmin)-1; ++j)
          blocks(i,j) = (blocks(i,j)+blocks(i+1,j)+blocks(i-1,j)+blocks(i,j+1)+blocks(i,j-1)+
                         blocks(i+1,j+1)+blocks(i-1,j+1)+blocks(i+1,j-1)+blocks(i-1,j-1)) / 9;
 }
 
 bool Grid::inBounds(double xpos, double ypos) {
-   if (roor(xpos) >= blocksX || roor(ypos) >= blocksY ||
-       roor(xpos) <  0       || roor(ypos) <  0)
+   if (roor(xpos) >= blocksXmax || roor(ypos) >= blocksYmax ||
+       roor(xpos) <  blocksXmin || roor(ypos) <  blocksYmin)
       return false;
    return true;
 }
 
 bool Grid::inBounds(int xpos, int ypos) {
-   if (xpos >= blocksX || xpos < 0 ||
-       ypos >= blocksY || ypos < 0)
+   if (xpos >= blocksXmax || xpos < blocksXmin ||
+       ypos >= blocksYmax || ypos < blocksYmin)
       return false;
    return true;
 }
@@ -52,7 +67,7 @@ int Grid::getIdx(double xpos, double ypos) {
       return -1;
    }
 #endif
-   return blocks(ax,ay);
+   return oblocks(ax,ay);
 }
 
 int Grid::getIdx(double xpos, double ypos, double error) {
@@ -65,7 +80,7 @@ int Grid::getIdx(double xpos, double ypos, double error) {
       return -1;
    }
 #endif
-   return blocks(ax,ay) + r(generator);
+   return oblocks(ax,ay) + r(generator);
 }
 
 int Grid::setIdx(double xpos, double ypos, int val) {
@@ -77,7 +92,7 @@ int Grid::setIdx(double xpos, double ypos, int val) {
       return -1;
    }
 #endif
-   blocks(ax,ay) = avgWeights(val,blocks(ax,ay));
+   oblocks(ax,ay) = avgWeights(val,blocks(ax,ay));
    return 0;
 }
 
@@ -90,7 +105,7 @@ int Grid::setIdx(double xpos, double ypos, int val, double weight) {
       return -1;
    }
 #endif
-   blocks(ax,ay) = (val * weight) + (blocks(ax,ay) * (1.0 - weight));
+   oblocks(ax,ay) = (val * weight) + (oblocks(ax,ay) * (1.0 - weight));
    return 0;
 }
 
@@ -123,16 +138,20 @@ int Grid::roor(double val) {
 void Grid::info() {
    printf("GRID %p :\n",this);
    printf("\tUNIT SIZE: %lf\n",unitSize);
-   printf("\tSIZE X   : %lf\n",sizeX);
-   printf("\tBLOCKS X : %d\n",blocksX);
-   printf("\tSIZE Y   : %lf\n",sizeY);
-   printf("\tBLOCKS Y : %d\n",blocksY);
+   printf("\tSIZE X   : %lf\n",sizeXmax-sizeXmin);
+   printf("\tBLOCKS X : %d\n",blocksXmax-blocksXmin);
+   printf("\tSIZE Y   : %lf\n",sizeYmax-sizeYmin);
+   printf("\tBLOCKS Y : %d\n",blocksYmax-blocksYmin);
+   printf("\tRANGE X  : (%lf, %lf)\n",sizeXmin,sizeXmax);
+   printf("\tRANGE BX : (%d, %d)\n",blocksXmin,blocksXmax);
+   printf("\tRANGE Y  : (%lf, %lf)\n",sizeYmin,sizeYmax);
+   printf("\tRANGE BY : (%d, %d)\n",blocksYmin,blocksYmax);
    printf("\tENTITIES : %lu\n",entities.size());
 }
 
 void Grid::print() {
-   for (int j = 0; j < blocksY; ++j) {
-      for (int i = 0; i < blocksX; ++i) {
+   for (int j = 0; j < blocksYmax-blocksYmin; ++j) {
+      for (int i = 0; i < blocksXmax-blocksXmin; ++i) {
          /*
          if (blocks(i,j) == KUROME_UNDETERMINED) {
             printf("zz\033[0m");
@@ -154,9 +173,12 @@ int Grid::changeUnitSize(double newSize) {
    }
 #endif
    this->unitSize = newSize;
-   this->blocksX = root(this->sizeX);
-   this->blocksY = root(this->sizeY);
-   this->blocks = Eigen::MatrixXi(this->blocksX,this->blocksY);
+   this->blocksXmax = root(this->sizeXmax);
+   this->blocksYmax = root(this->sizeYmax);
+   this->blocksXmin = roob(this->sizeXmin);
+   this->blocksYmin = roob(this->sizeYmin);
+   this->blocks = Eigen::MatrixXi(blocksXmax-blocksXmin,blocksYmax-blocksYmin);
+   clear();
    for (Entity * e : entities) 
       addEntity(e);
    for (Sample * s : samples)
@@ -164,41 +186,77 @@ int Grid::changeUnitSize(double newSize) {
    return 0;
 }
 
-int Grid::changeSizeX(double newX) {
+int Grid::changeSizeXmax(double newX) {
 #ifndef KUROME_NOCHECK
-   if (newX <= 0.0) {
+   if (newX <= sizeXmin) {
       errnok = KUROME_EBADNUM;
       return -1;
    }
 #endif
-   int oldBlocks = this->blocksX;
-   this->sizeX = newX;
-   this->blocksX = root(this->sizeX);
-   blocks.conservativeResize(blocksX,Eigen::NoChange_t());
-   if (blocksX > oldBlocks) {
-      for (int i = oldBlocks; i < blocksX; ++i)
-         for (int j = 0; j < blocksY; ++j)
-            blocks(i,j) = 0;
+   int oldBlocks = this->blocksXmax;
+   this->sizeXmax = newX;
+   this->blocksXmax = root(this->sizeXmax);
+   blocks.conservativeResize(blocksXmax-blocksXmin,Eigen::NoChange_t());
+   if (blocksXmax > oldBlocks) {
+      for (int i = oldBlocks; i < blocksXmax; ++i)
+         for (int j = 0; j < blocksYmax-blocksYmin; ++j)
+            oblocks(i,j) = 0;
    }
    return 0;
 }
 
-int Grid::changeSizeY(double newY) {
+int Grid::changeSizeYmax(double newY) {
 #ifndef KUROME_NOCHECK
-   if (newY <= 0.0) {
+   if (newY <= sizeYmin) {
       errnok = KUROME_EBADNUM;
       return -1;
    }
 #endif
-   int oldBlocks = this->blocksY;
-   this->sizeY = newY;
-   this->blocksY = root(this->sizeY);
-   blocks.conservativeResize(Eigen::NoChange_t(),blocksY);
-   if (blocksY > oldBlocks) {
-      for (int i = 0; i < blocksX; ++i)
-         for (int j = oldBlocks; j < blocksY; ++j)
-            blocks(i,j) = 0;
+   int oldBlocks = this->blocksYmax;
+   this->sizeYmax = newY;
+   this->blocksYmax = root(this->sizeYmax);
+   blocks.conservativeResize(Eigen::NoChange_t(),blocksYmax-blocksYmin);
+   if (blocksYmax > oldBlocks) {
+      for (int i = 0; i < blocksXmax-blocksXmin; ++i)
+         for (int j = oldBlocks; j < blocksYmax; ++j)
+            oblocks(i,j) = 0;
    }
+   return 0;
+}
+
+int Grid::changeSizeXmin(double newX) {
+#ifndef KUROME_NOCHECK
+   if (newX >= sizeXmax) {
+      errnok = KUROME_EBADNUM;
+      return -1;
+   }
+#endif
+   this->sizeXmin = newX;
+   this->blocksXmin = roob(this->sizeXmin);
+   blocks.conservativeResize(blocksXmax-blocksXmin,Eigen::NoChange_t());
+   clear();
+   for (Entity * e : entities) 
+      addEntity(e);
+   for (Sample * s : samples)
+      apply(s);
+   return 0;
+}
+
+int Grid::changeSizeYmin(double newY) {
+#ifndef KUROME_NOCHECK
+   if (newY >= sizeYmax) {
+      errnok = KUROME_EBADNUM;
+      return -1;
+   }
+#endif
+   this->sizeYmin = newY;
+   this->blocksYmin = roob(this->sizeYmin);
+   blocks.conservativeResize(Eigen::NoChange_t(),blocksYmax-blocksYmin);
+   clear();
+   for (Entity * e : entities) 
+      addEntity(e);
+   for (Sample * s : samples)
+      apply(s);
    return 0;
 }
 
@@ -215,7 +273,7 @@ int * Grid::getIdxPtr(double xpos, double ypos) {
       return NULL;
    }
 #endif
-   return &blocks(ax,ay);
+   return &oblocks(ax,ay);
 }
 
 int * Grid::getIdxPtr(int xpos, int ypos) {
@@ -225,7 +283,7 @@ int * Grid::getIdxPtr(int xpos, int ypos) {
       return NULL;
    }
 #endif
-   return &blocks(xpos,ypos);
+   return &oblocks(xpos,ypos);
 }
 
 int Grid::addEntity(Entity * e) {
@@ -243,7 +301,7 @@ int Grid::addEntity(Entity * e) {
          break;
       case KUROME_TYPE_RECT:
          while (!ri.done) {
-            *ri = avgWeights(e->val,*ei);
+            *ri = avgWeights(e->val,*ri);
             ++ri;
          }
          break;
@@ -286,8 +344,9 @@ int Grid::remEntity(Entity * e) {
    return 0;
 }
 
-int Grid::getXBlocks() {
-   return blocksX>blocksY?blocksX:blocksY;
+int Grid::getHighBlocks() {
+   return (blocksXmax-blocksXmin>blocksYmax-blocksYmin
+          ?blocksXmax-blocksXmin:blocksYmax-blocksYmin);
 }
 
 int Grid::apply(Sample * sample) {
@@ -319,29 +378,31 @@ int Grid::apply(Sample * sample) {
 }
 
 int Grid::toStruct(struct grid_struct ** gs) {
-   printf("grid: tostruct call\n");
    (*gs)->unitSize = unitSize;
-   (*gs)->blocksX = blocks.rows();
-   (*gs)->blocksY = blocks.cols();
-   (*gs)->sizeX = sizeX;
-   (*gs)->sizeY = sizeY;
-   int size = sizeof(grid_struct)+(sizeof(int)*(*gs)->blocksX*(*gs)->blocksY);
+   (*gs)->blocksXmax = blocksXmax;
+   (*gs)->blocksYmax = blocksYmax;
+   (*gs)->blocksXmin = blocksXmin;
+   (*gs)->blocksYmin = blocksYmin;
+   (*gs)->sizeXmax = sizeXmax;
+   (*gs)->sizeYmax = sizeYmax;
+   (*gs)->sizeXmin = sizeXmin;
+   (*gs)->sizeYmin = sizeYmin;
+   int size = sizeof(grid_struct)+(sizeof(int)*(blocksXmax-blocksXmin)*(blocksYmax-blocksYmin));
    *gs = (struct grid_struct *)realloc(*gs,size);
-   for (int i = 0; i < (*gs)->blocksX*(*gs)->blocksY; ++i)
-      (*gs)->matrix[i] = blocks(i/(*gs)->blocksX,i%(*gs)->blocksX);
-   printf("grid: size: %d\n",size);
+   for (int i = 0; i < (blocksXmax-blocksXmin)*(blocksYmax-blocksYmin); ++i)
+      (*gs)->matrix[i] = blocks(i/(blocksXmax-blocksXmin),i%(blocksXmax-blocksXmin));
    return size;
 }
 
 Grid::Grid(struct grid_struct * gs)
-   : blocksX(gs->blocksX), blocksY(gs->blocksY), 
-     sizeX(gs->sizeX), sizeY(gs->sizeY), unitSize(gs->unitSize) {
-   this->blocks = Eigen::MatrixXi(this->blocksX,this->blocksY);
+   : blocksXmax(gs->blocksXmax), blocksYmax(gs->blocksYmax), 
+     sizeXmax(gs->sizeXmax), sizeYmax(gs->sizeYmax), unitSize(gs->unitSize) {
+   this->blocks = Eigen::MatrixXi(blocksXmax-blocksXmin,blocksYmax-blocksYmin);
    this->entities = std::set<Entity *>();
    this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
    clear();
-   for (int i = 0; i < gs->blocksX*gs->blocksY; ++i)
-      blocks(i/gs->blocksX,i%gs->blocksX) = gs->matrix[i];
+   for (int i = 0; i < (blocksXmax-blocksXmin)*(blocksYmax-blocksYmin); ++i)
+      blocks(i/(blocksXmax-blocksXmin),i%(blocksXmax-blocksXmin)) = gs->matrix[i];
 }
 
