@@ -287,7 +287,7 @@ int Grid::remEntity(Entity * e) {
 }
 
 int Grid::getXBlocks() {
-   return blocksX;
+   return blocksX>blocksY?blocksX:blocksY;
 }
 
 int Grid::apply(Sample * sample) {

@@ -50,6 +50,7 @@ struct entity_struct {
    double posy;
    double xwid;
    double ywid;
+   double rot;
    int type;
    int val;
 };

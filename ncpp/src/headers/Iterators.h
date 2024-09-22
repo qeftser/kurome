@@ -6,6 +6,35 @@
 
 struct ShapeIteratorInfo { double posx; double posy; int * val; };
 
+#if !KUROME_NOROTATION_RECT && !KUROME_NOROTATION
+
+class RectIterator : public std::iterator<std::input_iterator_tag,int> {
+private:
+   double shiftxx, shiftxy, shiftyx, shiftyy, tshiftxx, tshiftxy;
+   double srtx, srty, endx, endy, posx, posy;
+   int steps, stepx, stepy;
+   Grid * g;
+   std::set<uint64_t> seen;
+   struct ShapeIteratorInfo info;
+   void setupVars(double, double, double, double, double);
+public:
+   bool done;
+   RectIterator() {};
+   RectIterator(double, double, double, double, Grid *);
+   RectIterator(Entity *, Grid *);
+   RectIterator(double, double, Entity *, Grid *);
+   RectIterator(double, double, double, Entity *, Grid *);
+   RectIterator(const RectIterator &);
+   RectIterator& operator++();
+   RectIterator& operator++(int);
+   bool operator==(const RectIterator &);
+   bool operator!=(const RectIterator &);
+   int & operator*();
+   struct ShapeIteratorInfo & locinfo();
+};
+
+#else
+
 class RectIterator : public std::iterator<std::input_iterator_tag,int> {
 private:
    Grid * g;
@@ -19,6 +48,7 @@ public:
    RectIterator(double, double, double, double, Grid *);
    RectIterator(Entity *, Grid *);
    RectIterator(double, double, Entity *, Grid *);
+   RectIterator(double, double, double, Entity *, Grid *);
    RectIterator(const RectIterator &);
    RectIterator& operator++();
    RectIterator& operator++(int);
@@ -27,6 +57,37 @@ public:
    int & operator*();
    struct ShapeIteratorInfo & locinfo();
 };
+
+#endif
+
+#if !KUROME_NOROTATION && !KUROME_NOROTATION_ELPS 
+
+class EllipseIterator : public std::iterator<std::input_iterator_tag,int> {
+private:
+   double shiftx, shifty, granularity;
+   double k, wrad, hrad, xs, ys, xe, ye;
+   double rot, srr, crr, offx, offy;
+   Grid * g;
+   std::set<uint64_t> seen;
+   struct ShapeIteratorInfo info;
+   void setupVars(double, double, double, double, double);
+public:
+   bool done;
+   EllipseIterator() {};
+   EllipseIterator(double, double, double, double, Grid *);
+   EllipseIterator(Entity *, Grid *);
+   EllipseIterator(double, double, Entity *, Grid *);
+   EllipseIterator(double, double, double, Entity *, Grid *);
+   EllipseIterator(const EllipseIterator &);
+   EllipseIterator& operator++();
+   EllipseIterator& operator++(int);
+   bool operator==(const EllipseIterator &);
+   bool operator!=(const EllipseIterator &);
+   int & operator*();
+   struct ShapeIteratorInfo & locinfo();
+};
+
+#else 
 
 class EllipseIterator : public std::iterator<std::input_iterator_tag,int> {
 private:
@@ -41,6 +102,7 @@ public:
    EllipseIterator(double, double, double, double, Grid *);
    EllipseIterator(Entity *, Grid *);
    EllipseIterator(double, double, Entity *, Grid *);
+   EllipseIterator(double, double, double, Entity *, Grid *);
    EllipseIterator(const EllipseIterator &);
    EllipseIterator& operator++();
    EllipseIterator& operator++(int);
@@ -49,5 +111,7 @@ public:
    int & operator*();
    struct ShapeIteratorInfo & locinfo();
 };
+
+#endif
 
 #endif
