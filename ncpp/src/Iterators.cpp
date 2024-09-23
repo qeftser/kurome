@@ -286,7 +286,7 @@ EllipseIterator & EllipseIterator::operator++(void) {
    do {
       ys -= shifty;
       xs -= shiftx;
-      if ((ye - ys) < 0 || (xe - xs) < 0) {
+      if ((ye-ys)*(ye-ys)+(xe-xs)*(xe-xs) < 0.1) {
          k+=granularity;
          if (k > PI) {
             done = true;
