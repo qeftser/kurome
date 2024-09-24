@@ -286,7 +286,7 @@ EllipseIterator & EllipseIterator::operator++(void) {
    do {
       ys -= shifty;
       xs -= shiftx;
-      if ((ye-ys)*(ye-ys)+(xe-xs)*(xe-xs) < 0.1) {
+      if ((ye-ys)*(ye-ys)+(xe-xs)*(xe-xs) < g->getUnitSize()) {
          k+=granularity;
          if (k > PI) {
             done = true;

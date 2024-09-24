@@ -89,7 +89,7 @@ struct mapper_info {
 };
 
 struct agent_values {
-   char addr[16];
+   char addr[52];
    int flags;
    int port;
    long naddr;

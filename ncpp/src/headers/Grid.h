@@ -52,6 +52,7 @@ public:
 
    void clear();
    void smooth();
+   void redraw();
    int  changeUnitSize(double);
    int  changeSizeXmax(double);
    int  changeSizeYmax(double);

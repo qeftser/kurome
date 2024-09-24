@@ -38,10 +38,22 @@ void Grid::clear() {
 
 /* kinda slow ... */
 void Grid::smooth() {
+   Eigen::MatrixXi cpy = Eigen::MatrixXi(blocks.rows(),blocks.cols());
    for (int i = 1; i < (blocksXmax-blocksXmin)-1; ++i)
       for (int j = 1; j < (blocksYmax-blocksYmin)-1; ++j)
-         blocks(i,j) = (blocks(i,j)+blocks(i+1,j)+blocks(i-1,j)+blocks(i,j+1)+blocks(i,j-1)+
+         cpy(i,j) = (blocks(i,j)+blocks(i+1,j)+blocks(i-1,j)+blocks(i,j+1)+blocks(i,j-1)+
                         blocks(i+1,j+1)+blocks(i-1,j+1)+blocks(i+1,j-1)+blocks(i-1,j-1)) / 9;
+   for (int i = 1; i < (blocksXmax-blocksXmin)-1; ++i)
+      for (int j = 1; j < (blocksYmax-blocksYmin)-1; ++j)
+         blocks(i,j) = cpy(i,j);
+}
+
+void Grid::redraw() {
+   clear();
+   for (Entity * e : entities) 
+      addEntity(e);
+   for (Sample * s : samples)
+      apply(s);
 }
 
 bool Grid::inBounds(double xpos, double ypos) {
@@ -178,11 +190,7 @@ int Grid::changeUnitSize(double newSize) {
    this->blocksXmin = roob(this->sizeXmin);
    this->blocksYmin = roob(this->sizeYmin);
    this->blocks = Eigen::MatrixXi(blocksXmax-blocksXmin,blocksYmax-blocksYmin);
-   clear();
-   for (Entity * e : entities) 
-      addEntity(e);
-   for (Sample * s : samples)
-      apply(s);
+   redraw();
    return 0;
 }
 
@@ -197,11 +205,7 @@ int Grid::changeSizeXmax(double newX) {
    this->sizeXmax = newX;
    this->blocksXmax = root(this->sizeXmax);
    blocks.conservativeResize(blocksXmax-blocksXmin,Eigen::NoChange_t());
-   if (blocksXmax > oldBlocks) {
-      for (int i = oldBlocks; i < blocksXmax; ++i)
-         for (int j = 0; j < blocksYmax-blocksYmin; ++j)
-            oblocks(i,j) = 0;
-   }
+   redraw();
    return 0;
 }
 
@@ -216,11 +220,7 @@ int Grid::changeSizeYmax(double newY) {
    this->sizeYmax = newY;
    this->blocksYmax = root(this->sizeYmax);
    blocks.conservativeResize(Eigen::NoChange_t(),blocksYmax-blocksYmin);
-   if (blocksYmax > oldBlocks) {
-      for (int i = 0; i < blocksXmax-blocksXmin; ++i)
-         for (int j = oldBlocks; j < blocksYmax; ++j)
-            oblocks(i,j) = 0;
-   }
+   redraw();
    return 0;
 }
 
@@ -234,11 +234,7 @@ int Grid::changeSizeXmin(double newX) {
    this->sizeXmin = newX;
    this->blocksXmin = roob(this->sizeXmin);
    blocks.conservativeResize(blocksXmax-blocksXmin,Eigen::NoChange_t());
-   clear();
-   for (Entity * e : entities) 
-      addEntity(e);
-   for (Sample * s : samples)
-      apply(s);
+   redraw();
    return 0;
 }
 
@@ -252,11 +248,7 @@ int Grid::changeSizeYmin(double newY) {
    this->sizeYmin = newY;
    this->blocksYmin = roob(this->sizeYmin);
    blocks.conservativeResize(Eigen::NoChange_t(),blocksYmax-blocksYmin);
-   clear();
-   for (Entity * e : entities) 
-      addEntity(e);
-   for (Sample * s : samples)
-      apply(s);
+   redraw();
    return 0;
 }
 

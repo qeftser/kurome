@@ -3,7 +3,7 @@
 
 int main(void) {
 
-   Grid g = Grid(0.075,0,10,0,10);
+   Grid g = Grid(1,0,10,0,10);
 
    Entity e0 = Entity(5,5,2,4,0,KUROME_TYPE_ELPS,40);
    /*
@@ -60,7 +60,7 @@ int main(void) {
    */
    for ( ; ; ) {
       e0.rot += 1;
-      g.changeUnitSize(0.075);
+      g.changeUnitSize(0.05);
       g.print();
       usleep(10000);
    }

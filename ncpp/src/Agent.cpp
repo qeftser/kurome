@@ -10,7 +10,7 @@
  * in the client queue out.
  */
 void kurome_agent_connection(gsock_fd fd, Agent * me) {
-   printf("conn: launch\n");
+   //printf("conn: launch\n");
    ll_queue<std::tuple<KB *,ll_queue<KB *> *>> * agent = &me->reqs;
    ll_queue<KB *> mydata;
    me->conns.insert(&mydata);
@@ -29,23 +29,23 @@ void kurome_agent_connection(gsock_fd fd, Agent * me) {
    struct timeval tv = {0,0};
 
    for ( ; ; ) {
-      printf("conn: loop start\n");
+      //printf("conn: loop start\n");
       uset = lset;
       if ((long)!mydata.empty()|rstate.known|wstate.known)
          vset = wset;
       else
          FD_ZERO(&vset);
       bzero(&tv,sizeof(tv));
-      tv.tv_sec = 5;
+      tv.tv_sec = 1;
       nready = select(fd+1,&uset,&vset,NULL,&tv);
       if (nready == -1)
          perror("select");
 
-      printf("conn: select triggered\n");
+      //printf("conn: select triggered\n");
       if (FD_ISSET(fd,&vset) && (!mydata.empty() || wstate.known)) {
          // handle writing data
          if (!wstate.known) {
-            printf("conn: starting new write\n");
+            //printf("conn: starting new write\n");
             KB * tosend;
             mydata.dequeue(&tosend);
             wstate.state.buf = tosend;
@@ -54,7 +54,7 @@ void kurome_agent_connection(gsock_fd fd, Agent * me) {
             wstate.known = 1;
          }
 
-         printf("conn: writing\n");
+         //printf("conn: writing\n");
          n = gnbwrite(fd,&wstate.state);
          if (n == -1) {
             if (gerror() == GEWOULDBLOCK)
@@ -66,7 +66,7 @@ void kurome_agent_connection(gsock_fd fd, Agent * me) {
 
          if (wstate.state.nr == wstate.state.len) {
             if (wstate.known == 1) {
-               printf("conn: fin writing\n");
+               //printf("conn: fin writing\n");
                free(wstate.state.buf);
                bzero(&wstate,sizeof(wstate));
             }
@@ -76,17 +76,17 @@ breakaway:
       if (FD_ISSET(fd,&uset)) {
          // handle reading data
          if (!rstate.known) {
-            printf("conn: starting new read\n");
+            //printf("conn: starting new read\n");
             rstate.state.buf = malloc(sizeof(kurome_basemsg));
             rstate.state.nr = 0;
             rstate.state.len = sizeof(kurome_basemsg);
             rstate.known = 1;
          }
 
-         printf("conn: reading\n");
+         //printf("conn: reading\n");
          n = gnbread(fd,&rstate.state);
          if (!n) {
-            printf("conn: closing connection\n");
+            //printf("conn: closing connection\n");
             gclose(fd);
             me->conns.erase(&mydata);
             KB * curr;
@@ -106,19 +106,19 @@ breakaway:
 check_readdone:
          if (rstate.state.nr == rstate.state.len) {
             if (rstate.known == 1) {
-               printf("conn: base message read\n");
+               //printf("conn: base message read\n");
                rstate.state.buf = realloc(rstate.state.buf,((KB *)rstate.state.buf)->size);
                rstate.known = 2;
                rstate.state.len = ((KB *)rstate.state.buf)->size;
                goto check_readdone;
             }
             else if (rstate.known == 2) {
-               printf("conn: full message read\n");
+               //printf("conn: full message read\n");
                KB * new_req = (KB *)rstate.state.buf;
                std::tuple res = std::make_tuple(new_req,&mydata);
                agent->enqueue(res);
                bzero(&rstate,sizeof(kurome_msg_transport));
-               printf("conn: finished reading\n");
+               //printf("conn: finished reading\n");
             }
          }
       }
@@ -169,13 +169,13 @@ void kurome_agent_server(int port, Agent * me) {
    setsockopt(broadcastfd,SOL_SOCKET,SO_BROADCAST,&connlen,sizeof(connlen));
 
    for ( ; ; ) {
-      printf("serv: loop start\n");
+      //printf("serv: loop start\n");
       uset = lset;
       bzero(&tv,sizeof(tv));
-      tv.tv_sec = 5;
+      tv.tv_sec = 1;
       nready = select(listenfd+1,&uset,NULL,NULL,&tv);
       if (nready && FD_ISSET(listenfd,&uset)) {
-         printf("serv: accepting new connection\n");
+         //printf("serv: accepting new connection\n");
          connlen = sizeof(connaddr);
          bzero(&connaddr,connlen);
          connfd = gaccept(listenfd,(gsockaddr *)&connaddr,&connlen);
@@ -183,7 +183,7 @@ void kurome_agent_server(int port, Agent * me) {
          connection.detach();
       }
       else {
-         printf("serv: sending new broadcast\n");
+         //printf("serv: sending new broadcast\n");
          broadcastinfo.flags = me->flags;
          sendto(broadcastfd,&broadcastinfo,sizeof(struct agent_discover),0,(gsockaddr *)&broadcastaddr,sizeof(broadcastaddr));
       }

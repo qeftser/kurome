@@ -33,7 +33,7 @@ void reporter_client(Reporter * me) {
    int nready, nfds = broadcastfd, slen, n;
 
    for ( ; ; ) {
-      printf("client: looping\n");
+      //printf("client: looping\n");
       rset = allrset;
       if ((long)!me->reqs.empty()|rstate.known|wstate.known)
          wset = allwset;
@@ -42,10 +42,10 @@ void reporter_client(Reporter * me) {
       bzero(&tv,sizeof(tv));
       tv.tv_sec = 5;
       nready = select(nfds+1,&rset,&wset,NULL,&tv);
-      printf("client: select triggered\n");
+      //printf("client: select triggered\n");
 
       if (FD_ISSET(broadcastfd,&rset)) {
-         printf("client: recieving broadcast\n");
+         //printf("client: recieving broadcast\n");
          slen = sizeof(servaddr);
          recvfrom(broadcastfd,(void *)&discovery,sizeof(discovery),0,(gsockaddr *)&servaddr,(socklen_t *)&slen);
          int exists = 0;
@@ -56,9 +56,9 @@ void reporter_client(Reporter * me) {
             curr = curr->nextptr;
          }
          if (!exists) {
-            printf("client: new broadcast\n");
+            //printf("client: new broadcast\n");
             struct agent_values * newv = (struct agent_values *)calloc(sizeof(struct agent_values),1);
-            inet_ntop(AF_INET,&servaddr.sin_addr.s_addr,(char *)&newv->addr,(socklen_t)16);
+            inet_ntop(AF_INET,&servaddr.sin_addr.s_addr,(char *)&newv->addr,(socklen_t)52);
             newv->naddr = servaddr.sin_addr.s_addr;
             newv->flags = discovery.flags;
             newv->port = discovery.start_port;
@@ -71,7 +71,7 @@ void reporter_client(Reporter * me) {
          if (FD_ISSET(connfd,&wset) && !me->reqs.empty()) {
             // handle writing data
             if (!wstate.known) {
-               printf("client: starting new write\n");
+               //printf("client: starting new write\n");
                KB * tosend;
                me->reqs.dequeue(&tosend);
                wstate.state.buf = tosend;
@@ -80,7 +80,7 @@ void reporter_client(Reporter * me) {
                wstate.known = 1;
             }
 
-            printf("client: writing\n");
+            //printf("client: writing\n");
             n = gnbwrite(connfd,&wstate.state);
             if (n == -1) {
                if (gerror() == GEWOULDBLOCK)
@@ -92,7 +92,7 @@ void reporter_client(Reporter * me) {
 
             if (wstate.state.nr == wstate.state.len) {
                if (wstate.known == 1) {
-                  printf("client: fin writing\n");
+                  //printf("client: fin writing\n");
                   free(wstate.state.buf);
                   bzero(&wstate,sizeof(wstate));
                }
@@ -102,17 +102,17 @@ breakaway:
          if (FD_ISSET(connfd,&rset)) {
             // handle reading data 
             if (!rstate.known) {
-               printf("client: starting new read\n");
+               //printf("client: starting new read\n");
                rstate.state.buf = malloc(sizeof(kurome_basemsg));
                rstate.state.nr = 0;
                rstate.state.len = sizeof(kurome_basemsg);
                rstate.known = 1;
             }
 
-            printf("client: reading\n");
+            //printf("client: reading\n");
             n = gnbread(connfd,&rstate.state);
             if (!n) {
-               printf("client: closing connection\n");
+               //printf("client: closing connection\n");
                gclose(connfd);
                return;
             }
@@ -126,25 +126,25 @@ breakaway:
 
             if (rstate.state.nr == rstate.state.len) {
                if (rstate.known == 1) {
-                  printf("client: base message read\n");
+                  //printf("client: base message read\n");
                   rstate.state.buf = realloc(rstate.state.buf,((KB *)rstate.state.buf)->size);
                   rstate.known = 2;
                   rstate.state.len = ((KB *)rstate.state.buf)->size;
                }
                else if (rstate.known == 2) {
-                  printf("client: full message read\n");
+                  //printf("client: full message read\n");
                   if (me->handlers.count(((KB *)rstate.state.buf)->type))
                      me->handlers.at(((KB *)rstate.state.buf)->type)((KB *)rstate.state.buf,me);
                   free(rstate.state.buf);
                   bzero(&rstate,sizeof(kurome_msg_transport));
-                  printf("client finished reading\n");
+                  //printf("client finished reading\n");
                }
             }
          }
       }
       else {
          if (me->conn) {
-            printf("client: opening connection\n");
+            //printf("client: opening connection\n");
             
             connfd = gsocket(AF_INET,SOCK_STREAM,0);
             if (-1 == connfd)
@@ -165,7 +165,7 @@ breakaway:
             n = fcntl(connfd,F_GETFL,0);
             fcntl(connfd,F_SETFL,n|O_NONBLOCK);
 
-            printf("client: connected\n");
+            //printf("client: connected\n");
          }
       }
    }
