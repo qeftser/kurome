@@ -2,6 +2,13 @@
 #include "Kurome.h"
 #include <fcntl.h>
 
+/*
+ * Connection server for kurome Agent class. Each
+ * open client is handled by an instance of this
+ * function. Mainly read messages coming in and
+ * put them in the server queue, and write messages
+ * in the client queue out.
+ */
 void kurome_agent_connection(gsock_fd fd, Agent * me) {
    printf("conn: launch\n");
    ll_queue<std::tuple<KB *,ll_queue<KB *> *>> * agent = &me->reqs;

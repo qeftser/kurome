@@ -32,7 +32,9 @@ extern int errno_kurome;
  */
 #define PI 3.14159265358
 
+/* convert radians to degrees */
 #define RAD_DEG (180.0/PI)
+/* convert degrees to radians */
 #define DEG_RAD (PI/180.0)
 
 /* All good */
