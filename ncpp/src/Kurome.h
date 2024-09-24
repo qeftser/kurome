@@ -97,6 +97,9 @@ extern int errno_kurome;
 /* waiters have info to send */
 #define KUROME_AFLAG_WAITERINFO 512
 
+/* how long do we sleep between checks? */
+#define KUROME_POLL_DELAY_MS 100
+
 #include "headers/Queues.hpp"
 
 #include "headers/kmsgs.h"

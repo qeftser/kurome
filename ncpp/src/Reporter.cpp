@@ -114,7 +114,20 @@ breakaway:
             if (!n) {
                //printf("client: closing connection\n");
                gclose(connfd);
-               return;
+               me->conn = NULL;
+               FD_CLR(connfd,&allwset);
+               FD_CLR(connfd,&allrset);
+               connfd = 0;
+               if (wstate.known)
+                  free(wstate.state.buf);
+               wstate.known = 0;
+               if (rstate.known)
+                  free(rstate.state.buf);
+               rstate.known = 0;
+               KB * tosend;
+               while (me->reqs.dequeue(&tosend))
+                  free(tosend);
+               continue;
             }
             if (n == -1) {
                if (gerror() == GEWOULDBLOCK)
@@ -135,6 +148,7 @@ breakaway:
                   //printf("client: full message read\n");
                   if (me->handlers.count(((KB *)rstate.state.buf)->type))
                      me->handlers.at(((KB *)rstate.state.buf)->type)((KB *)rstate.state.buf,me);
+                  me->recved.fetch_add(1);
                   free(rstate.state.buf);
                   bzero(&rstate,sizeof(kurome_msg_transport));
                   //printf("client finished reading\n");
@@ -215,4 +229,24 @@ void Reporter::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_MAPPERINFO,kurome_reporter_default_MSG_MAPPERINFO_handler);
    registerHandler(KUROME_MSG_GRID,kurome_reporter_default_MSG_GRID_handler);
    registerHandler(KUROME_MSG_FULLGRID,kurome_reporter_default_MSG_FULLGRID_handler);
+}
+
+void Reporter::connectFirst() {
+   while (!conn) {
+      if (avaliable) 
+         conn = avaliable;
+      std::this_thread::sleep_for(std::chrono::milliseconds(KUROME_POLL_DELAY_MS));
+   }
+}
+
+void Reporter::wait() {
+   wait(recved.load());
+}
+
+void Reporter::wait(uint64_t curr) {
+   while (1) {
+      if (curr != recved.load())
+         return;
+      std::this_thread::sleep_for(std::chrono::milliseconds(KUROME_POLL_DELAY_MS));
+   }
 }

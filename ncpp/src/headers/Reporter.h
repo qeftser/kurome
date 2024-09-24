@@ -15,6 +15,7 @@ public:
    std::shared_ptr<Entity> goal;
    std::unordered_map<int,void (*)(struct kurome_basemsg *, Reporter *)> handlers;
    std::thread cli;
+   std::atomic<uint64_t> recved;
    ll_queue<KB *> reqs;
    std::vector<struct waiter_info> waiters;
    struct mapper_info mapper;
@@ -23,7 +24,7 @@ public:
 
    Reporter() 
       : environment(NULL), full_env(NULL), self(NULL), 
-        goal(NULL), avaliable(NULL), conn(NULL)
+        goal(NULL), recved(0L), avaliable(NULL), conn(NULL)
       { setDefaultHandlers(); };
 
    void launchClient();
@@ -32,6 +33,10 @@ public:
    void setDefaultHandlers();
 
    void kcmdConnect(long naddr);
+   void connectFirst();
+
+   void wait();
+   void wait(uint64_t curr);
 
 };
 
