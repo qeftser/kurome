@@ -125,6 +125,13 @@ check_readdone:
    }
 }
 
+/* 
+ * Main server for the agent. This server is responsible
+ * for spawning client connections and sending the 
+ * broadcast messages. This process takes the port to operate
+ * on and the name of the server, in addition to the Agent to
+ * attach to, as arguments.
+ */
 void kurome_agent_server(int port, std::string name, Agent * me) {
 
    gsock_fd broadcastfd;
@@ -191,6 +198,11 @@ void kurome_agent_server(int port, std::string name, Agent * me) {
    }
 }
 
+/* 
+ * Launch the server with the given flags on the
+ * port that is specified. No name will be attached
+ * to the server.
+ */
 void Agent::launchServer(int port, int flags) {
    this->flags = flags;
    static std::string null = "";
@@ -198,13 +210,24 @@ void Agent::launchServer(int port, int flags) {
    return;
 }
 
+/*
+ * launch the server at the given port with the given flags set.
+ * Bind the name passed to the server.
+ */
 void Agent::launchServer(int port, std::string name, int flags) {
    this->flags = flags;
    serv = std::thread(kurome_agent_server, port, name, this);
    return;
 }
 
+/* 
+ * process the specified number of updates and
+ * apply results according to the message
+ * handlers specified. If no values are passed
+ * for updates it will default to 12.
+ */
 void Agent::updateFromServer(int updates) {
+   updates+=1;
    std::tuple<KB *,ll_queue<KB *> *> lreqs;
    while (reqs.dequeue(&lreqs) && --updates) {
       if (handlers.count(std::get<0>(lreqs)->type))
@@ -212,10 +235,19 @@ void Agent::updateFromServer(int updates) {
    }
 }
 
+/*
+ * Return the euclidean distance between the goal
+ * and self - the agent's current position.
+ */
 double Agent::goalDist(void) {
    return std::sqrt(self.dist2(goal));
 }
 
+/*
+ * register a new handler with the agent server. View
+ * the existing Agent handlers to see how to format
+ * the handler functions.
+ */
 void Agent::registerHandler(int mtype, void (* func)(struct kurome_basemsg *, ll_queue<KB *> *, Agent *)) {
    if (handlers.count(mtype)) {
       handlers.erase(mtype);
@@ -223,6 +255,11 @@ void Agent::registerHandler(int mtype, void (* func)(struct kurome_basemsg *, ll
    handlers.emplace(mtype,func);
 }
 
+/*
+ * Map all the default handlers into the
+ * handlers set for use in the Agent server. This
+ * is called in the Agent constructor.
+ */
 void Agent::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_ADD_ENTITY,kurome_agent_default_MSG_ADD_ENTITY_handler);
    registerHandler(KUROME_MSG_MAPCALLBACK,kurome_agent_default_MSG_MAPCALLBACK_handler);
@@ -238,12 +275,19 @@ void Agent::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_CHGFLAGS,kurome_agent_default_MSG_CHGFLAGS_handler);
 }
 
+/* 
+ * Send all connections an entity
+ */
 void Agent::sendAll(Entity & e) {
    for (ll_queue<KB *> * q : conns) {
       kcmd::entity(e,q);
    }
 }
 
+/*
+ * Send all connections an entity wrapped
+ * in the message type specified.
+ */
 void Agent::sendAll(Entity & e, int mtype) {
    switch (mtype) {
       case KUROME_MSG_ADD_ENTITY:
@@ -284,18 +328,28 @@ void Agent::sendAll(Entity & e, int mtype) {
    }
 }
 
+/*
+ * Send all connections a sample
+ */
 void Agent::sendAll(Sample & s) {
    for (ll_queue<KB *> * q : conns) {
       kcmd::sample(s,q);
    }
 }
 
+/*
+ * send all connections a grid
+ */
 void Agent::sendAll(Grid & g) {
    for (ll_queue<KB *> * q : conns) {
       kcmd::grid(g,q);
    }
 }
 
+/*
+ * send all connections a grid wrapped in the
+ * specified message type.
+ */
 void Agent::sendAll(Grid & g, int mtype) {
    switch (mtype) {
       case KUROME_MSG_GRID:

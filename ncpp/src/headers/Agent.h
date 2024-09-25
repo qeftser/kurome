@@ -32,7 +32,7 @@ public:
 
    void   launchServer(int,int);
    void   launchServer(int,std::string,int);
-   void   updateFromServer(int updates=13);
+   void   updateFromServer(int updates=12);
    void   registerHandler(int, void (*)(struct kurome_basemsg *, ll_queue<KB *> *, Agent *));
 
    void setDefaultHandlers();

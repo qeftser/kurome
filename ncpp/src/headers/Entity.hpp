@@ -26,6 +26,10 @@ public:
    Entity(struct entity_struct * es)
       : posx(es->posx), posy(es->posy), xwid(es->xwid), ywid(es->ywid), rot(es->rot), type(es->type), val(es->val) {}
 
+   /* 
+    * Populate the given struct with the
+    * data from this entity.
+    */
    void toStruct(struct entity_struct * es) {
       es->posx = posx;
       es->posy = posy;
@@ -36,10 +40,18 @@ public:
       es->val  = val;
    }
 
+   /* 
+    * Compute the distance squared between this
+    * Entity and another Entity.
+    */
    double dist2(const Entity & other) {
       return (((other.posx-posx)*(other.posx-posx))+((other.posy-posy)*(other.posy-posy)));
    }
 
+   /*
+    * Copy the data from another
+    * Entity into this one.
+    */
    void operator=(const Entity & other) {
       posx = other.posx;
       posy = other.posy;

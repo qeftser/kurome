@@ -36,6 +36,13 @@
 #define KUROME_MSG_ALLSAMPLES   13
 #define KUROME_MSG_ALLENTITIES  14
 
+/*
+ * Struct to hold all releavant data for the Grid
+ * class. This can be used to construct a new grid
+ * that should match the old one, provided the old
+ * one hasn't changed since it had a struct of it 
+ * generated :)
+ */
 struct grid_struct {
    int32_t blocksXmax;
    int32_t blocksYmax;
@@ -49,6 +56,10 @@ struct grid_struct {
    int matrix[];
 };
 
+/*
+ * Struct to hold all releavant data to
+ * construct an Entity class
+ */
 struct entity_struct {
    double posx;
    double posy;
@@ -59,6 +70,10 @@ struct entity_struct {
    int val;
 };
 
+/*
+ * Struct to hold all releavant data to
+ * construct a Waiter class
+ */
 struct waiter_info {
    char            name[40];
    int             id;
@@ -66,6 +81,10 @@ struct waiter_info {
    struct timespec last;
 };
 
+/*
+ * Struct to hold all releavant data to
+ * construct a Sample class
+ */
 struct sample_struct {
    double unitSize;
    struct entity_struct orgin;
@@ -74,6 +93,10 @@ struct sample_struct {
    int matrix[];
 };
 
+/*
+ * Struct to hold all releavant data to
+ * construct a Frame class
+ */
 struct frame_struct {
    double posx;
    double posy;
@@ -82,12 +105,23 @@ struct frame_struct {
    uint64_t weight;
 };
 
+/*
+ * Provide information about which mapping algorithm
+ * is being used, and what it is currently doing. Handling
+ * this as a client is dependent on knowing the mapping
+ * algorithm and how it functions.
+ */
 struct mapper_info {
    char            name[40];
    int             state;
    struct timespec last;
 };
 
+/*
+ * Hold information about potential
+ * agents to connect to. Used by the 
+ * reporter client.
+ */
 struct agent_values {
    char addr[52];
    char name[12];
@@ -97,25 +131,43 @@ struct agent_values {
    struct agent_values * nextptr;
 };
 
-
+/*
+ * This data is broadcast by the Agent
+ * server and used by reporters to determine
+ * which Agents are avaliable to connect to.
+ */
 struct agent_discover {
    int flags;
    int start_port;
    char name[12];
 };
 
+/*
+ * All other messages 'derive'
+ * from this message.
+ */
 struct kurome_basemsg {
    int type;
    int size;
    char more[];
 };
 
+/* 
+ * Message for passing an
+ * entity between Agent and
+ * Reporter.
+ */
 struct kurome_entitymsg {
    int type;
    int size;
    struct entity_struct e;
 };
 
+/* 
+ * Message for passing a
+ * grid index between Agent and
+ * Reporter.
+ */
 struct kurome_setidxmsg {
    int type;
    int size;
@@ -124,42 +176,77 @@ struct kurome_setidxmsg {
    int    weight;
 };
 
+/* 
+ * Message for passing a
+ * double value from Agent
+ * to Reporter.
+ */
 struct kurome_chgsizemsg {
    int type;
    int size;
    double unitSize;
 };
 
+/* 
+ * Message for passing a
+ * Grid between Agent and 
+ * Reporter
+ */
 struct kurome_gridmsg {
    int type;
    int size;
    struct grid_struct gs;
 };
 
+/* 
+ * Provide info regarding the
+ * Waiters that the Agent is
+ * using
+ */
 struct kurome_waiterinfomsg {
    int type;
    int size;
    struct waiter_info wi;
 };
 
+/* 
+ * Provide info regarding the
+ * Mapper that the Agent is
+ * using
+ */
 struct kurome_mapperinfomsg {
    int type;
    int size;
    struct mapper_info mi;
 };
 
+/*
+ * Message for passing a
+ * Sample from Agent to
+ * Reporter.
+ */
 struct kurome_samplemsg {
    int type;
    int size;
    struct sample_struct s;
 };
 
+/* 
+ * Message for passing an
+ * integer from Agent to
+ * Reporter.
+ */
 struct kurome_flagmsg {
    int type;
    int size;
    int flag;
 };
 
+/*
+ * This is a helper struct to 
+ * keep track of nonblocking reads/writes
+ * of the kurome_*msg struct tyoes
+ */
 typedef struct KUROME_MSG_READ_STATE {
    int    known;
    gnbstate state;

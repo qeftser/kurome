@@ -22,6 +22,10 @@ public:
          values(i/s->blocksX,i%s->blocksX) = s->matrix[i];
    }
 
+   /* 
+    * Map 'realspace' coordinates into the matrix of 
+    * Sample data.
+    */
    int & localVal(double x, double y) {
       static int null = 0;
       null = -1;
@@ -35,6 +39,11 @@ public:
       return values(xp,yp);
    }
 
+   /*
+    * Reallocate and populate the given
+    * sample_struct with the data from
+    * me, the Sample.
+    */
    int toStruct(struct sample_struct ** s) {
       (*s)->unitSize = unitSize;
       orgin.toStruct(&(*s)->orgin);

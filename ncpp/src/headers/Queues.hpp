@@ -7,6 +7,10 @@
 #include <mutex>
 #include <cstdlib>
 
+/*
+ * lock-free queue. 
+ * Untested :/
+ */
 template <typename T>
 class lf_queue {
    struct lf_queue_node {
@@ -24,6 +28,10 @@ public:
    bool empty();
 };
 
+/*
+ * lock based queue.
+ * Untested :/
+ */
 template <typename T>
 class ll_queue {
    struct ll_queue_node {
@@ -51,6 +59,9 @@ struct lf_queue<T>::lf_queue_node * lf_queue<T>::new_node() {
    return ret;
 }
 
+/*
+ * Construct a new queue
+ */
 template <typename T>
 lf_queue<T>::lf_queue() {
    struct lf_queue_node * node = new_node();
@@ -58,6 +69,9 @@ lf_queue<T>::lf_queue() {
    head = tail = node;
 }
 
+/*
+ * Add an element to the queue.
+ */
 template <typename T>
 void lf_queue<T>::enqueue(T val) {
    struct lf_queue_node * node = new_node();
@@ -81,6 +95,9 @@ void lf_queue<T>::enqueue(T val) {
    this->tail.compare_exchange_strong(tail,node);
 }
 
+/*
+ * Remove an element from the queue.
+ */
 template <typename T>
 bool lf_queue<T>::dequeue(T * val) {
    struct lf_queue_node * head;
@@ -108,6 +125,9 @@ bool lf_queue<T>::dequeue(T * val) {
    return true;
 }
 
+/*
+ * Check if the queue contains any more elements.
+ */
 template <typename T>
 bool lf_queue<T>::empty() {
    struct lf_queue_node * head;
@@ -135,6 +155,9 @@ struct ll_queue<T>::ll_queue_node * ll_queue<T>::new_node() {
    return (struct ll_queue_node *)calloc(sizeof(struct ll_queue_node),1);
 }
 
+/*
+ * Construct a new queue
+ */
 template <typename T>
 ll_queue<T>::ll_queue()
    : hmutex(std::mutex()), tmutex(std::mutex()) {
@@ -143,6 +166,9 @@ ll_queue<T>::ll_queue()
    head = tail = node;
 }
 
+/*
+ * Add an element to the queue.
+ */
 template <typename T>
 void ll_queue<T>::enqueue(T val) {
    struct ll_queue_node * node = new_node();
@@ -154,6 +180,9 @@ void ll_queue<T>::enqueue(T val) {
    tmutex.unlock();
 }
 
+/*
+ * Remove an element from the queue.
+ */
 template <typename T>
 bool ll_queue<T>::dequeue(T * val) {
    hmutex.lock();
@@ -170,6 +199,9 @@ bool ll_queue<T>::dequeue(T * val) {
    return true;
 }
 
+/*
+ * Check if the queue contains any more elements.
+ */
 template <typename T>
 bool ll_queue<T>::empty() {
    hmutex.lock();
