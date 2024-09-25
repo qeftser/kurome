@@ -62,7 +62,7 @@ int main(void) {
       e0.rot += 1;
       g.changeUnitSize(0.05);
       g.print();
-      usleep(10000);
+      usleep(50000);
    }
 
    return 0;

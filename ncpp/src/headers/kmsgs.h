@@ -90,6 +90,7 @@ struct mapper_info {
 
 struct agent_values {
    char addr[52];
+   char name[12];
    int flags;
    int port;
    long naddr;
@@ -100,6 +101,7 @@ struct agent_values {
 struct agent_discover {
    int flags;
    int start_port;
+   char name[12];
 };
 
 struct kurome_basemsg {

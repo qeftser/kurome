@@ -21,13 +21,14 @@ int main(void) {
    Agent OO7 = Agent(me,goal,*m,g);
    OO7.waiters.push_back(w);
 
-   OO7.launchServer(0xffffffff,12333);
+   OO7.launchServer(0xffffffff,"brainless",12333);
    printf("user: server launched\n");
 
-   sleep(25);
-   printf("user: done sleeping\n");
-
-   OO7.updateFromServer();
+   for ( ; ; ) {
+      printf("cycle\n");
+      OO7.updateFromServer();
+      usleep(10000);
+   }
 
    sleep(40);
 

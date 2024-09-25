@@ -125,7 +125,7 @@ check_readdone:
    }
 }
 
-void kurome_agent_server(int port, Agent * me) {
+void kurome_agent_server(int port, std::string name, Agent * me) {
 
    gsock_fd broadcastfd;
    gsock_fd listenfd;
@@ -139,6 +139,7 @@ void kurome_agent_server(int port, Agent * me) {
    struct agent_discover broadcastinfo;
    bzero(&broadcastinfo,sizeof(struct agent_discover));
    broadcastinfo.start_port = port;
+   strncpy(broadcastinfo.name,name.c_str(),11);
 
    gsockaddr_in listenaddr;
    listenaddr.sin_family = AF_INET;
@@ -191,8 +192,15 @@ void kurome_agent_server(int port, Agent * me) {
 }
 
 void Agent::launchServer(int port, int flags) {
-   flags = flags;
-   serv = std::thread(kurome_agent_server, port, this);
+   this->flags = flags;
+   static std::string null = "";
+   serv = std::thread(kurome_agent_server, port, null, this);
+   return;
+}
+
+void Agent::launchServer(int port, std::string name, int flags) {
+   this->flags = flags;
+   serv = std::thread(kurome_agent_server, port, name, this);
    return;
 }
 

@@ -36,13 +36,13 @@ void kurome_agent_default_MSG_CHGUNITSIZE_handler(KB * msg, ll_queue<KB *> * fro
 
 void kurome_agent_default_MSG_CHG_XBLOCKS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
    struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-   me->environment.changeSizeX(csm->unitSize);
+   me->environment.changeSizeXmax(csm->unitSize);
    kcmd::chgX(csm->unitSize,from);
 }
 
 void kurome_agent_default_MSG_CHG_YBLOCKS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
    struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-   me->environment.changeSizeY(csm->unitSize);
+   me->environment.changeSizeYmax(csm->unitSize);
    kcmd::chgY(csm->unitSize,from);
 }
 
@@ -129,14 +129,14 @@ void kurome_reporter_default_MSG_CHGUNITSIZE_handler(KB * msg, Reporter * me) {
 void kurome_reporter_default_MSG_CHG_XBLOCKS_handler(KB * msg, Reporter * me) {
    if (me->environment) {
       struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-      me->environment->changeSizeX(csm->unitSize);
+      me->environment->changeSizeXmax(csm->unitSize);
    }
 }
 
 void kurome_reporter_default_MSG_CHG_YBLOCKS_handler(KB * msg, Reporter * me) {
    if (me->environment) {
       struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-      me->environment->changeSizeY(csm->unitSize);
+      me->environment->changeSizeYmax(csm->unitSize);
    }
 }
 

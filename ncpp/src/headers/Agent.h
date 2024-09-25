@@ -31,6 +31,7 @@ public:
    double goalDist();
 
    void   launchServer(int,int);
+   void   launchServer(int,std::string,int);
    void   updateFromServer(int updates=13);
    void   registerHandler(int, void (*)(struct kurome_basemsg *, ll_queue<KB *> *, Agent *));
 

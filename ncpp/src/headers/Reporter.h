@@ -32,8 +32,10 @@ public:
    void registerHandler(int, void (*)(struct kurome_basemsg *, Reporter *));
    void setDefaultHandlers();
 
-   void kcmdConnect(long naddr);
+   int connect(long naddr);
+   int connect(char * name);
    void connectFirst();
+   void disconnectClient();
 
    void wait();
    void wait(uint64_t curr);

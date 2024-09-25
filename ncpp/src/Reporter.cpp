@@ -41,6 +41,8 @@ void reporter_client(Reporter * me) {
          FD_ZERO(&wset);
       bzero(&tv,sizeof(tv));
       tv.tv_sec = 5;
+      if (connfd && !me->conn)
+         goto close;
       nready = select(nfds+1,&rset,&wset,NULL,&tv);
       //printf("client: select triggered\n");
 
@@ -62,6 +64,7 @@ void reporter_client(Reporter * me) {
             newv->naddr = servaddr.sin_addr.s_addr;
             newv->flags = discovery.flags;
             newv->port = discovery.start_port;
+            strncpy(newv->name,discovery.name,11);
             newv->nextptr = me->avaliable;
             me->avaliable = newv;
          }
@@ -112,6 +115,7 @@ breakaway:
             //printf("client: reading\n");
             n = gnbread(connfd,&rstate.state);
             if (!n) {
+close:
                //printf("client: closing connection\n");
                gclose(connfd);
                me->conn = NULL;
@@ -185,7 +189,6 @@ breakaway:
    }
 }
 
-
 void Reporter::launchClient() {
    cli = std::thread (reporter_client, this);
 }
@@ -194,15 +197,32 @@ void Reporter::clientSend(KB * req) {
    reqs.enqueue(req);
 }
 
-void Reporter::kcmdConnect(long naddr) {
+int Reporter::connect(long naddr) {
    struct agent_values * curr = avaliable;
    while (curr) {
       if (curr->naddr == naddr) {
          conn = curr;
-         return;
+         return 1;
       }
       curr = curr->nextptr;
    }
+   return 0;
+}
+
+int Reporter::connect(char * name) {
+   struct agent_values * curr = avaliable;
+   while (curr) {
+      if (!strcmp(curr->name,name)) {
+         conn = curr;
+         return 1;
+      }
+      curr = curr->nextptr;
+   }
+   return 0;
+}
+
+void Reporter::disconnectClient() {
+   conn = NULL;
 }
 
 void Reporter::registerHandler(int mtype, void (* func)(struct kurome_basemsg *, Reporter *)) {
