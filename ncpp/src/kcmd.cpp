@@ -133,7 +133,7 @@ void kcmd::getMapperInfo(khandle * reqs) {
 }
 
 void kcmd::getWaiterInfo(khandle * reqs) {
-   kurome_base_req_base(reqs,KUROME_MSG_GETWAITER);
+   kurome_base_req_base(reqs,KUROME_MSG_GETWAITERS);
 }
 
 void kcmd::allSamples(khandle * reqs) {

@@ -231,7 +231,10 @@ void Agent::updateFromServer(int updates) {
    std::tuple<KB *,ll_queue<KB *> *> lreqs;
    while (reqs.dequeue(&lreqs) && --updates) {
       if (handlers.count(std::get<0>(lreqs)->type))
-         handlers.at(std::get<0>(lreqs)->type)(std::get<0>(lreqs),std::get<1>(lreqs),this);
+         handlers.at(std::get<0>(lreqs)->type)(std::get<0>(lreqs),std::get<1>(lreqs),
+                    (handlerData.count(std::get<0>(lreqs)->type) ?
+                     handlerData.at(std::get<0>(lreqs)->type) :
+                     this));
    }
 }
 
@@ -248,11 +251,22 @@ double Agent::goalDist(void) {
  * the existing Agent handlers to see how to format
  * the handler functions.
  */
-void Agent::registerHandler(int mtype, void (* func)(struct kurome_basemsg *, ll_queue<KB *> *, Agent *)) {
+void Agent::registerHandler(int mtype, void (* func)(struct kurome_basemsg *, ll_queue<KB *> *, void *)) {
    if (handlers.count(mtype)) {
       handlers.erase(mtype);
    }
    handlers.emplace(mtype,func);
+}
+
+/* register data to be passed to a given handler when it is
+ * called. If there is no entry here, the agent will be provided
+ * to the handler data slot as a default
+ */
+void Agent::registerHandlerData(int mtype, void * data) {
+   if (handlerData.count(mtype)) {
+      handlerData.erase(mtype);
+   }
+   handlerData.emplace(mtype,data);
 }
 
 /*

@@ -20,7 +20,8 @@ public:
    std::thread serv;
    ll_queue<std::tuple<KB *,khandle *>> reqs;
    std::set<khandle *>conns;
-   std::unordered_map<int,void (*)(KB *, khandle *, Agent *)> handlers;
+   std::unordered_map<int,void (*)(KB *, khandle *, void *)> handlers;
+   std::unordered_map<int,void *> handlerData;
 
    Agent(Entity & self, Entity & goal, Mapper & mapper, Grid & env)
       : self(self), goal(goal), mapper(mapper), environment(env), full_env(NULL) { 
@@ -33,7 +34,8 @@ public:
    void   launchServer(int,int);
    void   launchServer(int,std::string,int);
    void   updateFromServer(int updates=12);
-   void   registerHandler(int, void (*)(KB *, khandle *, Agent *));
+   void   registerHandler(int, void (*)(KB *, khandle *, void *));
+   void   registerHandlerData(int, void *);
 
    void setDefaultHandlers();
    void sendAll(Entity &);

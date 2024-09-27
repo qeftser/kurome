@@ -151,7 +151,10 @@ close:
                else if (rstate.known == 2) {
                   //printf("client: full message read\n");
                   if (me->handlers.count(((KB *)rstate.state.buf)->type))
-                     me->handlers.at(((KB *)rstate.state.buf)->type)((KB *)rstate.state.buf,me);
+                     me->handlers.at(((KB *)rstate.state.buf)->type)((KB *)rstate.state.buf,
+                                    (me->handlerData.count(((KB *)rstate.state.buf)->type) ?
+                                     me->handlerData.at(((KB *)rstate.state.buf)->type) :
+                                     me));
                   me->recved.fetch_add(1);
                   free(rstate.state.buf);
                   bzero(&rstate,sizeof(kurome_msg_transport));
@@ -241,11 +244,18 @@ void Reporter::disconnectClient() {
    conn = NULL;
 }
 
-void Reporter::registerHandler(int mtype, void (* func)(struct kurome_basemsg *, Reporter *)) {
+void Reporter::registerHandler(int mtype, void (* func)(struct kurome_basemsg *, void *)) {
    if (handlers.count(mtype)) {
       handlers.erase(mtype);
    }
    handlers.emplace(mtype,func);
+}
+
+void Reporter::registerHandlerData(int mtype, void * data) {
+   if (handlerData.count(mtype)) {
+      handlerData.erase(mtype);
+   }
+   handlerData.emplace(mtype,data);
 }
 
 void Reporter::setDefaultHandlers(void) {

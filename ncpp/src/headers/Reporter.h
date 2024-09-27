@@ -13,7 +13,8 @@ public:
    std::shared_ptr<Grid> full_env;
    std::shared_ptr<Entity> self;
    std::shared_ptr<Entity> goal;
-   std::unordered_map<int,void (*)(struct kurome_basemsg *, Reporter *)> handlers;
+   std::unordered_map<int,void (*)(struct kurome_basemsg *, void *)> handlers;
+   std::unordered_map<int,void *> handlerData;
    std::thread cli;
    std::atomic<uint64_t> recved;
    khandle reqs;
@@ -31,7 +32,8 @@ public:
 
    void launchClient();
    void clientSend(KB *);
-   void registerHandler(int, void (*)(struct kurome_basemsg *, Reporter *));
+   void registerHandler(int, void (*)(struct kurome_basemsg *, void *));
+   void registerHandlerData(int, void *);
    void setDefaultHandlers();
 
    /* handle connections */
