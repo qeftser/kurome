@@ -273,6 +273,12 @@ void Agent::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_CHGSELF,kurome_agent_default_MSG_CHGSELF_handler);
    registerHandler(KUROME_MSG_CHGGOAL,kurome_agent_default_MSG_CHGGOAL_handler);
    registerHandler(KUROME_MSG_CHGFLAGS,kurome_agent_default_MSG_CHGFLAGS_handler);
+   registerHandler(KUROME_MSG_FCLEAR,kurome_agent_default_MSG_FCLEAR_handler);
+   registerHandler(KUROME_MSG_FCLENSE,kurome_agent_default_MSG_FCLENSE_handler);
+   registerHandler(KUROME_MSG_FCHGENTITY,kurome_agent_default_MSG_FCHGENTITY_handler);
+   registerHandler(KUROME_MSG_FREMENTITY,kurome_agent_default_MSG_FREMENTITY_handler);
+   registerHandler(KUROME_MSG_FADD_ENTITY,kurome_agent_default_MSG_FADD_ENTITY_handler);
+   registerHandler(KUROME_MSG_CLENSE,kurome_agent_default_MSG_CLENSE_handler);
 }
 
 /* 

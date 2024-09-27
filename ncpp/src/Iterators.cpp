@@ -1,7 +1,8 @@
 
 #include "Kurome.h"
 
-int errno_kurome;
+int errno_kurome = 0;
+int KUROME_ENTITY_ID_NUM = 0;
 
 #define KUROME_NOROTATION_RECT 0
 

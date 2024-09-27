@@ -44,6 +44,7 @@ public:
    int  setIdx(double,double,int,double);
 
    int  addEntity(Entity *);
+   int  chgEntity(Entity *);
    int  remEntity(Entity *);
    int  apply(Sample *);
 
@@ -53,6 +54,7 @@ public:
    void clear();
    void smooth();
    void redraw();
+   void clense();
    int  changeUnitSize(double);
    int  changeSizeXmax(double);
    int  changeSizeYmax(double);
@@ -68,16 +70,18 @@ public:
    Eigen::MatrixXi slice(int,int,int,int);
    Eigen::MatrixXi slice(double,double,double,double);
    
-   double          getUnitSize();
-   int *           getIdxPtr(int,int);
-   int *           getIdxPtr(double,double);
-   int             getHighBlocks();
+   double getUnitSize();
+   int *  getIdxPtr(int,int);
+   int *  getIdxPtr(double,double);
+   int    getHighBlocks();
 
    int root(double);
    int roob(double);
    int roor(double);
 
    int toStruct(struct grid_struct **);
+
+   friend class Reporter;
 };
 
 #endif

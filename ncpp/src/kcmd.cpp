@@ -16,12 +16,12 @@ void kurome_entity_req_base(Entity & e, ll_queue<KB *> * reqs, int mtype) {
    reqs->enqueue((KB *)msg);
 }
 
-void kurome_flags_req_base(int flags, ll_queue<KB *> * reqs, int mtype) {
-   struct kurome_flagmsg * fm = (struct kurome_flagmsg *)malloc(sizeof(struct kurome_flagmsg));
-   fm->type = mtype;
-   fm->size = sizeof(struct kurome_flagmsg);
-   fm->flag = flags;
-   reqs->enqueue((KB *)fm);
+void kurome_int_req_base(int val, ll_queue<KB *> * reqs, int mtype) {
+   struct kurome_intmsg * im = (struct kurome_intmsg *)malloc(sizeof(struct kurome_intmsg));
+   im->type = mtype;
+   im->size = sizeof(struct kurome_intmsg);
+   im->val = val;
+   reqs->enqueue((KB *)im);
 }
 
 void kurome_base_req_base(ll_queue<KB *> * reqs, int mtype) {
@@ -31,12 +31,12 @@ void kurome_base_req_base(ll_queue<KB *> * reqs, int mtype) {
    reqs->enqueue(bm);
 }
 
-void kurome_chg_req_base(double val, ll_queue<KB *> * reqs, int mtype) {
-   struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)malloc(sizeof(struct kurome_chgsizemsg));
-   csm->type = mtype;
-   csm->size = sizeof(struct kurome_chgsizemsg);
-   csm->unitSize = val;
-   reqs->enqueue((KB *)csm);
+void kurome_double_req_base(double val, ll_queue<KB *> * reqs, int mtype) {
+   struct kurome_doublemsg * dsm = (struct kurome_doublemsg *)malloc(sizeof(struct kurome_doublemsg));
+   dsm->type = mtype;
+   dsm->size = sizeof(struct kurome_doublemsg);
+   dsm->val = val;
+   reqs->enqueue((KB *)dsm);
 }
 
 void kurome_grid_req_base(Grid & g, ll_queue<KB *> * reqs, int mtype) {
@@ -54,7 +54,19 @@ void kcmd::addEntity(Entity & e, ll_queue<KB *> * reqs) {
    kurome_entity_req_base(e,reqs,KUROME_MSG_ADD_ENTITY);
 }
 
+void kcmd::fAddEntity(Entity & e, ll_queue<KB *> * reqs) {
+   kurome_entity_req_base(e,reqs,KUROME_MSG_FADD_ENTITY);
+}
+
 void kcmd::entity(Entity & e, ll_queue<KB *> * reqs) {
+   kurome_entity_req_base(e,reqs,KUROME_MSG_ENTITY);
+}
+
+void kcmd::fChgEntity(Entity & e, ll_queue<KB *> * reqs) {
+   kurome_entity_req_base(e,reqs,KUROME_MSG_ENTITY);
+}
+
+void kcmd::fRemEntity(Entity & e, ll_queue<KB *> * reqs) {
    kurome_entity_req_base(e,reqs,KUROME_MSG_ENTITY);
 }
 
@@ -75,11 +87,11 @@ void kcmd::chgGoal(Entity & e, ll_queue<KB *> * reqs) {
 }
 
 void kcmd::chgFlags(int flags, ll_queue<KB *> * reqs) {
-   kurome_flags_req_base(flags,reqs,KUROME_MSG_CHGFLAGS);
+   kurome_int_req_base(flags,reqs,KUROME_MSG_CHGFLAGS);
 }
 
 void kcmd::mapCallback(int flags, ll_queue<KB *> * reqs) {
-   kurome_flags_req_base(flags,reqs,KUROME_MSG_MAPCALLBACK);
+   kurome_int_req_base(flags,reqs,KUROME_MSG_MAPCALLBACK);
 }
 
 void kcmd::setIdx(double xpos, double ypos, int weight, ll_queue<KB *> * reqs) {
@@ -96,6 +108,18 @@ void kcmd::clear(ll_queue<KB *> * reqs) {
    kurome_base_req_base(reqs,KUROME_MSG_CLEAR);
 }
 
+void kcmd::fClear(ll_queue<KB *> * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_FCLEAR);
+}
+
+void kcmd::clense(ll_queue<KB *> * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_CLENSE);
+}
+
+void kcmd::fClense(ll_queue<KB *> * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_FCLENSE);
+}
+
 void kcmd::allSamples(ll_queue<KB *> * reqs) {
    kurome_base_req_base(reqs,KUROME_MSG_ALLSAMPLES);
 }
@@ -105,15 +129,15 @@ void kcmd::allEntities(ll_queue<KB *> * reqs) {
 }
 
 void kcmd::chgUnits(double units, ll_queue<KB *> * reqs) {
-   kurome_chg_req_base(units,reqs,KUROME_MSG_CHG_UNITSIZE);
+   kurome_double_req_base(units,reqs,KUROME_MSG_CHG_UNITSIZE);
 }
 
 void kcmd::chgX(double x, ll_queue<KB *> * reqs) {
-   kurome_chg_req_base(x,reqs,KUROME_MSG_CHG_XBLOCKS);
+   kurome_double_req_base(x,reqs,KUROME_MSG_CHG_XBLOCKS);
 }
 
 void kcmd::chgY(double y, ll_queue<KB *> * reqs) {
-   kurome_chg_req_base(y,reqs,KUROME_MSG_CHG_YBLOCKS);
+   kurome_double_req_base(y,reqs,KUROME_MSG_CHG_YBLOCKS);
 }
 
 void kcmd::getGrid(ll_queue<KB *> * reqs) {

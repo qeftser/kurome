@@ -4,6 +4,8 @@
 #define KUROME_ENTITY_CLASS
 #include "kmsgs.h"
 
+extern int KUROME_ENTITY_ID_NUM;
+
 class Entity {
 public:
    double posx;
@@ -13,18 +15,31 @@ public:
    double rot;
    int    type;
    int    val;
+   int    id;
    
    Entity(double posx, double posy, double xwid, double ywid, int type, int val) 
-      : posx(posx), posy(posy), xwid(xwid), ywid(ywid), rot(0.0), type(type), val(val) {}
+      : posx(posx), posy(posy), xwid(xwid), ywid(ywid), rot(0.0), type(type), val(val) {
+         KUROME_ENTITY_ID_NUM++;
+         id = KUROME_ENTITY_ID_NUM;
+      }
 
    Entity(double posx, double posy, double xwid, double ywid, double rot, int type, int val) 
-      : posx(posx), posy(posy), xwid(xwid), ywid(ywid), rot(rot), type(type), val(val) {}
+      : posx(posx), posy(posy), xwid(xwid), ywid(ywid), rot(rot), type(type), val(val) {
+         KUROME_ENTITY_ID_NUM++;
+         id = KUROME_ENTITY_ID_NUM;
+      }
 
    Entity(double xwid, double ywid, int type) 
-      : posx(0), posy(0), xwid(xwid), ywid(ywid), rot(0.0), type(type), val(0) {}
+      : posx(0), posy(0), xwid(xwid), ywid(ywid), rot(0.0), type(type), val(0) {
+         KUROME_ENTITY_ID_NUM++;
+         id = KUROME_ENTITY_ID_NUM;
+      }
 
    Entity(struct entity_struct * es)
-      : posx(es->posx), posy(es->posy), xwid(es->xwid), ywid(es->ywid), rot(es->rot), type(es->type), val(es->val) {}
+      : posx(es->posx), posy(es->posy), xwid(es->xwid), ywid(es->ywid), rot(es->rot), type(es->type), val(es->val) {
+         KUROME_ENTITY_ID_NUM++;
+         id = es->id;
+      }
 
    /* 
     * Populate the given struct with the
@@ -38,6 +53,7 @@ public:
       es->rot  = rot;
       es->type = type;
       es->val  = val;
+      es->id   = id;
    }
 
    /* 
@@ -60,6 +76,7 @@ public:
       rot  = other.rot;
       type = other.type;
       val  = other.val;
+      id   = other.id;
    }
 };
 

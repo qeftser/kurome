@@ -11,9 +11,17 @@ public:
    Entity          orgin;
    Eigen::MatrixXi values;
    double unitSize;
+   int crr, srr;
+   int ssx, ssy;
    
    Sample(Entity e, Eigen::MatrixXi m, double d) 
-      : orgin(e), values(m), unitSize(d) { values.setZero(); };
+      : orgin(e), values(m), unitSize(d) { 
+         values.setZero(); 
+         srr = sin((-e.rot)*(180.0/3.14159265358));
+         crr = cos((-e.rot)*(180.0/3.14159265358));
+         ssx = (e.posx-(e.xwid/2));
+         ssy = (e.posy-(e.ywid/2));
+      };
    Sample() 
       : orgin(Entity(0,0,0,0,0,0)), values(Eigen::MatrixXi(0,0)), unitSize(0) {}
    Sample(struct sample_struct * s) 
@@ -29,8 +37,10 @@ public:
    int & localVal(double x, double y) {
       static int null = 0;
       null = -1;
-      x -= (orgin.posx-(orgin.xwid/2));
-      y -= (orgin.posy-(orgin.ywid/2));
+      x -= ssx;
+      y -= ssy;
+      x = (x * crr) - (y * srr);
+      y = (x * srr) + (y * crr);
       int xp = (int)std::round(x/unitSize);
       int yp = (int)std::round(y/unitSize);
       if (xp >= values.rows() || xp < 0 ||

@@ -11,8 +11,8 @@ void kurome_agent_default_MSG_ADD_ENTITY_handler(KB * msg, ll_queue<KB *> * from
 }
 
 void kurome_agent_default_MSG_MAPCALLBACK_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
-   struct kurome_flagmsg * fm = (struct kurome_flagmsg *)msg;
-   me->mapper.callback(fm->flag);
+   struct kurome_intmsg * fm = (struct kurome_intmsg *)msg;
+   me->mapper.callback(fm->val);
    kcmd::mapperInfo(me->mapper,from);
 }
 
@@ -29,21 +29,21 @@ void kurome_agent_default_MSG_CLEAR_handler(KB * msg, ll_queue<KB *> * from, Age
 }
 
 void kurome_agent_default_MSG_CHGUNITSIZE_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
-   struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-   me->environment.changeUnitSize(csm->unitSize);
-   kcmd::chgUnits(csm->unitSize,from);
+   struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
+   me->environment.changeUnitSize(csm->val);
+   kcmd::chgUnits(csm->val,from);
 }
 
 void kurome_agent_default_MSG_CHG_XBLOCKS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
-   struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-   me->environment.changeSizeXmax(csm->unitSize);
-   kcmd::chgX(csm->unitSize,from);
+   struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
+   me->environment.changeSizeXmax(csm->val);
+   kcmd::chgX(csm->val,from);
 }
 
 void kurome_agent_default_MSG_CHG_YBLOCKS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
-   struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-   me->environment.changeSizeYmax(csm->unitSize);
-   kcmd::chgY(csm->unitSize,from);
+   struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
+   me->environment.changeSizeYmax(csm->val);
+   kcmd::chgY(csm->val,from);
 }
 
 void kurome_agent_default_MSG_GET_GRID_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
@@ -73,8 +73,8 @@ void kurome_agent_default_MSG_CHGGOAL_handler(KB * msg, ll_queue<KB *> * from, A
 
 void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
    (void)from;
-   struct kurome_flagmsg * fm = (struct kurome_flagmsg *)msg;
-   me->flags = fm->flag;
+   struct kurome_intmsg * fm = (struct kurome_intmsg *)msg;
+   me->flags = fm->val;
 }
 
 /* not sure how to do these at the moment */
@@ -85,6 +85,44 @@ void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, ll_queue<KB *> * from
 void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
 }
 */
+
+void kurome_agent_default_MSG_FADD_ENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+   struct kurome_entitymsg * em = (struct kurome_entitymsg *)msg;
+   if (me->full_env)
+      me->full_env->addEntity(new Entity(&em->e));
+}
+
+void kurome_agent_default_MSG_FCLEAR_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+   if (me->full_env)
+      me->full_env->clear();
+}
+
+void kurome_agent_default_MSG_FCLENSE_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+   if (me->full_env)
+      me->full_env->clense();
+}
+
+void kurome_agent_default_MSG_FCHGENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+   struct kurome_entitymsg * em = (struct kurome_entitymsg *)msg;
+   if (me->full_env) {
+      Entity e = Entity(&em->e);
+      me->full_env->chgEntity(&e);
+   }
+}
+
+void kurome_agent_default_MSG_FREMENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+   struct kurome_entitymsg * em = (struct kurome_entitymsg *)msg;
+   if (me->full_env) {
+      Entity e = Entity(&em->e);
+      me->full_env->remEntity(&e);
+   }
+}
+
+void kurome_agent_default_MSG_CLENSE_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+   me->environment.clense();
+   kcmd::clense(from);
+}
+
 
 /* default reporter handlers */
 
@@ -119,24 +157,31 @@ void kurome_reporter_default_MSG_CLEAR_handler(KB * msg, Reporter * me) {
    }
 }
 
+void kurome_reporter_default_MSG_CLENSE_handler(KB * msg, Reporter * me) {
+   (void)msg;
+   if (me->environment) {
+      me->environment->clense();
+   }
+}
+
 void kurome_reporter_default_MSG_CHGUNITSIZE_handler(KB * msg, Reporter * me) {
    if (me->environment) {
-      struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-      me->environment->changeUnitSize(csm->unitSize);
+      struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
+      me->environment->changeUnitSize(csm->val);
    }
 }
 
 void kurome_reporter_default_MSG_CHG_XBLOCKS_handler(KB * msg, Reporter * me) {
    if (me->environment) {
-      struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-      me->environment->changeSizeXmax(csm->unitSize);
+      struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
+      me->environment->changeSizeXmax(csm->val);
    }
 }
 
 void kurome_reporter_default_MSG_CHG_YBLOCKS_handler(KB * msg, Reporter * me) {
    if (me->environment) {
-      struct kurome_chgsizemsg * csm = (struct kurome_chgsizemsg *)msg;
-      me->environment->changeSizeYmax(csm->unitSize);
+      struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
+      me->environment->changeSizeYmax(csm->val);
    }
 }
 

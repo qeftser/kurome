@@ -32,6 +32,12 @@ public:
    static void mapperInfo(Mapper &, ll_queue<KB *> *);
    static void grid(Grid &, ll_queue<KB *> *);
    static void fullGrid(Grid &, ll_queue<KB *> *);
+   static void fAddEntity(Entity &, ll_queue<KB *> *);
+   static void fChgEntity(Entity &, ll_queue<KB *> *);
+   static void fRemEntity(Entity &, ll_queue<KB *> *);
+   static void fClear(ll_queue<KB *> *);
+   static void clense(ll_queue<KB *> *);
+   static void fClense(ll_queue<KB *> *);
 };
 
 #endif

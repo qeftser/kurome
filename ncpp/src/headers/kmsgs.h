@@ -25,6 +25,7 @@
 #define KUROME_MSG_MAPCALLBACK  12
 #define KUROME_MSG_SET_IDX       3
 #define KUROME_MSG_CLEAR         4
+#define KUROME_MSG_CLENSE       27
 #define KUROME_MSG_CHG_UNITSIZE  5
 #define KUROME_MSG_CHG_XBLOCKS   6
 #define KUROME_MSG_CHG_YBLOCKS   7
@@ -35,6 +36,11 @@
 #define KUROME_MSG_CHGFLAGS     21
 #define KUROME_MSG_ALLSAMPLES   13
 #define KUROME_MSG_ALLENTITIES  14
+#define KUROME_MSG_FADD_ENTITY  23
+#define KUROME_MSG_FCLEAR       24
+#define KUROME_MSG_FCLENSE      28
+#define KUROME_MSG_FCHGENTITY   25
+#define KUROME_MSG_FREMENTITY   26
 
 /*
  * Struct to hold all releavant data for the Grid
@@ -68,6 +74,7 @@ struct entity_struct {
    double rot;
    int type;
    int val;
+   int id;
 };
 
 /*
@@ -181,10 +188,10 @@ struct kurome_setidxmsg {
  * double value from Agent
  * to Reporter.
  */
-struct kurome_chgsizemsg {
+struct kurome_doublemsg {
    int type;
    int size;
-   double unitSize;
+   double val;
 };
 
 /* 
@@ -236,10 +243,10 @@ struct kurome_samplemsg {
  * integer from Agent to
  * Reporter.
  */
-struct kurome_flagmsg {
+struct kurome_intmsg {
    int type;
    int size;
-   int flag;
+   int val;
 };
 
 /*

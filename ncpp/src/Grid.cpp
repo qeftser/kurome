@@ -36,6 +36,16 @@ void Grid::clear() {
          blocks(i,j) = KUROME_UNDETERMINED;
 }
 
+void Grid::clense() {
+   clear();
+   for (Entity * e : entities)
+      delete e;
+   for (Sample * s : samples)
+      delete s;
+   entities.clear();
+   samples.clear();
+}
+
 /* kinda slow ... */
 void Grid::smooth() {
    Eigen::MatrixXi cpy = Eigen::MatrixXi(blocks.rows(),blocks.cols());
@@ -308,31 +318,24 @@ int Grid::addEntity(Entity * e) {
 }
 
 int Grid::remEntity(Entity * e) {
-   EllipseIterator ei(EllipseIterator(e,this));
-   RectIterator ri(RectIterator(e,this));
-   switch (e->type) {
-      case KUROME_TYPE_PONT:
-         setIdx(e->posx,e->posy,0);
+   for (Entity * en : entities) {
+      if (en->id == e->id) {
+         entities.erase(en);
+         redraw();
          break;
-      case KUROME_TYPE_ELPS:
-         while (!ei.done) {
-            *ei = (*ei - e->val < 0 ? 0 : *ei - e->val);
-            ++ei;
-         }
-         break;
-      case KUROME_TYPE_RECT:
-         while (!ri.done) {
-            *ri = (*ri - e->val < 0 ? 0 : *ri - e->val);
-            ++ri;
-         }
-         break;
-      default:
-         errnok = KUROME_ETYPE;
-         return -1;
-         break;
+      }
    }
-   if (entities.count(e))
-      entities.erase(e);
+   return 0;
+}
+
+int Grid::chgEntity(Entity * e) {
+   for (Entity * en : entities) {
+      if (en->id == e->id) {
+         *en = *e;
+         redraw();
+         break;
+      }
+   }
    return 0;
 }
 

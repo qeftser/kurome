@@ -27,15 +27,28 @@ public:
         goal(NULL), recved(0L), avaliable(NULL), conn(NULL)
       { setDefaultHandlers(); };
 
+   /* message passing */
+
    void launchClient();
    void clientSend(KB *);
    void registerHandler(int, void (*)(struct kurome_basemsg *, Reporter *));
    void setDefaultHandlers();
 
+   /* handle connections */
+
    int connect(long naddr);
    int connect(char * name);
    void connectFirst();
    void disconnectClient();
+
+   /* access private data for display */
+
+   Eigen::MatrixXi &    blocks();
+   Eigen::MatrixXi &    fblocks();
+   std::set<Entity *> & entities();
+   std::set<Entity *> & fentities();
+
+   /* wait on server */
 
    void wait();
    void wait(uint64_t curr);

@@ -221,6 +221,22 @@ int Reporter::connect(char * name) {
    return 0;
 }
 
+Eigen::MatrixXi & Reporter::blocks() {
+   return environment->blocks;
+}
+
+Eigen::MatrixXi & Reporter::fblocks() {
+   return full_env->blocks;
+}
+
+std::set<Entity *> & Reporter::entities() {
+   return environment->entities;
+}
+
+std::set<Entity *> & Reporter::fentities() {
+   return full_env->entities;
+}
+
 void Reporter::disconnectClient() {
    conn = NULL;
 }
@@ -249,6 +265,7 @@ void Reporter::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_MAPPERINFO,kurome_reporter_default_MSG_MAPPERINFO_handler);
    registerHandler(KUROME_MSG_GRID,kurome_reporter_default_MSG_GRID_handler);
    registerHandler(KUROME_MSG_FULLGRID,kurome_reporter_default_MSG_FULLGRID_handler);
+   registerHandler(KUROME_MSG_CLENSE,kurome_reporter_default_MSG_CLENSE_handler);
 }
 
 void Reporter::connectFirst() {
