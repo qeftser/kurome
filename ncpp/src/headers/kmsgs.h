@@ -43,7 +43,9 @@
 #define KUROME_MSG_FCHGENTITY   25
 #define KUROME_MSG_FREMENTITY   26
 #define KUROME_MSG_GETSELF      28
-#define KUROME_MSG_GETGOAL      28
+#define KUROME_MSG_GETGOAL      29
+#define KUROME_MSG_GETMAPPER    30
+#define KUROME_MSG_GETWAITERS   31
 
 /*
  * Struct to hold all releavant data for the Grid

@@ -281,6 +281,8 @@ void Agent::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_CLENSE,kurome_agent_default_MSG_CLENSE_handler);
    registerHandler(KUROME_MSG_GETSELF,kurome_agent_default_MSG_GETSELF_handler);
    registerHandler(KUROME_MSG_GETGOAL,kurome_agent_default_MSG_GETGOAL_handler);
+   registerHandler(KUROME_MSG_GETMAPPER,kurome_agent_default_MSG_GETMAPPER_handler);
+   registerHandler(KUROME_MSG_GETWAITERS,kurome_agent_default_MSG_GETWAITERS_handler);
 }
 
 /* 

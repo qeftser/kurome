@@ -25,6 +25,8 @@ int main(void) {
 
    KUROME_ENTITY_ID_NUM = (INT_MAX/2); // ensure no overlap between our entities
                                        // and the agent provided ones.
+   bool mouseDown;
+   int  lastKey;
 
 connection:
    while (1) {
@@ -60,9 +62,11 @@ connection:
    kcmd::getGrid(&reporter.reqs);
    reporter.wait(before);
 
-   before = reporter.recved.load();
-   kcmd::getFullGrid(&reporter.reqs);
-   reporter.wait(before);
+   if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
+      before = reporter.recved.load();
+      kcmd::getFullGrid(&reporter.reqs);
+      reporter.wait(before);
+   }
 
    before = reporter.recved.load();
    kcmd::getSelf(&reporter.reqs);
@@ -70,6 +74,10 @@ connection:
 
    before = reporter.recved.load();
    kcmd::getGoal(&reporter.reqs);
+   reporter.wait(before);
+
+   before = reporter.recved.load();
+   kcmd::getMapperInfo(&reporter.reqs);
    reporter.wait(before);
 
    /* run gui */

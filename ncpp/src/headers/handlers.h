@@ -29,6 +29,8 @@ void kurome_agent_default_MSG_FREMENTITY_handler(KB * msg, khandle * from, Agent
 void kurome_agent_default_MSG_CLENSE_handler(KB * msg, khandle * from, Agent * me);
 void kurome_agent_default_MSG_GETSELF_handler(KB * msg, khandle * from, Agent * me);
 void kurome_agent_default_MSG_GETGOAL_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_GETMAPPER_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_GETWAITERS_handler(KB * msg, khandle * from, Agent * me);
 /*
 void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
 void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, ll_queue<KB *> * from, Agent * me);

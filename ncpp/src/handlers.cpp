@@ -51,6 +51,18 @@ void kurome_agent_default_MSG_GET_GRID_handler(KB * msg, khandle * from, Agent *
    kcmd::grid(me->environment,from);
 }
 
+void kurome_agent_default_MSG_GETMAPPER_handler(KB * msg, khandle * from, Agent * me) {
+   (void)msg;
+   kcmd::mapperInfo(me->mapper,from);
+}
+
+void kurome_agent_default_MSG_GETWAITERS_handler(KB * msg, khandle * from, Agent * me) {
+   (void)msg;
+   for (Waiter * w : me->waiters) {
+      kcmd::waiterInfo(*w,from);
+   }
+}
+
 void kurome_agent_default_MSG_GET_FULLGRID_handler(KB * msg, khandle * from, Agent * me) {
    (void)msg;
    if (me->full_env)

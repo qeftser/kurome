@@ -128,6 +128,14 @@ void kcmd::getGoal(khandle * reqs) {
    kurome_base_req_base(reqs,KUROME_MSG_GETSELF);
 }
 
+void kcmd::getMapperInfo(khandle * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_GETMAPPER);
+}
+
+void kcmd::getWaiterInfo(khandle * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_GETWAITER);
+}
+
 void kcmd::allSamples(khandle * reqs) {
    kurome_base_req_base(reqs,KUROME_MSG_ALLSAMPLES);
 }

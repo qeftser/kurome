@@ -40,6 +40,8 @@ public:
    static void fClense(khandle *);
    static void getSelf(khandle *);
    static void getGoal(khandle *);
+   static void getMapperInfo(khandle *);
+   static void getWaiterInfo(khandle *);
 };
 
 #endif
