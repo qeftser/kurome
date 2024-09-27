@@ -279,6 +279,8 @@ void Agent::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_FREMENTITY,kurome_agent_default_MSG_FREMENTITY_handler);
    registerHandler(KUROME_MSG_FADD_ENTITY,kurome_agent_default_MSG_FADD_ENTITY_handler);
    registerHandler(KUROME_MSG_CLENSE,kurome_agent_default_MSG_CLENSE_handler);
+   registerHandler(KUROME_MSG_GETSELF,kurome_agent_default_MSG_GETSELF_handler);
+   registerHandler(KUROME_MSG_GETGOAL,kurome_agent_default_MSG_GETGOAL_handler);
 }
 
 /* 

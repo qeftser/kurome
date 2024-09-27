@@ -16,7 +16,7 @@ public:
    std::unordered_map<int,void (*)(struct kurome_basemsg *, Reporter *)> handlers;
    std::thread cli;
    std::atomic<uint64_t> recved;
-   ll_queue<KB *> reqs;
+   khandle reqs;
    std::vector<struct waiter_info> waiters;
    struct mapper_info mapper;
    struct agent_values * avaliable;

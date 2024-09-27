@@ -10,34 +10,36 @@
 
 class kcmd {
 public:
-   static void addEntity(Entity &, ll_queue<KB *> *);
-   static void chgSelf(Entity &, ll_queue<KB *> *);
-   static void chgGoal(Entity &, ll_queue<KB *> *);
-   static void chgFlags(int, ll_queue<KB *> *);
-   static void mapCallback(int, ll_queue<KB *> *);
-   static void setIdx(double, double, int, ll_queue<KB *> *);
-   static void clear(ll_queue<KB *> *);
-   static void allSamples(ll_queue<KB *> *);
-   static void allEntities(ll_queue<KB *> *);
-   static void chgUnits(double, ll_queue<KB *> *);
-   static void chgX(double, ll_queue<KB *> *);
-   static void chgY(double, ll_queue<KB *> *);
-   static void getGrid(ll_queue<KB *> *);
-   static void getFullGrid(ll_queue<KB *> *);
-   static void entity(Entity &, ll_queue<KB *> *);
-   static void self(Entity &, ll_queue<KB *> *);
-   static void goal(Entity &, ll_queue<KB *> *);
-   static void sample(Sample &, ll_queue<KB *> *);
-   static void waiterInfo(Waiter &, ll_queue<KB *> *);
-   static void mapperInfo(Mapper &, ll_queue<KB *> *);
-   static void grid(Grid &, ll_queue<KB *> *);
-   static void fullGrid(Grid &, ll_queue<KB *> *);
-   static void fAddEntity(Entity &, ll_queue<KB *> *);
-   static void fChgEntity(Entity &, ll_queue<KB *> *);
-   static void fRemEntity(Entity &, ll_queue<KB *> *);
-   static void fClear(ll_queue<KB *> *);
-   static void clense(ll_queue<KB *> *);
-   static void fClense(ll_queue<KB *> *);
+   static void addEntity(Entity &, khandle *);
+   static void chgSelf(Entity &, khandle *);
+   static void chgGoal(Entity &, khandle *);
+   static void chgFlags(int, khandle *);
+   static void mapCallback(int, khandle *);
+   static void setIdx(double, double, int, khandle *);
+   static void clear(khandle *);
+   static void allSamples(khandle *);
+   static void allEntities(khandle *);
+   static void chgUnits(double, khandle *);
+   static void chgX(double, khandle *);
+   static void chgY(double, khandle *);
+   static void getGrid(khandle *);
+   static void getFullGrid(khandle *);
+   static void entity(Entity &, khandle *);
+   static void self(Entity &, khandle *);
+   static void goal(Entity &, khandle *);
+   static void sample(Sample &, khandle *);
+   static void waiterInfo(Waiter &, khandle *);
+   static void mapperInfo(Mapper &, khandle *);
+   static void grid(Grid &, khandle *);
+   static void fullGrid(Grid &, khandle *);
+   static void fAddEntity(Entity &, khandle *);
+   static void fChgEntity(Entity &, khandle *);
+   static void fRemEntity(Entity &, khandle *);
+   static void fClear(khandle *);
+   static void clense(khandle *);
+   static void fClense(khandle *);
+   static void getSelf(khandle *);
+   static void getGoal(khandle *);
 };
 
 #endif

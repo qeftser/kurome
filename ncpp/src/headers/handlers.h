@@ -9,24 +9,26 @@
 
 /* default agent handlers */
 
-void kurome_agent_default_MSG_ADD_ENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_MAPCALLBACK_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_SET_IDX_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_CLEAR_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_CHGUNITSIZE_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_CHG_XBLOCKS_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_CHG_YBLOCKS_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_GET_GRID_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_GET_FULLGRID_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_CHGSELF_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_CHGGOAL_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_FADD_ENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_FCLEAR_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_FCLENSE_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_FCHGENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_FREMENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
-void kurome_agent_default_MSG_CLENSE_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
+void kurome_agent_default_MSG_ADD_ENTITY_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_MAPCALLBACK_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_SET_IDX_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_CLEAR_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_CHGUNITSIZE_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_CHG_XBLOCKS_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_CHG_YBLOCKS_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_GET_GRID_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_GET_FULLGRID_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_CHGSELF_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_CHGGOAL_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_FADD_ENTITY_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_FCLEAR_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_FCLENSE_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_FCHGENTITY_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_FREMENTITY_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_CLENSE_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_GETSELF_handler(KB * msg, khandle * from, Agent * me);
+void kurome_agent_default_MSG_GETGOAL_handler(KB * msg, khandle * from, Agent * me);
 /*
 void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, ll_queue<KB *> * from, Agent * me);
 void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, ll_queue<KB *> * from, Agent * me);

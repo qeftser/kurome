@@ -18,9 +18,9 @@ public:
    Grid   & environment;
    Grid   * full_env;
    std::thread serv;
-   ll_queue<std::tuple<KB *,ll_queue<KB *> *>> reqs;
-   std::set<ll_queue<KB *> *>conns;
-   std::unordered_map<int,void (*)(struct kurome_basemsg *, ll_queue<KB *> *, Agent *)> handlers;
+   ll_queue<std::tuple<KB *,khandle *>> reqs;
+   std::set<khandle *>conns;
+   std::unordered_map<int,void (*)(KB *, khandle *, Agent *)> handlers;
 
    Agent(Entity & self, Entity & goal, Mapper & mapper, Grid & env)
       : self(self), goal(goal), mapper(mapper), environment(env), full_env(NULL) { 
@@ -33,7 +33,7 @@ public:
    void   launchServer(int,int);
    void   launchServer(int,std::string,int);
    void   updateFromServer(int updates=12);
-   void   registerHandler(int, void (*)(struct kurome_basemsg *, ll_queue<KB *> *, Agent *));
+   void   registerHandler(int, void (*)(KB *, khandle *, Agent *));
 
    void setDefaultHandlers();
    void sendAll(Entity &);

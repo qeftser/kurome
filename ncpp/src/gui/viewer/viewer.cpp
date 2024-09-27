@@ -23,6 +23,9 @@ int main(void) {
    long i, n;
    char buf[1024];
 
+   KUROME_ENTITY_ID_NUM = (INT_MAX/2); // ensure no overlap between our entities
+                                       // and the agent provided ones.
+
 connection:
    while (1) {
       struct agent_values * curr = reporter.avaliable;
@@ -51,6 +54,26 @@ connection:
    int xpos = window.getSize().x/2;
    int ypos = window.getSize().y/2;
 
+   /* get all the data we want and need */
+
+   uint64_t before = reporter.recved.load();
+   kcmd::getGrid(&reporter.reqs);
+   reporter.wait(before);
+
+   before = reporter.recved.load();
+   kcmd::getFullGrid(&reporter.reqs);
+   reporter.wait(before);
+
+   before = reporter.recved.load();
+   kcmd::getSelf(&reporter.reqs);
+   reporter.wait(before);
+
+   before = reporter.recved.load();
+   kcmd::getGoal(&reporter.reqs);
+   reporter.wait(before);
+
+   /* run gui */
+
    while (window.isOpen()) {
 
       while (window.pollEvent(event)) {
@@ -59,9 +82,17 @@ connection:
          }
          else if (event.type == sf::Event::MouseButtonPressed) {
             printf("(%d, %d)\n",sf::Mouse::getPosition().x,sf::Mouse::getPosition().y);
+            // set mouse down
+            // if goal - attach goal
+            // if self and flag - attach entity
+            // if entity - attach entity
+            // if in add mode - start drawing new ellipse/rect
          }
          else if (event.type == sf::Event::MouseButtonReleased) {
             printf("(-, -)\n");
+            // 'set down' held object
+            // update agent and local
+            // if in draw mode 'finish' new element
          }
       }
 

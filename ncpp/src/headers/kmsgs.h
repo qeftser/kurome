@@ -9,6 +9,7 @@
 #define KUROME_SERV_MAXCONNS  32
 
 #define KB struct kurome_basemsg
+#define khandle ll_queue<KB *>
 
 /* data */
 #define KUROME_MSG_ENTITY        1
@@ -41,6 +42,8 @@
 #define KUROME_MSG_FCLENSE      28
 #define KUROME_MSG_FCHGENTITY   25
 #define KUROME_MSG_FREMENTITY   26
+#define KUROME_MSG_GETSELF      28
+#define KUROME_MSG_GETGOAL      28
 
 /*
  * Struct to hold all releavant data for the Grid

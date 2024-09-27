@@ -3,75 +3,75 @@
 
 /* default agent handlers */
 
-void kurome_agent_default_MSG_ADD_ENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_ADD_ENTITY_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_entitymsg * emsg = (struct kurome_entitymsg *)msg;
    Entity * e = new Entity(&emsg->e);
    me->environment.addEntity(e);
    kcmd::entity(*e,from);
 }
 
-void kurome_agent_default_MSG_MAPCALLBACK_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_MAPCALLBACK_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_intmsg * fm = (struct kurome_intmsg *)msg;
    me->mapper.callback(fm->val);
    kcmd::mapperInfo(me->mapper,from);
 }
 
-void kurome_agent_default_MSG_SET_IDX_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_SET_IDX_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_setidxmsg * simg = (struct kurome_setidxmsg *)msg;
    me->environment.setIdx(simg->posx,simg->posy,simg->weight);
    kcmd::setIdx(simg->posx,simg->posy,simg->weight,from);
 }
 
-void kurome_agent_default_MSG_CLEAR_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_CLEAR_handler(KB * msg, khandle * from, Agent * me) {
    (void)msg;
    me->environment.clear();
    kcmd::clear(from);
 }
 
-void kurome_agent_default_MSG_CHGUNITSIZE_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_CHGUNITSIZE_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
    me->environment.changeUnitSize(csm->val);
    kcmd::chgUnits(csm->val,from);
 }
 
-void kurome_agent_default_MSG_CHG_XBLOCKS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_CHG_XBLOCKS_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
    me->environment.changeSizeXmax(csm->val);
    kcmd::chgX(csm->val,from);
 }
 
-void kurome_agent_default_MSG_CHG_YBLOCKS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_CHG_YBLOCKS_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_doublemsg * csm = (struct kurome_doublemsg *)msg;
    me->environment.changeSizeYmax(csm->val);
    kcmd::chgY(csm->val,from);
 }
 
-void kurome_agent_default_MSG_GET_GRID_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_GET_GRID_handler(KB * msg, khandle * from, Agent * me) {
    (void)msg;
    kcmd::grid(me->environment,from);
 }
 
-void kurome_agent_default_MSG_GET_FULLGRID_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_GET_FULLGRID_handler(KB * msg, khandle * from, Agent * me) {
    (void)msg;
    if (me->full_env)
       kcmd::fullGrid(*me->full_env,from);
 }
 
-void kurome_agent_default_MSG_CHGSELF_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_CHGSELF_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_entitymsg * emsg = (struct kurome_entitymsg *)msg;
-   Entity * e = new Entity(&emsg->e);
-   me->self = *e;
-   kcmd::self(*e,from);
+   Entity e = Entity(&emsg->e);
+   me->self = e;
+   kcmd::self(e,from);
 }
 
-void kurome_agent_default_MSG_CHGGOAL_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_CHGGOAL_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_entitymsg * emsg = (struct kurome_entitymsg *)msg;
-   Entity * e = new Entity(&emsg->e);
-   me->goal = *e;
-   kcmd::goal(*e,from);
+   Entity e = Entity(&emsg->e);
+   me->goal = e;
+   kcmd::goal(e,from);
 }
 
-void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, khandle * from, Agent * me) {
    (void)from;
    struct kurome_intmsg * fm = (struct kurome_intmsg *)msg;
    me->flags = fm->val;
@@ -79,30 +79,30 @@ void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, ll_queue<KB *> * from, 
 
 /* not sure how to do these at the moment */
 /*
-void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, khandle * from, Agent * me) {
 }
 
-void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, khandle * from, Agent * me) {
 }
 */
 
-void kurome_agent_default_MSG_FADD_ENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_FADD_ENTITY_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_entitymsg * em = (struct kurome_entitymsg *)msg;
    if (me->full_env)
       me->full_env->addEntity(new Entity(&em->e));
 }
 
-void kurome_agent_default_MSG_FCLEAR_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_FCLEAR_handler(KB * msg, khandle * from, Agent * me) {
    if (me->full_env)
       me->full_env->clear();
 }
 
-void kurome_agent_default_MSG_FCLENSE_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_FCLENSE_handler(KB * msg, khandle * from, Agent * me) {
    if (me->full_env)
       me->full_env->clense();
 }
 
-void kurome_agent_default_MSG_FCHGENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_FCHGENTITY_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_entitymsg * em = (struct kurome_entitymsg *)msg;
    if (me->full_env) {
       Entity e = Entity(&em->e);
@@ -110,7 +110,7 @@ void kurome_agent_default_MSG_FCHGENTITY_handler(KB * msg, ll_queue<KB *> * from
    }
 }
 
-void kurome_agent_default_MSG_FREMENTITY_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_FREMENTITY_handler(KB * msg, khandle * from, Agent * me) {
    struct kurome_entitymsg * em = (struct kurome_entitymsg *)msg;
    if (me->full_env) {
       Entity e = Entity(&em->e);
@@ -118,9 +118,17 @@ void kurome_agent_default_MSG_FREMENTITY_handler(KB * msg, ll_queue<KB *> * from
    }
 }
 
-void kurome_agent_default_MSG_CLENSE_handler(KB * msg, ll_queue<KB *> * from, Agent * me) {
+void kurome_agent_default_MSG_CLENSE_handler(KB * msg, khandle * from, Agent * me) {
    me->environment.clense();
    kcmd::clense(from);
+}
+
+void kurome_agent_default_MSG_GETSELF_handler(KB * msg, khandle * from, Agent * me) {
+   kcmd::self(me->self,from);
+}
+
+void kurome_agent_default_MSG_GETGOAL_handler(KB * msg, khandle * from, Agent * me) {
+   kcmd::goal(me->goal,from);
 }
 
 
