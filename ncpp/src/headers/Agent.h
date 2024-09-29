@@ -31,8 +31,8 @@ public:
 
    double goalDist();
 
-   void   launchServer(int,int);
-   void   launchServer(int,std::string,int);
+   void   launchServer(short,int);
+   void   launchServer(short,std::string,int);
    void   updateFromServer(int updates=12);
    void   registerHandler(int, void (*)(KB *, khandle *, void *));
    void   registerHandlerData(int, void *);

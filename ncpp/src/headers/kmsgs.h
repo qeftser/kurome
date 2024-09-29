@@ -46,6 +46,9 @@
 #define KUROME_MSG_GETGOAL      29
 #define KUROME_MSG_GETMAPPER    30
 #define KUROME_MSG_GETWAITERS   31
+#define KUROME_MSG_START        32
+#define KUROME_MSG_STOP         33
+#define KUROME_MSG_PAUSE        34
 
 /*
  * Struct to hold all releavant data for the Grid
@@ -65,6 +68,21 @@ struct grid_struct {
    double sizeYmin;
    double unitSize;
    int matrix[];
+};
+
+/*
+ * grid struct without the grid
+ */
+struct partial_grid_struct {
+   int32_t blocksXmax;
+   int32_t blocksYmax;
+   int32_t blocksXmin;
+   int32_t blocksYmin;
+   double sizeXmax;
+   double sizeYmax;
+   double sizeXmin;
+   double sizeYmin;
+   double unitSize;
 };
 
 /*

@@ -22,6 +22,9 @@ public:
    struct mapper_info mapper;
    struct agent_values * avaliable;
    struct agent_values * conn;
+   struct partial_grid_struct  ginfo;
+   struct partial_grid_struct fginfo;
+
 
    Reporter() 
       : environment(NULL), full_env(NULL), self(NULL), 

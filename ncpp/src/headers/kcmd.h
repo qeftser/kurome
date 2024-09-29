@@ -42,6 +42,9 @@ public:
    static void getGoal(khandle *);
    static void getMapperInfo(khandle *);
    static void getWaiterInfo(khandle *);
+   static void start(khandle *);
+   static void stop(khandle *);
+   static void pause(khandle *);
 };
 
 #endif

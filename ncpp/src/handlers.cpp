@@ -281,11 +281,13 @@ void kurome_reporter_default_MSG_MAPPERINFO_handler(KB * msg, void * me) {
 
 void kurome_reporter_default_MSG_GRID_handler(KB * msg, void * me) {
    struct kurome_gridmsg * gmsg = (struct kurome_gridmsg *)msg;
+   memcpy(&((Reporter *)me)->ginfo,&gmsg->gs,sizeof(partial_grid_struct));
    ((Reporter *)me)->environment = std::make_shared<Grid>(&gmsg->gs);
 }
 
 void kurome_reporter_default_MSG_FULLGRID_handler(KB * msg, void * me) {
    struct kurome_gridmsg * gmsg = (struct kurome_gridmsg *)msg;
+   memcpy(&((Reporter *)me)->fginfo,&gmsg->gs,sizeof(partial_grid_struct));
    ((Reporter *)me)->full_env = std::make_shared<Grid>(&gmsg->gs);
 }
 

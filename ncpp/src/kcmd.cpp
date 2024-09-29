@@ -125,7 +125,7 @@ void kcmd::getSelf(khandle * reqs) {
 }
 
 void kcmd::getGoal(khandle * reqs) {
-   kurome_base_req_base(reqs,KUROME_MSG_GETSELF);
+   kurome_base_req_base(reqs,KUROME_MSG_GETGOAL);
 }
 
 void kcmd::getMapperInfo(khandle * reqs) {
@@ -162,6 +162,18 @@ void kcmd::getGrid(khandle * reqs) {
 
 void kcmd::getFullGrid(khandle * reqs) {
    kurome_base_req_base(reqs,KUROME_MSG_GET_FULLGRID);
+}
+
+void kcmd::start(khandle * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_START);
+}
+
+void kcmd::stop(khandle * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_STOP);
+}
+
+void kcmd::pause(khandle * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_PAUSE);
 }
 
 void kcmd::sample(Sample & s, khandle * reqs) {

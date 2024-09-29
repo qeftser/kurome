@@ -132,7 +132,7 @@ check_readdone:
  * on and the name of the server, in addition to the Agent to
  * attach to, as arguments.
  */
-void kurome_agent_server(int port, std::string name, Agent * me) {
+void kurome_agent_server(short port, std::string name, Agent * me) {
 
    gsock_fd broadcastfd;
    gsock_fd listenfd;
@@ -203,7 +203,7 @@ void kurome_agent_server(int port, std::string name, Agent * me) {
  * port that is specified. No name will be attached
  * to the server.
  */
-void Agent::launchServer(int port, int flags) {
+void Agent::launchServer(short port, int flags) {
    this->flags = flags;
    static std::string null = "";
    serv = std::thread(kurome_agent_server, port, null, this);
@@ -214,7 +214,7 @@ void Agent::launchServer(int port, int flags) {
  * launch the server at the given port with the given flags set.
  * Bind the name passed to the server.
  */
-void Agent::launchServer(int port, std::string name, int flags) {
+void Agent::launchServer(short port, std::string name, int flags) {
    this->flags = flags;
    serv = std::thread(kurome_agent_server, port, name, this);
    return;

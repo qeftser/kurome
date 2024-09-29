@@ -172,7 +172,7 @@ close:
                perror("gsocket");
 
             connaddr.sin_family = AF_INET;
-            connaddr.sin_port = me->conn->port;
+            connaddr.sin_port = htons(me->conn->port);
             connaddr.sin_addr.s_addr = me->conn->naddr;
 
             if (-1 == gconnect(connfd,(gsockaddr *)&connaddr,sizeof(connaddr)))

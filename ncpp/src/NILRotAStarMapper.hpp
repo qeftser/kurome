@@ -2,6 +2,7 @@
 
 #include "Kurome.h"
 #include <unordered_set>
+#include <cstring>
 
 class NILRotAStarMapper : public Mapper {
 public:
@@ -112,6 +113,14 @@ public:
       curr->nextptr = NULL;
       return curr;
    };
+
+   int mstat(struct mapper_info * mi) {
+      static char buf[40] = "NILRotAStarMapper";
+      strncpy(mi->name,buf,39);
+      mi->state = 0;
+      timespec_get(&mi->last,TIME_UTC);
+      return 1;
+   }
 
 
 };
