@@ -12,8 +12,8 @@ int main(void) {
    
    env.clear();
    Entity tst{100,100,12,12,KUROME_TYPE_ELPS,20};
-   env.addEntity(&tst);
-   g.addEntity(&tst);
+   //env.addEntity(&tst);
+   //g.addEntity(&tst);
 
    Entity fov{0,0,8,8,KUROME_TYPE_RECT,0};
    Entity me{10,10,8,3,KUROME_TYPE_ELPS,20};
@@ -31,7 +31,6 @@ int main(void) {
    printf("user: server launched\n");
 
    for ( ; ; ) {
-      printf("cycle\n");
       OO7.updateFromServer();
       usleep(10000);
    }
