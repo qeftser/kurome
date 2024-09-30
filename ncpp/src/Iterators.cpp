@@ -248,10 +248,10 @@ void EllipseIterator::setupVars(double xwid, double ywid, double offx, double of
    ys = ((-wrad)*srr+hrad*crr);
    shiftx = ((-wrad)*crr+hrad*srr);
    shifty = ((-wrad)*srr-hrad*crr);
-   double steps = std::ceil((xwid>ywid?xwid:ywid)/(g->getUnitSize()/8.0));
+   double steps = std::ceil((xwid>ywid?xwid:ywid)/(g->getUnitSize()/2.0));
    shiftx = (shiftx - xs)/steps;
    shifty = (shifty - ys)/steps;
-   granularity = g->getUnitSize()/8.0;
+   granularity = g->getUnitSize()/xwid;
    k = -granularity;
    xs = xe = 0.0;
    ys = ye = 0.0;
@@ -287,7 +287,7 @@ EllipseIterator & EllipseIterator::operator++(void) {
    do {
       ys -= shifty;
       xs -= shiftx;
-      if ((ye-ys)*(ye-ys)+(xe-xs)*(xe-xs) < g->getUnitSize()/2.0) {
+      if ((ye-ys)*(ye-ys)+(xe-xs)*(xe-xs) < g->getUnitSize()) {
          k+=granularity;
          if (k > PI) {
             done = true;
