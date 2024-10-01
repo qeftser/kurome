@@ -77,6 +77,7 @@ int main(void) {
    Entity * held = NULL;
 
    double winScale;
+   double invU;
 
    double startX, startY, posX, posY;
 
@@ -152,18 +153,19 @@ connection:
 
       int sizeX = reporter.ginfo.blocksXmax-reporter.ginfo.blocksXmin;
       int sizeY = reporter.ginfo.blocksYmax-reporter.ginfo.blocksYmin;
-      winScale = ((window.getSize().x>window.getSize().y)?window.getSize().y:window.getSize().x)
-                 /(reporter.ginfo.unitSize*(sizeX>sizeY?sizeX:sizeY));
+      winScale = (((window.getSize().x>window.getSize().y)?window.getSize().y:window.getSize().x)
+                  /(double)((sizeX>sizeY?sizeX:sizeY)));
+      invU = winScale*(1/reporter.ginfo.unitSize);
 
       while (window.pollEvent(event)) {
          if (event.type == sf::Event::Closed) {
             window.close();
          }
          else if (event.type == sf::Event::MouseButtonPressed) {
-            sf::Vector2i pos = sf::Mouse::getPosition(window);
+            sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
             sf::Vector2u ws = window.getSize();
-            startX = ((pos.x+(xpos-(ws.x/2.0)))/(winScale))*reporter.ginfo.unitSize;
-            startY = ((pos.y+(ypos-(ws.y/2.0)))/(winScale))*reporter.ginfo.unitSize;
+            startX = (((pos.x)+(xpos-(ws.x/2.0)))/(winScale))*reporter.ginfo.unitSize;
+            startY = (((pos.y)+(ypos-(ws.y/2.0)))/(winScale))*reporter.ginfo.unitSize;
             mouseDown = true;
             if (mouseState == KUROME_VIEWER_MNONE) {
                if (startX > reporter.goal->posx-(reporter.goal->xwid) &&
@@ -178,10 +180,10 @@ connection:
                   mouseState = KUROME_VIEWER_MSMOVE;
                else {
                   for (Entity * e : reporter.fentities()) {
-                     if (startX > e->posx-(e->xwid) &&
-                         startX < e->posx+(e->xwid) &&
-                         startY > e->posy-(e->ywid) &&
-                         startY < e->posy+(e->ywid)) {
+                     if (startX > e->posx-(e->xwid/2.0) &&
+                         startX < e->posx+(e->xwid/2.0) &&
+                         startY > e->posy-(e->ywid/2.0) &&
+                         startY < e->posy+(e->ywid/2.0)) {
                         mouseState = KUROME_VIEWER_MMOVE;
                         reporter.full_env->remEntity(e);
                         held = e;
@@ -376,9 +378,9 @@ connection:
             kurome_viewer_draw_entity(*reporter.self,window,winScale);
          }
          else {
-            sf::CircleShape me(winScale*3,3);
+            sf::CircleShape me(8,3);
             me.setRotation(reporter.self->rot);
-            me.setPosition((reporter.self->posx*winScale)-(winScale*1.5),(reporter.self->posy*winScale)-(winScale*1.5));
+            me.setPosition((reporter.self->posx*invU)-6,(reporter.self->posy*invU)-6);
             me.setFillColor(sf::Color(160,32,240,255));
             window.draw(me);
          }
@@ -401,10 +403,10 @@ connection:
       }
 
       if (mouseDown) {
-         sf::Vector2i pos = sf::Mouse::getPosition(window);
+         sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
          sf::Vector2u currS = window.getSize();
-         posX = ((pos.x+(xpos-(currS.x/2.0)))/(winScale))*reporter.ginfo.unitSize;
-         posY = ((pos.y+(ypos-(currS.y/2.0)))/(winScale))*reporter.ginfo.unitSize;
+         posX = (((pos.x)+((xpos-(currS.x/2.0))))/(winScale))*reporter.ginfo.unitSize;
+         posY = (((pos.y)+((ypos-(currS.y/2.0))))/(winScale))*reporter.ginfo.unitSize;
          r.setFillColor(sf::Color(0,0,255,255));
          e.setFillColor(sf::Color(0,0,255,255));
          switch (mouseState) {
@@ -413,14 +415,14 @@ connection:
                break;
             case KUROME_VIEWER_MMOVE:
                if (held->type == KUROME_TYPE_RECT) {
-                  r.setPosition((posX-(held->xwid/2.0))*winScale,(posY-(held->ywid/2.0))*winScale);
-                  r.setSize(sf::Vector2f((held->xwid)*winScale,(held->ywid)*winScale));
+                  r.setPosition((posX-(held->xwid/2.0))*invU,(posY-(held->ywid/2.0))*invU);
+                  r.setSize(sf::Vector2f((held->xwid)*invU,(held->ywid)*invU));
                   r.setRotation(held->rot);
                   window.draw(r);
                }
                else if (held->type == KUROME_TYPE_ELPS) {
-                  e.setPosition((posX-(held->xwid/2.0))*winScale,(posY-(held->ywid/2.0))*winScale);
-                  e.setRadius(sf::Vector2f(((held->xwid)*winScale)/2.0,((held->ywid)*winScale)/2.0));
+                  e.setPosition((posX-(held->xwid/2.0))*invU,(posY-(held->ywid/2.0))*invU);
+                  e.setRadius(sf::Vector2f(((held->xwid)*invU)/2.0,((held->ywid)*invU)/2.0));
                   e.setRotation(held->rot);
                   window.draw(e);
                }
@@ -437,15 +439,15 @@ connection:
                printf("sx: %f sy: %f\n",startX,startY);
                printf("cx: %f cy: %f\n",posX,posY);
                if (startX < posX && startY < posY) {
-                  r.setPosition(startX*winScale,startY*winScale);
-                  r.setSize(sf::Vector2f((posX-startX)*winScale,(posY-startY)*winScale));
+                  r.setPosition(startX*invU,startY*invU);
+                  r.setSize(sf::Vector2f((posX-startX)*invU,(posY-startY)*invU));
                   window.draw(r);
                }
                break;
             case KUROME_VIEWER_MELPS:
                if (startX < posX && startY < posY) {
-                  e.setPosition(startX*winScale,startY*winScale);
-                  e.setRadius(sf::Vector2f(((posX-startX)*winScale)/2.0,((posY-startY)*winScale)/2.0));
+                  e.setPosition(startX*invU,startY*invU);
+                  e.setRadius(sf::Vector2f(((posX-startX)*invU)/2.0,((posY-startY)*invU)/2.0));
                   window.draw(e);
                }
                break;
