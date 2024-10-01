@@ -119,7 +119,7 @@ connection:
    printf("getting env\n");
    uint64_t before = reporter.recved.load();
    kcmd::getGrid(&reporter.reqs);
-   reporter.wait(before);
+   //reporter.wait(before);
 
    if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
       printf("getting fullEnv\n");
@@ -131,17 +131,17 @@ connection:
    printf("getting self\n");
    before = reporter.recved.load();
    kcmd::getSelf(&reporter.reqs);
-   reporter.wait(before);
+   //reporter.wait(before);
 
    printf("getting goal\n");
    before = reporter.recved.load();
    kcmd::getGoal(&reporter.reqs);
-   reporter.wait(before);
+   //reporter.wait(before);
 
    printf("getting mapper\n");
    before = reporter.recved.load();
    kcmd::getMapperInfo(&reporter.reqs);
-   reporter.wait(before);
+   //reporter.wait(before);
 
    kcmd::pause(&reporter.reqs);
    agentState = KUROME_VIEWER_APAUSE;
@@ -168,17 +168,19 @@ connection:
             startY = (((pos.y)+(ypos-(ws.y/2.0)))/(winScale))*reporter.ginfo.unitSize;
             mouseDown = true;
             if (mouseState == KUROME_VIEWER_MNONE) {
-               if (startX > reporter.goal->posx-(reporter.goal->xwid) &&
+               if (reporter.goal &&
+                   startX > reporter.goal->posx-(reporter.goal->xwid) &&
                    startX < reporter.goal->posx+(reporter.goal->xwid) &&
                    startY > reporter.goal->posy-(reporter.goal->ywid) &&
                    startY < reporter.goal->posy+(reporter.goal->ywid))
                   mouseState = KUROME_VIEWER_MGMOVE;
-               else if (startX > reporter.self->posx-(reporter.self->xwid) &&
+               else if (reporter.self &&
+                        startX > reporter.self->posx-(reporter.self->xwid) &&
                         startX < reporter.self->posx+(reporter.self->xwid) &&
                         startY > reporter.self->posy-(reporter.self->ywid) &&
                         startY < reporter.self->posy+(reporter.self->ywid))
                   mouseState = KUROME_VIEWER_MSMOVE;
-               else {
+               else if (reporter.full_env) {
                   for (Entity * e : reporter.fentities()) {
                      if (startX > e->posx-(e->xwid/2.0) &&
                          startX < e->posx+(e->xwid/2.0) &&
@@ -192,7 +194,7 @@ connection:
                   }
                }
             }
-            else if (mouseState == KUROME_VIEWER_MDEL) {
+            else if (reporter.full_env && mouseState == KUROME_VIEWER_MDEL) {
                for (Entity * e : reporter.fentities()) {
                   if (startX > e->posx-(e->xwid/2.0) &&
                       startX < e->posx+(e->xwid/2.0) &&
@@ -213,37 +215,45 @@ connection:
             Entity * nev;
             switch (mouseState) {
                case KUROME_VIEWER_MRECT:
-                  if (startX < posX && startY < posY) {
-                     nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_RECT,20);
-                     nev->posx += (nev->xwid/2.0);
-                     nev->posy += (nev->ywid/2.0);
-                     reporter.full_env->addEntity(nev);
-                     reporter.full_env->redraw();
-                     kcmd::fAddEntity(*nev,&reporter.reqs);
+                  if (reporter.full_env) {
+                     if (startX < posX && startY < posY) {
+                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_RECT,20);
+                        nev->posx += (nev->xwid/2.0);
+                        nev->posy += (nev->ywid/2.0);
+                        reporter.full_env->addEntity(nev);
+                        reporter.full_env->redraw();
+                        kcmd::fAddEntity(*nev,&reporter.reqs);
+                     }
                   }
                   break;
                case KUROME_VIEWER_MELPS:
-                  if (startX < posX && startY < posY) {
-                     nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_ELPS,20);
-                     nev->posx += (nev->xwid/2.0);
-                     nev->posy += (nev->ywid/2.0);
-                     reporter.full_env->addEntity(nev);
-                     reporter.full_env->redraw();
-                     kcmd::fAddEntity(*nev,&reporter.reqs);
+                  if (reporter.full_env) {
+                     if (startX < posX && startY < posY) {
+                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_ELPS,20);
+                        nev->posx += (nev->xwid/2.0);
+                        nev->posy += (nev->ywid/2.0);
+                        reporter.full_env->addEntity(nev);
+                        reporter.full_env->redraw();
+                        kcmd::fAddEntity(*nev,&reporter.reqs);
+                     }
                   }
                   break;
                case KUROME_VIEWER_MSMOVE:
-                  kcmd::chgSelf(*reporter.self,&reporter.reqs);
+                  if (reporter.self)
+                     kcmd::chgSelf(*reporter.self,&reporter.reqs);
                   break;
                case KUROME_VIEWER_MGMOVE:
-                  kcmd::chgGoal(*reporter.goal,&reporter.reqs);
+                  if (reporter.goal) 
+                     kcmd::chgGoal(*reporter.goal,&reporter.reqs);
                   break;
                case KUROME_VIEWER_MMOVE:
-                  held->posx = posX;
-                  held->posy = posY;
-                  reporter.full_env->addEntity(held);
-                  reporter.full_env->redraw();
-                  kcmd::fChgEntity(*held,&reporter.reqs);
+                  if (reporter.full_env && held) {
+                     held->posx = posX;
+                     held->posy = posY;
+                     reporter.full_env->addEntity(held);
+                     reporter.full_env->redraw();
+                     kcmd::fChgEntity(*held,&reporter.reqs);
+                  }
                   held = NULL;
                   break;
             }
@@ -428,12 +438,16 @@ connection:
                }
                break;
             case KUROME_VIEWER_MSMOVE:
-               reporter.self->posx = posX;
-               reporter.self->posy = posY;
+               if (reporter.self) {
+                  reporter.self->posx = posX;
+                  reporter.self->posy = posY;
+               }
                break;
             case KUROME_VIEWER_MGMOVE:
-               reporter.goal->posx = posX;
-               reporter.goal->posy = posY;
+               if (reporter.goal) {
+                  reporter.goal->posx = posX;
+                  reporter.goal->posy = posY;
+               }
                break;
             case KUROME_VIEWER_MRECT:
                printf("sx: %f sy: %f\n",startX,startY);
