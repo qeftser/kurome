@@ -116,30 +116,28 @@ connection:
 
    /* get all the data we want and need */
 
-   printf("getting env\n");
-   uint64_t before = reporter.recved.load();
+   //printf("getting env\n");
+   //uint64_t before = reporter.recved.load();
    kcmd::getGrid(&reporter.reqs);
    //reporter.wait(before);
 
-   if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
-      printf("getting fullEnv\n");
-      before = reporter.recved.load();
-      kcmd::getFullGrid(&reporter.reqs);
-      reporter.wait(before);
-   }
+   //printf("getting fullEnv\n");
+   //before = reporter.recved.load();
+   kcmd::getFullGrid(&reporter.reqs);
+   //reporter.wait(before);
 
-   printf("getting self\n");
-   before = reporter.recved.load();
+   //printf("getting self\n");
+   //before = reporter.recved.load();
    kcmd::getSelf(&reporter.reqs);
    //reporter.wait(before);
 
-   printf("getting goal\n");
-   before = reporter.recved.load();
+   //printf("getting goal\n");
+   //before = reporter.recved.load();
    kcmd::getGoal(&reporter.reqs);
    //reporter.wait(before);
 
-   printf("getting mapper\n");
-   before = reporter.recved.load();
+   //printf("getting mapper\n");
+   //before = reporter.recved.load();
    kcmd::getMapperInfo(&reporter.reqs);
    //reporter.wait(before);
 
@@ -164,8 +162,8 @@ connection:
          else if (event.type == sf::Event::MouseButtonPressed) {
             sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
             sf::Vector2u ws = window.getSize();
-            startX = (((pos.x)+(xpos-(ws.x/2.0)))/(winScale))*reporter.ginfo.unitSize;
-            startY = (((pos.y)+(ypos-(ws.y/2.0)))/(winScale))*reporter.ginfo.unitSize;
+            startX = (((pos.x))/(winScale))*reporter.ginfo.unitSize;
+            startY = (((pos.y))/(winScale))*reporter.ginfo.unitSize;
             mouseDown = true;
             if (mouseState == KUROME_VIEWER_MNONE) {
                if (reporter.goal &&
@@ -385,7 +383,7 @@ connection:
 
       if (reporter.self) {
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DSELF)) {
-            kurome_viewer_draw_entity(*reporter.self,window,winScale);
+            kurome_viewer_draw_entity(*reporter.self,window,invU);
          }
          else {
             sf::CircleShape me(8,3);
@@ -398,7 +396,7 @@ connection:
 
       if (reporter.goal) {
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DGOAL)) {
-            kurome_viewer_draw_entity(*reporter.goal,window,winScale);
+            kurome_viewer_draw_entity(*reporter.goal,window,invU);
          }
       }
 
@@ -415,8 +413,8 @@ connection:
       if (mouseDown) {
          sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
          sf::Vector2u currS = window.getSize();
-         posX = (((pos.x)+((xpos-(currS.x/2.0))))/(winScale))*reporter.ginfo.unitSize;
-         posY = (((pos.y)+((ypos-(currS.y/2.0))))/(winScale))*reporter.ginfo.unitSize;
+         posX = (((pos.x))/(winScale))*reporter.ginfo.unitSize;
+         posY = (((pos.y))/(winScale))*reporter.ginfo.unitSize;
          r.setFillColor(sf::Color(0,0,255,255));
          e.setFillColor(sf::Color(0,0,255,255));
          switch (mouseState) {
