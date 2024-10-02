@@ -224,22 +224,6 @@ int Reporter::connect(char * name) {
    return 0;
 }
 
-Eigen::MatrixXi & Reporter::blocks() {
-   return environment->blocks;
-}
-
-Eigen::MatrixXi & Reporter::fblocks() {
-   return full_env->blocks;
-}
-
-std::set<Entity *> & Reporter::entities() {
-   return environment->entities;
-}
-
-std::set<Entity *> & Reporter::fentities() {
-   return full_env->entities;
-}
-
 void Reporter::disconnectClient() {
    conn = NULL;
 }

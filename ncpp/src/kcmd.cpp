@@ -62,6 +62,10 @@ void kcmd::entity(Entity & e, khandle * reqs) {
    kurome_entity_req_base(e,reqs,KUROME_MSG_ENTITY);
 }
 
+void kcmd::fEntity(Entity & e, khandle * reqs) {
+   kurome_entity_req_base(e,reqs,KUROME_MSG_FENTITY);
+}
+
 void kcmd::fChgEntity(Entity & e, khandle * reqs) {
    kurome_entity_req_base(e,reqs,KUROME_MSG_ENTITY);
 }
@@ -144,6 +148,14 @@ void kcmd::allEntities(khandle * reqs) {
    kurome_base_req_base(reqs,KUROME_MSG_ALLENTITIES);
 }
 
+void kcmd::fAllSamples(khandle * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_FALLSAMPLES);
+}
+
+void kcmd::fAllEntities(khandle * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_FALLENTITIES);
+}
+
 void kcmd::chgUnits(double units, khandle * reqs) {
    kurome_double_req_base(units,reqs,KUROME_MSG_CHG_UNITSIZE);
 }
@@ -180,6 +192,17 @@ void kcmd::sample(Sample & s, khandle * reqs) {
    struct sample_struct * ss = (struct sample_struct *)malloc(sizeof(struct sample_struct));
    struct kurome_samplemsg * msg = (struct kurome_samplemsg *)malloc(sizeof(struct kurome_samplemsg));
    msg->type = KUROME_MSG_SAMPLE;
+   msg->size = sizeof(KB)+s.toStruct(&ss);
+   msg = (struct kurome_samplemsg *)realloc(msg,msg->size);
+   memcpy(&msg->s,ss,msg->size-sizeof(KB));
+   free(ss);
+   reqs->enqueue((KB *)msg);
+}
+
+void kcmd::fSample(Sample & s, khandle * reqs) {
+   struct sample_struct * ss = (struct sample_struct *)malloc(sizeof(struct sample_struct));
+   struct kurome_samplemsg * msg = (struct kurome_samplemsg *)malloc(sizeof(struct kurome_samplemsg));
+   msg->type = KUROME_MSG_FSAMPLE;
    msg->size = sizeof(KB)+s.toStruct(&ss);
    msg = (struct kurome_samplemsg *)realloc(msg,msg->size);
    memcpy(&msg->s,ss,msg->size-sizeof(KB));

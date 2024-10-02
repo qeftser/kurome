@@ -50,8 +50,6 @@ public:
 
    Eigen::MatrixXi &    blocks();
    Eigen::MatrixXi &    fblocks();
-   std::set<Entity *> & entities();
-   std::set<Entity *> & fentities();
 
    /* wait on server */
 

@@ -296,7 +296,10 @@ void Agent::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_GETSELF,kurome_agent_default_MSG_GETSELF_handler);
    registerHandler(KUROME_MSG_GETGOAL,kurome_agent_default_MSG_GETGOAL_handler);
    registerHandler(KUROME_MSG_GETMAPPER,kurome_agent_default_MSG_GETMAPPER_handler);
-   registerHandler(KUROME_MSG_GETWAITERS,kurome_agent_default_MSG_GETWAITERS_handler);
+   registerHandler(KUROME_MSG_ALLENTITIES,kurome_agent_default_MSG_ALLENTITIES_handler);
+   registerHandler(KUROME_MSG_FALLENTITIES,kurome_agent_default_MSG_FALLENTITIES_handler);
+   registerHandler(KUROME_MSG_ALLSAMPLES,kurome_agent_default_MSG_ALLSAMPLES_handler);
+   registerHandler(KUROME_MSG_FALLSAMPLES,kurome_agent_default_MSG_FALLSAMPLES_handler);
 }
 
 /* 
@@ -393,3 +396,4 @@ void Agent::sendAll(Grid & g, int mtype) {
          break;
    }
 }
+

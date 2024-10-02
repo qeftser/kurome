@@ -13,9 +13,11 @@
 
 /* data */
 #define KUROME_MSG_ENTITY        1
+#define KUROME_MSG_FENTITY      35
 #define KUROME_MSG_SELF         19
 #define KUROME_MSG_GOAL         20
 #define KUROME_MSG_SAMPLE        9
+#define KUROME_MSG_FSAMPLE      36
 #define KUROME_MSG_WAITERINFO   10
 #define KUROME_MSG_MAPPERINFO   11
 #define KUROME_MSG_GRID         15
@@ -36,7 +38,9 @@
 #define KUROME_MSG_CHGGOAL      17
 #define KUROME_MSG_CHGFLAGS     21
 #define KUROME_MSG_ALLSAMPLES   13
+#define KUROME_MSG_FALLSAMPLES  37
 #define KUROME_MSG_ALLENTITIES  14
+#define KUROME_MSG_FALLENTITIES 38
 #define KUROME_MSG_FADD_ENTITY  23
 #define KUROME_MSG_FCLEAR       24
 #define KUROME_MSG_FCLENSE      28

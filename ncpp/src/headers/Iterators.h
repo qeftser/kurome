@@ -8,7 +8,7 @@ struct ShapeIteratorInfo { double posx; double posy; int * val; };
 
 #if !KUROME_NOROTATION_RECT && !KUROME_NOROTATION
 
-class RectIterator : public std::iterator<std::input_iterator_tag,int> {
+class RectIterator {
 private:
    double shiftxx, shiftxy, shiftyx, shiftyy, tshiftxx, tshiftxy;
    double srtx, srty, endx, endy, posx, posy;
@@ -35,7 +35,7 @@ public:
 
 #else
 
-class RectIterator : public std::iterator<std::input_iterator_tag,int> {
+class RectIterator {
 private:
    Grid * g;
    int srtx, srty;
@@ -62,7 +62,7 @@ public:
 
 #if !KUROME_NOROTATION && !KUROME_NOROTATION_ELPS 
 
-class EllipseIterator : public std::iterator<std::input_iterator_tag,int> {
+class EllipseIterator {
 private:
    double shiftx, shifty, granularity;
    double k, wrad, hrad, xs, ys, xe, ye;
@@ -89,7 +89,7 @@ public:
 
 #else 
 
-class EllipseIterator : public std::iterator<std::input_iterator_tag,int> {
+class EllipseIterator {
 private:
    Grid * g;
    double granularity;

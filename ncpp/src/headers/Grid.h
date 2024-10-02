@@ -23,12 +23,12 @@ private:
    double                     sizeXmin;
    double                     sizeYmin;
    double                     unitSize;
-   Eigen::MatrixXi            blocks;
    std::default_random_engine generator;
-   std::set<Entity *>         entities;
-   std::set<Sample *>         samples;
 
 public:
+   Eigen::MatrixXi            blocks;
+   std::set<Entity *>         entities;
+   std::set<Sample *>         samples;
 
    Grid(double,double,double);
    Grid(double,double,double,double,double);
@@ -80,8 +80,6 @@ public:
    int roor(double);
 
    int toStruct(struct grid_struct **);
-
-   friend class Reporter;
 };
 
 #endif

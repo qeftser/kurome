@@ -6,9 +6,9 @@
 
 int main(void) {
 
-   Grid g{5,200,200};
+   Grid g{0.5,200,200};
 
-   Grid env{5,200,200};
+   Grid env{0.5,200,200};
    
    env.clear();
    Entity tst{100,100,12,12,KUROME_TYPE_ELPS,20};

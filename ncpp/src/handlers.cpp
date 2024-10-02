@@ -89,14 +89,25 @@ void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, khandle * from, void * 
    ((Agent *)me)->flags = fm->val;
 }
 
-/* not sure how to do these at the moment */
-/*
-void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, khandle * from, Agent * me) {
+void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, khandle * from, void * me) {
+   for (Sample * s : ((Agent *)me)->environment.samples)
+      kcmd::sample(*s,from);
 }
 
-void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, khandle * from, Agent * me) {
+void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, khandle * from, void * me) {
+   for (Entity * e : ((Agent *)me)->environment.entities)
+      kcmd::entity(*e,from);
 }
-*/
+
+void kurome_agent_default_MSG_FALLSAMPLES_handler(KB * msg, khandle * from, void * me) {
+   for (Sample * s : ((Agent *)me)->full_env->samples)
+      kcmd::fSample(*s,from);
+}
+
+void kurome_agent_default_MSG_FALLENTITIES_handler(KB * msg, khandle * from, void * me) {
+   for (Entity * e : ((Agent *)me)->full_env->entities)
+      kcmd::fEntity(*e,from);
+}
 
 void kurome_agent_default_MSG_FADD_ENTITY_handler(KB * msg, khandle * from, void * me) {
    struct kurome_entitymsg * em = (struct kurome_entitymsg *)msg;
@@ -156,6 +167,13 @@ void kurome_reporter_default_MSG_ADD_ENTITY_handler(KB * msg, void * me) {
 void kurome_reporter_default_MSG_ENTITY_handler(KB * msg, void * me) {
 }
 */
+
+void kurome_reporter_default_MSG_FADD_ENTITY_handler(KB * msg, void * me) {
+   if (((Reporter *)me)->full_env) {
+      struct kurome_entitymsg * emsg = (struct kurome_entitymsg *)msg;
+      ((Reporter *)me)->full_env->addEntity(new Entity(&emsg->e));
+   }
+}
 
 /* don't care */
 /*
@@ -251,6 +269,13 @@ void kurome_reporter_default_MSG_SAMPLE_handler(KB * msg, void * me) {
    if (((Reporter *)me)->environment) {
       struct kurome_samplemsg * sm = (struct kurome_samplemsg *)msg;
       ((Reporter *)me)->environment->apply(new Sample(&sm->s));
+   }
+}
+
+void kurome_reporter_default_MSG_FSAMPLE_handler(KB * msg, void * me) {
+   if (((Reporter *)me)->full_env) {
+      struct kurome_samplemsg * sm = (struct kurome_samplemsg *)msg;
+      ((Reporter *)me)->full_env->apply(new Sample(&sm->s));
    }
 }
 
