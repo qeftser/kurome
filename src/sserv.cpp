@@ -1,7 +1,7 @@
 
 #include "Kurome.h"
-#include "SimWaiter.hpp"
-#include "NILRotAStarMapper.hpp"
+#include "waiters/SimWaiter.hpp"
+#include "mappers/NILRotAStarMapper.hpp"
 #include <unistd.h>
 
 int main(void) {

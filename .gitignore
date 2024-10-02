@@ -32,6 +32,9 @@
 *.app
 *.e
 
+# build dir
+build/*
+
 # Python stuff
 *.pyc
 py/*

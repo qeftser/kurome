@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Kurome.h"
+#include "../Kurome.h"
 #include <unordered_set>
 #include <cstring>
 
