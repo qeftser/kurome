@@ -179,7 +179,7 @@ connection:
                         startY < reporter.self->posy+(reporter.self->ywid))
                   mouseState = KUROME_VIEWER_MSMOVE;
                else if (reporter.full_env) {
-                  for (Entity * e : reporter.fentities()) {
+                  for (Entity * e : reporter.full_env->entities) {
                      if (startX > e->posx-(e->xwid/2.0) &&
                          startX < e->posx+(e->xwid/2.0) &&
                          startY > e->posy-(e->ywid/2.0) &&
@@ -193,7 +193,7 @@ connection:
                }
             }
             else if (reporter.full_env && mouseState == KUROME_VIEWER_MDEL) {
-               for (Entity * e : reporter.fentities()) {
+               for (Entity * e : reporter.full_env->entities) {
                   if (startX > e->posx-(e->xwid/2.0) &&
                       startX < e->posx+(e->xwid/2.0) &&
                       startY > e->posy-(e->ywid/2.0) &&
@@ -347,7 +347,7 @@ connection:
             r.setFillColor(sf::Color(155,155,155,255));
             for (i = reporter.fginfo.blocksXmin; i < reporter.fginfo.blocksXmax; ++i) {
                for (j = reporter.fginfo.blocksYmin; j < reporter.fginfo.blocksYmax; ++j) {
-                  if (reporter.fblocks()(i,j)) {
+                  if (reporter.full_env->blocks(i,j)) {
                      r.setPosition(i*altScale,j*altScale);
                      window.draw(r);
                   }
@@ -361,7 +361,7 @@ connection:
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DKNOWN)) {
             for (i = reporter.ginfo.blocksXmin; i < reporter.ginfo.blocksXmax; ++i) {
                for (j = reporter.ginfo.blocksYmin; j < reporter.ginfo.blocksYmax; ++j) {
-                   if (reporter.blocks()(i,j)) {
+                   if (reporter.full_env->blocks(i,j)) {
                       r.setPosition(i*winScale,j*winScale);
                       window.draw(r);
                    }

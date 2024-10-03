@@ -46,11 +46,6 @@ public:
    void connectFirst();
    void disconnectClient();
 
-   /* access private data for display */
-
-   Eigen::MatrixXi &    blocks();
-   Eigen::MatrixXi &    fblocks();
-
    /* wait on server */
 
    void wait();
