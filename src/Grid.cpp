@@ -14,7 +14,7 @@ Grid::Grid(double unitSize, double sizeX, double sizeY) {
    this->entities = std::set<Entity *>();
    this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
-   clear();
+   //clear();
 }
 
 Grid::Grid(double unitSize, double sizeXmin, double sizeXmax, double sizeYmin, double sizeYmax) {
@@ -27,7 +27,7 @@ Grid::Grid(double unitSize, double sizeXmin, double sizeXmax, double sizeYmin, d
    this->entities = std::set<Entity *>();
    this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
-   clear();
+   //clear();
 }
 
 void Grid::clear() {
@@ -289,6 +289,7 @@ int * Grid::getIdxPtr(int xpos, int ypos) {
 }
 
 int Grid::addEntity(Entity * e) {
+   printf("Adding entity %d\n",e->id);
    EllipseIterator ei = EllipseIterator(e,this);
    RectIterator ri = RectIterator(e,this);
    switch (e->type) {
@@ -318,6 +319,7 @@ int Grid::addEntity(Entity * e) {
 }
 
 int Grid::remEntity(Entity * e) {
+   printf("Reming entity %d\n",e->id);
    for (Entity * en : entities) {
       if (en->id == e->id) {
          entities.erase(en);
@@ -329,6 +331,7 @@ int Grid::remEntity(Entity * e) {
 }
 
 int Grid::chgEntity(Entity * e) {
+   printf("Chging entity %d\n",e->id);
    for (Entity * en : entities) {
       if (en->id == e->id) {
          *en = *e;
@@ -373,6 +376,8 @@ int Grid::apply(Sample * sample) {
 }
 
 int Grid::toStruct(struct grid_struct ** gs) {
+   int size = sizeof(grid_struct)+(sizeof(int)*(blocksXmax-blocksXmin)*(blocksYmax-blocksYmin));
+   *gs = (struct grid_struct *)realloc(*gs,size);
    (*gs)->unitSize = unitSize;
    (*gs)->blocksXmax = blocksXmax;
    (*gs)->blocksYmax = blocksYmax;
@@ -382,8 +387,6 @@ int Grid::toStruct(struct grid_struct ** gs) {
    (*gs)->sizeYmax = sizeYmax;
    (*gs)->sizeXmin = sizeXmin;
    (*gs)->sizeYmin = sizeYmin;
-   int size = sizeof(grid_struct)+(sizeof(int)*(blocksXmax-blocksXmin)*(blocksYmax-blocksYmin));
-   *gs = (struct grid_struct *)realloc(*gs,size);
    for (int i = 0; i < (blocksXmax-blocksXmin)*(blocksYmax-blocksYmin); ++i)
       (*gs)->matrix[i] = blocks(i/(blocksXmax-blocksXmin),i%(blocksXmax-blocksXmin));
    return size;
@@ -392,12 +395,12 @@ int Grid::toStruct(struct grid_struct ** gs) {
 Grid::Grid(struct grid_struct * gs)
    : blocksXmax(gs->blocksXmax), blocksYmax(gs->blocksYmax), 
      sizeXmax(gs->sizeXmax), sizeYmax(gs->sizeYmax), unitSize(gs->unitSize) {
-   this->blocks = Eigen::MatrixXi(blocksXmax-blocksXmin,blocksYmax-blocksYmin);
+   this->blocks = Eigen::MatrixXi(gs->blocksXmax-gs->blocksXmin,gs->blocksYmax-gs->blocksYmin);
    this->entities = std::set<Entity *>();
    this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
-   clear();
-   for (int i = 0; i < (blocksXmax-blocksXmin)*(blocksYmax-blocksYmin); ++i)
-      blocks(i/(blocksXmax-blocksXmin),i%(blocksXmax-blocksXmin)) = gs->matrix[i];
+   for (int i = 0; i < (gs->blocksXmax-gs->blocksXmin)*(gs->blocksYmax-gs->blocksYmin); ++i) {
+      blocks(i/(gs->blocksXmax-blocksXmin),i%(gs->blocksXmax-gs->blocksXmin)) = gs->matrix[i];
+   }
 }
 

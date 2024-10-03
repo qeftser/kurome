@@ -36,9 +36,8 @@ public:
       }
 
    Entity(struct entity_struct * es)
-      : posx(es->posx), posy(es->posy), xwid(es->xwid), ywid(es->ywid), rot(es->rot), type(es->type), val(es->val) {
-         id = es->id;
-      }
+      : posx(es->posx), posy(es->posy), xwid(es->xwid), ywid(es->ywid), 
+        rot(es->rot), type(es->type), val(es->val), id(es->id) {}
 
    /* 
     * Populate the given struct with the

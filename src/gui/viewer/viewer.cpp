@@ -7,22 +7,23 @@
 
 #define KUROME_VIEWER_FRAMERATE 30
 
-#define KUROME_VIEWER_APAUSE 1
-#define KUROME_VIEWER_ASTART 2
-#define KUROME_VIEWER_DALL   0x01
-#define KUROME_VIEWER_DFULL  0x02
-#define KUROME_VIEWER_DKNOWN 0x04
-#define KUROME_VIEWER_DGRID  0x08
-#define KUROME_VIEWER_DSELF  0x10
-#define KUROME_VIEWER_DMAPP  0x20
-#define KUROME_VIEWER_DGOAL  0x40
-#define KUROME_VIEWER_MNONE  1
-#define KUROME_VIEWER_MRECT  2
-#define KUROME_VIEWER_MELPS  3
-#define KUROME_VIEWER_MDEL   4
-#define KUROME_VIEWER_MMOVE  5
-#define KUROME_VIEWER_MSMOVE 6
-#define KUROME_VIEWER_MGMOVE 7
+#define KUROME_VIEWER_APAUSE  1
+#define KUROME_VIEWER_ASTART  2
+#define KUROME_VIEWER_DALL    0x01
+#define KUROME_VIEWER_DFULL   0x02
+#define KUROME_VIEWER_DKNOWN  0x04
+#define KUROME_VIEWER_DGRID   0x08
+#define KUROME_VIEWER_DSELF   0x10
+#define KUROME_VIEWER_DMAPP   0x20
+#define KUROME_VIEWER_DGOAL   0x40
+#define KUROME_VIEWER_DBORDER 0x80
+#define KUROME_VIEWER_MNONE   1
+#define KUROME_VIEWER_MRECT   2
+#define KUROME_VIEWER_MELPS   3
+#define KUROME_VIEWER_MDEL    4
+#define KUROME_VIEWER_MMOVE   5
+#define KUROME_VIEWER_MSMOVE  6
+#define KUROME_VIEWER_MGMOVE  7
 
 void kurome_viewer_draw_entity(Entity & en, sf::RenderWindow & w, double winScale) {
    sf::RectangleShape r;
@@ -127,6 +128,9 @@ connection:
       uint64_t before = reporter.recved;
       kcmd::getGrid(&reporter.reqs);
       reporter.wait(before);
+
+      kcmd::allSamples(&reporter.reqs);
+      kcmd::allEntities(&reporter.reqs);
    }
 
    if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
@@ -154,8 +158,7 @@ connection:
    kcmd::getMapperInfo(&reporter.reqs);
    //reporter.wait(before);
 
-   //kcmd::allSamples(&reporter.reqs);
-   //kcmd::allEntities(&reporter.reqs);
+
 
    kcmd::pause(&reporter.reqs);
    agentState = KUROME_VIEWER_APAUSE;
@@ -230,13 +233,13 @@ connection:
                case KUROME_VIEWER_MRECT:
                   if (reporter.full_env) {
                      if (startX < posX && startY < posY) {
-                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_RECT,20);
-                        nev->posx += (nev->xwid/2.0);
-                        nev->posy += (nev->ywid/2.0);
                         for (Entity * e : reporter.full_env->entities) {
                            if (e->id > KUROME_ENTITY_ID_NUM)
                               KUROME_ENTITY_ID_NUM = e->id;
                         }
+                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_RECT,20);
+                        nev->posx += (nev->xwid/2.0);
+                        nev->posy += (nev->ywid/2.0);
                         reporter.full_env->addEntity(nev);
                         reporter.full_env->redraw();
                         kcmd::fAddEntity(*nev,&reporter.reqs);
@@ -246,13 +249,13 @@ connection:
                case KUROME_VIEWER_MELPS:
                   if (reporter.full_env) {
                      if (startX < posX && startY < posY) {
-                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_ELPS,20);
-                        nev->posx += (nev->xwid/2.0);
-                        nev->posy += (nev->ywid/2.0);
                         for (Entity * e : reporter.full_env->entities) {
                            if (e->id > KUROME_ENTITY_ID_NUM)
                               KUROME_ENTITY_ID_NUM = e->id;
                         }
+                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_ELPS,20);
+                        nev->posx += (nev->xwid/2.0);
+                        nev->posy += (nev->ywid/2.0);
                         reporter.full_env->addEntity(nev);
                         reporter.full_env->redraw();
                         kcmd::fAddEntity(*nev,&reporter.reqs);
@@ -350,6 +353,9 @@ connection:
                case sf::Keyboard::V:
                   drawState ^= KUROME_VIEWER_DKNOWN;
                   break;
+               case sf::Keyboard::B:
+                  drawState ^= KUROME_VIEWER_DBORDER;
+                  break;
             }
          }
       }
@@ -384,7 +390,7 @@ connection:
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DKNOWN)) {
             for (i = reporter.ginfo.blocksXmin; i < reporter.ginfo.blocksXmax; ++i) {
                for (j = reporter.ginfo.blocksYmin; j < reporter.ginfo.blocksYmax; ++j) {
-                   if (reporter.full_env->blocks(i,j)) {
+                   if (reporter.environment->blocks(i,j)) {
                       r.setPosition(i*winScale,j*winScale);
                       window.draw(r);
                    }
@@ -394,7 +400,7 @@ connection:
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DGRID)) {
             r.setFillColor(sf::Color(0,0,0,0));
             r.setOutlineColor(sf::Color::White);
-            r.setOutlineThickness(0.1);
+            r.setOutlineThickness(0.35);
             for (i = reporter.ginfo.blocksXmin; i < reporter.ginfo.blocksXmax; ++i) {
                for (j = reporter.ginfo.blocksYmin; j < reporter.ginfo.blocksYmax; ++j) {
                    r.setPosition(i*winScale,j*winScale);
@@ -420,6 +426,18 @@ connection:
       if (reporter.goal) {
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DGOAL)) {
             kurome_viewer_draw_entity(*reporter.goal,window,invU);
+         }
+      }
+
+      if (reporter.environment) {
+         if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DKNOWN)) {
+            r.setFillColor(sf::Color(0,0,0,0));
+            r.setOutlineColor(sf::Color::White);
+            r.setOutlineThickness(1);
+            r.setPosition(reporter.ginfo.blocksXmin*invU,reporter.ginfo.blocksYmin*invU);
+            r.setSize(sf::Vector2f((reporter.ginfo.blocksXmax-reporter.ginfo.blocksXmin)*invU*0.5,
+                                   (reporter.ginfo.blocksYmax-reporter.ginfo.blocksYmin)*invU*0.5));
+            window.draw(r);
          }
       }
 

@@ -12,7 +12,7 @@ void kurome_entity_req_base(Entity & e, khandle * reqs, int mtype) {
    e.toStruct(&em);
    struct kurome_entitymsg * msg = (struct kurome_entitymsg *)wrap_basemsg(&em,sizeof(struct entity_struct));
    msg->type = mtype;
-   msg->size = sizeof(struct entity_struct);
+   msg->size = sizeof(struct kurome_entitymsg);
    reqs->enqueue((KB *)msg);
 }
 
@@ -67,11 +67,11 @@ void kcmd::fEntity(Entity & e, khandle * reqs) {
 }
 
 void kcmd::fChgEntity(Entity & e, khandle * reqs) {
-   kurome_entity_req_base(e,reqs,KUROME_MSG_ENTITY);
+   kurome_entity_req_base(e,reqs,KUROME_MSG_FCHGENTITY);
 }
 
 void kcmd::fRemEntity(Entity & e, khandle * reqs) {
-   kurome_entity_req_base(e,reqs,KUROME_MSG_ENTITY);
+   kurome_entity_req_base(e,reqs,KUROME_MSG_FREMENTITY);
 }
 
 void kcmd::goal(Entity & e, khandle * reqs) {

@@ -29,6 +29,8 @@ void reporter_client(Reporter * me) {
    FD_SET(broadcastfd,&allrset);
 
    kurome_msg_transport rstate, wstate;
+   bzero(&rstate,sizeof(rstate));
+   bzero(&wstate,sizeof(wstate));
 
    int nready, nfds = broadcastfd, slen, n;
 

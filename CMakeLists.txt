@@ -15,6 +15,8 @@ add_executable(viewer src/gui/viewer/viewer.cpp)
 
 # target_compile_definitions(viewer PRIVATE SFML_STATIC)
 
+add_compile_options(-g)
+
 target_include_directories(serv PUBLIC src/headers src/mappers)
 target_include_directories(viewer PUBLIC src/headers src/waiters)
 

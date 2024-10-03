@@ -90,27 +90,29 @@ void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, khandle * from, void * 
 }
 
 void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, khandle * from, void * me) {
-   kcmd::allSamples(from);
+   //kcmd::allSamples(from);
    for (Sample * s : ((Agent *)me)->environment.samples)
       kcmd::sample(*s,from);
 }
 
 void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, khandle * from, void * me) {
-   kcmd::allEntities(from);
+   //kcmd::allEntities(from);
    for (Entity * e : ((Agent *)me)->environment.entities)
       kcmd::entity(*e,from);
 }
 
 void kurome_agent_default_MSG_FALLSAMPLES_handler(KB * msg, khandle * from, void * me) {
-   kcmd::fAllSamples(from);
-   for (Sample * s : ((Agent *)me)->full_env->samples)
-      kcmd::fSample(*s,from);
+   //kcmd::fAllSamples(from);
+   if (((Agent *)me)->full_env)
+      for (Sample * s : ((Agent *)me)->full_env->samples)
+         kcmd::fSample(*s,from);
 }
 
 void kurome_agent_default_MSG_FALLENTITIES_handler(KB * msg, khandle * from, void * me) {
-   kcmd::fAllEntities(from);
-   for (Entity * e : ((Agent *)me)->full_env->entities)
-      kcmd::fEntity(*e,from);
+   //kcmd::fAllEntities(from);
+   if (((Agent *)me)->full_env)
+      for (Entity * e : ((Agent *)me)->full_env->entities)
+         kcmd::fEntity(*e,from);
 }
 
 void kurome_agent_default_MSG_FADD_ENTITY_handler(KB * msg, khandle * from, void * me) {
