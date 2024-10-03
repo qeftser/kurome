@@ -2,6 +2,7 @@
 #include "../../Kurome.h"
 #include "../../headers/EllipseShape.hpp"
 #include <SFML/Graphics.hpp>
+#include <chrono>
 #include <errno.h>
 
 #define KUROME_VIEWER_FRAMERATE 30
@@ -118,12 +119,24 @@ connection:
 
    //printf("getting env\n");
    //uint64_t before = reporter.recved.load();
-   kcmd::getGrid(&reporter.reqs);
    //reporter.wait(before);
 
    //printf("getting fullEnv\n");
    //before = reporter.recved.load();
-   kcmd::getFullGrid(&reporter.reqs);
+   {
+      uint64_t before = reporter.recved;
+      kcmd::getGrid(&reporter.reqs);
+      reporter.wait(before);
+   }
+
+   if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
+      uint64_t before = reporter.recved;
+      kcmd::getFullGrid(&reporter.reqs);
+      reporter.wait(before);
+
+      kcmd::fAllEntities(&reporter.reqs);
+      kcmd::fAllSamples(&reporter.reqs);
+   }
    //reporter.wait(before);
 
    //printf("getting self\n");
@@ -140,6 +153,9 @@ connection:
    //before = reporter.recved.load();
    kcmd::getMapperInfo(&reporter.reqs);
    //reporter.wait(before);
+
+   //kcmd::allSamples(&reporter.reqs);
+   //kcmd::allEntities(&reporter.reqs);
 
    kcmd::pause(&reporter.reqs);
    agentState = KUROME_VIEWER_APAUSE;
@@ -208,7 +224,6 @@ connection:
             }
          }
          else if (event.type == sf::Event::MouseButtonReleased) {
-            printf("(-, -)\n");
             mouseDown = false;
             Entity * nev;
             switch (mouseState) {
@@ -218,6 +233,10 @@ connection:
                         nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_RECT,20);
                         nev->posx += (nev->xwid/2.0);
                         nev->posy += (nev->ywid/2.0);
+                        for (Entity * e : reporter.full_env->entities) {
+                           if (e->id > KUROME_ENTITY_ID_NUM)
+                              KUROME_ENTITY_ID_NUM = e->id;
+                        }
                         reporter.full_env->addEntity(nev);
                         reporter.full_env->redraw();
                         kcmd::fAddEntity(*nev,&reporter.reqs);
@@ -230,6 +249,10 @@ connection:
                         nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_ELPS,20);
                         nev->posx += (nev->xwid/2.0);
                         nev->posy += (nev->ywid/2.0);
+                        for (Entity * e : reporter.full_env->entities) {
+                           if (e->id > KUROME_ENTITY_ID_NUM)
+                              KUROME_ENTITY_ID_NUM = e->id;
+                        }
                         reporter.full_env->addEntity(nev);
                         reporter.full_env->redraw();
                         kcmd::fAddEntity(*nev,&reporter.reqs);
@@ -419,7 +442,6 @@ connection:
          e.setFillColor(sf::Color(0,0,255,255));
          switch (mouseState) {
             case KUROME_VIEWER_MNONE:
-               printf("(%0.2f, %0.2f)\n",posX,posY);
                break;
             case KUROME_VIEWER_MMOVE:
                if (held->type == KUROME_TYPE_RECT) {
@@ -448,8 +470,6 @@ connection:
                }
                break;
             case KUROME_VIEWER_MRECT:
-               printf("sx: %f sy: %f\n",startX,startY);
-               printf("cx: %f cy: %f\n",posX,posY);
                if (startX < posX && startY < posY) {
                   r.setPosition(startX*invU,startY*invU);
                   r.setSize(sf::Vector2f((posX-startX)*invU,(posY-startY)*invU));

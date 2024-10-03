@@ -65,5 +65,6 @@ void kurome_reporter_default_MSG_MAPPERINFO_handler(KB * msg, void * me);
 void kurome_reporter_default_MSG_GRID_handler(KB * msg, void * me);
 void kurome_reporter_default_MSG_FULLGRID_handler(KB * msg, void * me);
 void kurome_reporter_default_MSG_CLENSE_handler(KB * msg, void * me);
+void kurome_reporter_default_MSG_ALL_X_handler(KB * msg, void * me);
 
 #endif

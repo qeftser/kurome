@@ -245,6 +245,8 @@ void Reporter::registerHandlerData(int mtype, void * data) {
 void Reporter::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_ENTITY,kurome_reporter_default_MSG_ADD_ENTITY_handler);
    registerHandler(KUROME_MSG_ADD_ENTITY,kurome_reporter_default_MSG_ADD_ENTITY_handler);
+   registerHandler(KUROME_MSG_FENTITY,kurome_reporter_default_MSG_FADD_ENTITY_handler);
+   registerHandler(KUROME_MSG_FADD_ENTITY,kurome_reporter_default_MSG_FADD_ENTITY_handler);
    registerHandler(KUROME_MSG_SET_IDX,kurome_reporter_default_MSG_SET_IDX_handler);
    registerHandler(KUROME_MSG_CLEAR,kurome_reporter_default_MSG_CLEAR_handler);
    registerHandler(KUROME_MSG_CHG_UNITSIZE,kurome_reporter_default_MSG_CHGUNITSIZE_handler);
@@ -255,11 +257,16 @@ void Reporter::setDefaultHandlers(void) {
    registerHandler(KUROME_MSG_GOAL,kurome_reporter_default_MSG_CHGGOAL_handler);
    registerHandler(KUROME_MSG_CHGGOAL,kurome_reporter_default_MSG_CHGGOAL_handler);
    registerHandler(KUROME_MSG_SAMPLE,kurome_reporter_default_MSG_SAMPLE_handler);
+   registerHandler(KUROME_MSG_FSAMPLE,kurome_reporter_default_MSG_FSAMPLE_handler);
    registerHandler(KUROME_MSG_WAITERINFO,kurome_reporter_default_MSG_WAITERINFO_handler);
    registerHandler(KUROME_MSG_MAPPERINFO,kurome_reporter_default_MSG_MAPPERINFO_handler);
    registerHandler(KUROME_MSG_GRID,kurome_reporter_default_MSG_GRID_handler);
    registerHandler(KUROME_MSG_FULLGRID,kurome_reporter_default_MSG_FULLGRID_handler);
    registerHandler(KUROME_MSG_CLENSE,kurome_reporter_default_MSG_CLENSE_handler);
+   registerHandler(KUROME_MSG_FALLENTITIES,kurome_reporter_default_MSG_ALL_X_handler);
+   registerHandler(KUROME_MSG_ALLENTITIES,kurome_reporter_default_MSG_ALL_X_handler);
+   registerHandler(KUROME_MSG_FALLSAMPLES,kurome_reporter_default_MSG_ALL_X_handler);
+   registerHandler(KUROME_MSG_ALLSAMPLES,kurome_reporter_default_MSG_ALL_X_handler);
 }
 
 void Reporter::connectFirst() {

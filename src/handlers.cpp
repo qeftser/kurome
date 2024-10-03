@@ -90,21 +90,25 @@ void kurome_agent_default_MSG_CHGFLAGS_handler(KB * msg, khandle * from, void * 
 }
 
 void kurome_agent_default_MSG_ALLSAMPLES_handler(KB * msg, khandle * from, void * me) {
+   kcmd::allSamples(from);
    for (Sample * s : ((Agent *)me)->environment.samples)
       kcmd::sample(*s,from);
 }
 
 void kurome_agent_default_MSG_ALLENTITIES_handler(KB * msg, khandle * from, void * me) {
+   kcmd::allEntities(from);
    for (Entity * e : ((Agent *)me)->environment.entities)
       kcmd::entity(*e,from);
 }
 
 void kurome_agent_default_MSG_FALLSAMPLES_handler(KB * msg, khandle * from, void * me) {
+   kcmd::fAllSamples(from);
    for (Sample * s : ((Agent *)me)->full_env->samples)
       kcmd::fSample(*s,from);
 }
 
 void kurome_agent_default_MSG_FALLENTITIES_handler(KB * msg, khandle * from, void * me) {
+   kcmd::fAllEntities(from);
    for (Entity * e : ((Agent *)me)->full_env->entities)
       kcmd::fEntity(*e,from);
 }
@@ -186,6 +190,10 @@ void kurome_reporter_default_MSG_SET_IDX_handler(KB * msg, void * me) {
       struct kurome_setidxmsg * simg = (struct kurome_setidxmsg *)msg;
       ((Reporter *)me)->environment->setIdx(simg->posx,simg->posy,simg->weight);
    }
+}
+
+void kurome_reporter_default_MSG_ALL_X_handler(KB * msg, void * me) {
+   // dummy function
 }
 
 void kurome_reporter_default_MSG_CLEAR_handler(KB * msg, void * me) {
