@@ -11,16 +11,16 @@ public:
    Entity          orgin;
    Eigen::MatrixXi values;
    double unitSize;
-   int crr, srr;
-   int ssx, ssy;
+   double crr, srr;
+   double ssx, ssy;
    
    Sample(Entity e, Eigen::MatrixXi m, double d) 
       : orgin(e), values(m), unitSize(d) { 
          values.setZero(); 
-         srr = sin((-e.rot)*(180.0/3.14159265358));
-         crr = cos((-e.rot)*(180.0/3.14159265358));
-         ssx = (e.posx-(e.xwid/2));
-         ssy = (e.posy-(e.ywid/2));
+         srr = sinl((e.rot)*(3.14159265358/180.0));
+         crr = cosl((e.rot)*(3.14159265358/180.0));
+         ssx = (e.xwid/2);
+         ssy = (e.ywid/2);
       };
    Sample() 
       : orgin(Entity(0,0,0,0,0,0)), values(Eigen::MatrixXi(0,0)), unitSize(0) {}
@@ -36,13 +36,18 @@ public:
     */
    int & localVal(double x, double y) {
       static int null = 0;
-      null = -1;
-      x -= ssx;
-      y -= ssy;
-      x = (x * crr) - (y * srr);
-      y = (x * srr) + (y * crr);
+      null = 0;
+      x -= orgin.posx;
+      y -= orgin.posy;
+      printf("ssx: %f ssy: %f\n",ssx,ssy);
+      double temp;
+      temp = ((x * crr) + (y * srr)) + ssx;
+      y = ((y * crr) - (x * srr)) + ssy;
+      x = temp;
+      printf("\033[32m%f %f\033[0m\n",x,y);
       int xp = (int)std::round(x/unitSize);
       int yp = (int)std::round(y/unitSize);
+      printf("\033[33m%d %d\033[0m\n",xp,yp);
       if (xp >= values.rows() || xp < 0 ||
           yp >= values.cols() || yp < 0)
          return null;

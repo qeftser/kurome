@@ -24,7 +24,7 @@ public:
       : posx(s->posx), posy(s->posy), rot(s->rot), num(s->num), weight(s->weight), nextptr(NULL) {}
 
    FrameId id() const;
-   bool operator=(const Frame &);
+   bool operator==(const Frame &);
    Frame * operator+(const Frame &);
    void operator+=(Frame &);
    int cost(Entity &, Grid &);

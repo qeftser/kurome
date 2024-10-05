@@ -49,7 +49,6 @@ void RectIterator::setupVars(double xwid, double ywid, double offx, double offy,
    srty += (offy);
    posx = srtx - shiftyx;
    posy = srty - shiftyy;
-   printf("xx: %f xy: %f yx: %f yy: %f\n",shiftxx,shiftxy,shiftyx,shiftyy); 
 }
 
 RectIterator::RectIterator(Entity * e, Grid * g) 

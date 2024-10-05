@@ -12,13 +12,14 @@ add_library(k_lib STATIC src/Grid.cpp src/Iterators.cpp src/Frame.cpp src/Agent.
 
 add_executable(serv src/sserv.cpp)
 add_executable(viewer src/gui/viewer/viewer.cpp)
+add_executable(scratch src/scratch.cpp)
 
 # target_compile_definitions(viewer PRIVATE SFML_STATIC)
 
-add_compile_options(-g)
-
 target_include_directories(serv PUBLIC src/headers src/mappers)
 target_include_directories(viewer PUBLIC src/headers src/waiters)
+target_include_directories(scratch PUBLIC src/headers src/waiters)
 
 target_link_libraries(serv PUBLIC k_lib Eigen3::Eigen)
 target_link_libraries(viewer PUBLIC k_lib Eigen3::Eigen sfml-window sfml-graphics sfml-system)
+target_link_libraries(scratch PUBLIC k_lib Eigen3::Eigen)

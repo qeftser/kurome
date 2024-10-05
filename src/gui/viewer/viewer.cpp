@@ -1,6 +1,7 @@
 
 #include "../../Kurome.h"
 #include "../../headers/EllipseShape.hpp"
+#include "../../mappers/NILRotAStarMapper.hpp"
 #include <SFML/Graphics.hpp>
 #include <chrono>
 #include <errno.h>
@@ -50,6 +51,25 @@ void kurome_viewer_draw_entity(Entity & en, sf::RenderWindow & w, double winScal
          w.draw(r);
          break;
    }
+}
+
+void kurome_viewer_place_NILRotAStarMapper(Reporter * me, sf::RenderWindow * w, double invU) {
+   NILRotAStarMapper nrm = NILRotAStarMapper(me);
+   nrm.callback(0xffffffff);
+   bool done = false;
+   Frame curr;
+   while (!done) {
+      Frame curr = nrm.nextPoint(done);
+      sf::RectangleShape r;
+      r.setSize(sf::Vector2f(invU,invU));
+      r.setPosition((curr.posx)*invU,(curr.posy)*invU);
+      r.setFillColor(sf::Color(255,255,0));
+      w->draw(r);
+   }
+   /*
+   for (Frame * f : nrm.allocated) 
+      free(f);
+      */
 }
 
 int main(void) {
@@ -410,6 +430,12 @@ connection:
          }
       }
 
+      if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DMAPP)) {
+         if (strcmp(reporter.mapper.name,"NILRotAStarMapper") == 0) {
+            kurome_viewer_place_NILRotAStarMapper(&reporter,&window,invU);
+         }
+      }
+
       if (reporter.self) {
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DSELF)) {
             kurome_viewer_draw_entity(*reporter.self,window,invU);
@@ -446,10 +472,6 @@ connection:
          kurome_viewer_draw_entity(*held,window,winScale);
       }
       */
-
-      if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DMAPP)) {
-         /* need to do something different for each mapper */
-      }
 
       if (mouseDown) {
          sf::Vector2f pos = window.mapPixelToCoords(sf::Mouse::getPosition(window));

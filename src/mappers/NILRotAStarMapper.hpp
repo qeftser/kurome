@@ -14,6 +14,8 @@ public:
 
    NILRotAStarMapper(Agent * me) 
       : Mapper(me) {}; 
+   NILRotAStarMapper(Reporter * me)
+      : Mapper(me) {};
    NILRotAStarMapper() : Mapper() {};
 
    void callback(int flags) {
@@ -27,13 +29,13 @@ public:
          currPaths.pop();
       visited.clear();
 
-      double destX = self->goal.posx;
-      double destY = self->goal.posy;
+      double destX = goal->posx;
+      double destY = goal->posy;
 
-      double startX = self->self.posx;
-      double startY = self->self.posy;
+      double startX = self->posx;
+      double startY = self->posy;
 
-      double step = self->environment.getUnitSize();
+      double step = env->getUnitSize();
 
       Frame dest{ destX, destY, 0.0, 0, 0, NULL };
       Frame start{ startX, startY, 0.0, 0, 0, NULL };
@@ -51,9 +53,9 @@ public:
          nFrame = new Frame(curr);
          nFrame->posx = curr->posx-step;
          nFrame->posy = curr->posy-step;
-         if (self->environment.inBounds(nFrame->posx,nFrame->posy) && visited.insert(nFrame->id()).second) {
+         if (env->inBounds(nFrame->posx,nFrame->posy)) {
             nFrame->nextptr = curr;
-            nFrame->weight = nFrame->dist2(dest) + nFrame->cost(self->self,self->environment);
+            nFrame->weight = nFrame->dist2(dest) + nFrame->cost(*self,*env);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
          }
@@ -64,9 +66,9 @@ public:
          nFrame = new Frame(curr);
          nFrame->posx = curr->posx+step;
          nFrame->posy = curr->posy-step;
-         if (self->environment.inBounds(nFrame->posx,nFrame->posy) && visited.insert(nFrame->id()).second) {
+         if (env->inBounds(nFrame->posx,nFrame->posy)) {
             nFrame->nextptr = curr;
-            nFrame->weight = nFrame->dist2(dest) + nFrame->cost(self->self,self->environment);
+            nFrame->weight = nFrame->dist2(dest) + nFrame->cost(*self,*env);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
          }
@@ -77,9 +79,9 @@ public:
          nFrame = new Frame(curr);
          nFrame->posx = curr->posx-step;
          nFrame->posy = curr->posy+step;
-         if (self->environment.inBounds(nFrame->posx,nFrame->posy) && visited.insert(nFrame->id()).second) {
+         if (env->inBounds(nFrame->posx,nFrame->posy)) {
             nFrame->nextptr = curr;
-            nFrame->weight = nFrame->dist2(dest) + nFrame->cost(self->self,self->environment);
+            nFrame->weight = nFrame->dist2(dest) + nFrame->cost(*self,*env);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
          }
@@ -90,9 +92,9 @@ public:
          nFrame = new Frame(curr);
          nFrame->posx = curr->posx+step;
          nFrame->posy = curr->posy+step;
-         if (self->environment.inBounds(nFrame->posx,nFrame->posy) && visited.insert(nFrame->id()).second) {
+         if (env->inBounds(nFrame->posx,nFrame->posy)) {
             nFrame->nextptr = curr;
-            nFrame->weight = nFrame->dist2(dest) + nFrame->cost(self->self,self->environment);
+            nFrame->weight = nFrame->dist2(dest) + nFrame->cost(*self,*env);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
          }
@@ -102,9 +104,12 @@ public:
       }
    }
 
-   Frame nextPoint() {
-      if (!best.nextptr)
+   Frame nextPoint(bool & done) {
+      if (!best.nextptr) {
+         done = true;
          return best;
+      }
+      done = false;
 
       Frame * curr = &best;
       while (curr->nextptr->nextptr != NULL) {

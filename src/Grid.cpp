@@ -289,7 +289,6 @@ int * Grid::getIdxPtr(int xpos, int ypos) {
 }
 
 int Grid::addEntity(Entity * e) {
-   printf("Adding entity %d\n",e->id);
    EllipseIterator ei = EllipseIterator(e,this);
    RectIterator ri = RectIterator(e,this);
    switch (e->type) {
@@ -319,7 +318,6 @@ int Grid::addEntity(Entity * e) {
 }
 
 int Grid::remEntity(Entity * e) {
-   printf("Reming entity %d\n",e->id);
    for (Entity * en : entities) {
       if (en->id == e->id) {
          entities.erase(en);
@@ -331,7 +329,6 @@ int Grid::remEntity(Entity * e) {
 }
 
 int Grid::chgEntity(Entity * e) {
-   printf("Chging entity %d\n",e->id);
    for (Entity * en : entities) {
       if (en->id == e->id) {
          *en = *e;
@@ -361,6 +358,7 @@ int Grid::apply(Sample * sample) {
          break;
       case KUROME_TYPE_RECT:
          while (!ri.done) {
+            printf("%f %f\n",ri.locinfo().posx,ri.locinfo().posy);
             *ri = sample->localVal(ri.locinfo().posx,ri.locinfo().posy);
             ++ri;
          }

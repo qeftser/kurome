@@ -2,7 +2,10 @@
 #include "Kurome.h"
 
 Frame::Frame(Frame * other) {
-   memcpy(this,other,sizeof(Frame));
+   this->posx = other->posx;
+   this->posy = other->posy;
+   this->rot = other->rot;
+   this->weight = other->weight;
    this->num++;
    this->nextptr = other;
 }
@@ -11,7 +14,7 @@ FrameId Frame::id() const {
    return (((FrameId)posx<<48)|((FrameId)posy<<24)|((FrameId)rot));
 }
 
-bool Frame::operator=(const Frame & other) {
+bool Frame::operator==(const Frame & other) {
    if (id() == other.id())
       return true;
    return false;

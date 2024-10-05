@@ -4,9 +4,13 @@
 #define KUROME_AGENT_CLASS
 #include <vector>
 #include <thread>
+#include <set>
 #include "Entity.hpp"
 #include "Waiter.hpp"
-#include "Mapper.h"
+#include "kmsgs.h"
+
+class Mapper;
+class Grid;
 
 class Agent {
 public:
@@ -25,7 +29,6 @@ public:
 
    Agent(Entity & self, Entity & goal, Mapper & mapper, Grid & env)
       : self(self), goal(goal), mapper(mapper), environment(env), full_env(NULL) { 
-         mapper.self = this; 
          setDefaultHandlers();
       }
 

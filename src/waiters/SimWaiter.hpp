@@ -28,6 +28,9 @@ public:
          case KUROME_TYPE_RECT:
             ri = RectIterator(&ret->orgin,&fullenv);
             while (!ri.done) {
+               if (*ri) {
+                  printf("val!\n");
+               }
                ret->localVal(ri.locinfo().posx,ri.locinfo().posy) = *ri;
                ++ri;
             }
