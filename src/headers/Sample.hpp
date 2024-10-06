@@ -28,6 +28,10 @@ public:
    : orgin(&s->orgin), values(Eigen::MatrixXi(s->blocksX,s->blocksY)), unitSize(s->unitSize) {
       for (int i = 0; i < s->blocksX*s->blocksY; ++i)
          values(i/s->blocksX,i%s->blocksX) = s->matrix[i];
+      srr = sinl((orgin.rot)*(3.14159265358/180.0));
+      crr = cosl((orgin.rot)*(3.14159265358/180.0));
+      ssx = (orgin.xwid/2);
+      ssy = (orgin.ywid/2);
    }
 
    /* 
@@ -35,19 +39,16 @@ public:
     * Sample data.
     */
    int & localVal(double x, double y) {
-      static int null = 0;
+      static int null;
       null = 0;
       x -= orgin.posx;
       y -= orgin.posy;
-      printf("ssx: %f ssy: %f\n",ssx,ssy);
       double temp;
       temp = ((x * crr) + (y * srr)) + ssx;
       y = ((y * crr) - (x * srr)) + ssy;
       x = temp;
-      printf("\033[32m%f %f\033[0m\n",x,y);
       int xp = (int)std::round(x/unitSize);
       int yp = (int)std::round(y/unitSize);
-      printf("\033[33m%d %d\033[0m\n",xp,yp);
       if (xp >= values.rows() || xp < 0 ||
           yp >= values.cols() || yp < 0)
          return null;

@@ -430,9 +430,11 @@ connection:
          }
       }
 
-      if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DMAPP)) {
-         if (strcmp(reporter.mapper.name,"NILRotAStarMapper") == 0) {
-            kurome_viewer_place_NILRotAStarMapper(&reporter,&window,invU);
+      if (reporter.environment && reporter.self && reporter.goal) {
+         if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DMAPP) && mouseState == KUROME_VIEWER_MNONE) {
+            if (strcmp(reporter.mapper.name,"NILRotAStarMapper") == 0) {
+               kurome_viewer_place_NILRotAStarMapper(&reporter,&window,invU);
+            }
          }
       }
 

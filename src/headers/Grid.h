@@ -47,8 +47,9 @@ public:
    int  chgEntity(Entity *);
    int  remEntity(Entity *);
    int  apply(Sample *);
+   int  apply(Sample *, int(*)(int,int));
 
-   int  avgWeights(int,int);
+   static int  avgWeights(int,int);
    int  avgWeights(int,int,double);
 
    void clear();

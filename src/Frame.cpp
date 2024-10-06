@@ -11,7 +11,7 @@ Frame::Frame(Frame * other) {
 }
 
 FrameId Frame::id() const {
-   return (((FrameId)posx<<48)|((FrameId)posy<<24)|((FrameId)rot));
+   return (((FrameId)(posx*10)<<48)|((FrameId)(posy*10)<<24)|((FrameId)rot));
 }
 
 bool Frame::operator==(const Frame & other) {

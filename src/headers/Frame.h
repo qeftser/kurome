@@ -16,7 +16,7 @@ public:
    uint64_t weight;
    Frame * nextptr;
 
-   Frame() {};
+   Frame() : nextptr(NULL) {};
    Frame(double posx, double posy, double rot, uint64_t num, uint64_t weight, Frame * nextptr) 
       : posx(posx), posy(posy), rot(rot), num(num), weight(weight), nextptr(nextptr) {}
    Frame(Frame *);

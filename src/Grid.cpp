@@ -344,7 +344,7 @@ int Grid::getHighBlocks() {
           ?blocksXmax-blocksXmin:blocksYmax-blocksYmin);
 }
 
-int Grid::apply(Sample * sample) {
+int Grid::apply(Sample * sample, int (* func) (int, int)) {
    if (!sample)
       return 0;
    EllipseIterator ei = EllipseIterator(&sample->orgin,this);
@@ -352,14 +352,13 @@ int Grid::apply(Sample * sample) {
    switch(sample->orgin.type) {
       case KUROME_TYPE_ELPS:
          while (!ei.done) {
-            *ei = sample->localVal(ei.locinfo().posx,ei.locinfo().posy);
+            *ei = func(sample->localVal(ei.locinfo().posx,ei.locinfo().posy),*ei);
             ++ei;
          }
          break;
       case KUROME_TYPE_RECT:
          while (!ri.done) {
-            printf("%f %f\n",ri.locinfo().posx,ri.locinfo().posy);
-            *ri = sample->localVal(ri.locinfo().posx,ri.locinfo().posy);
+            *ri = func(sample->localVal(ri.locinfo().posx,ri.locinfo().posy),*ri);
             ++ri;
          }
          break;
@@ -371,6 +370,10 @@ int Grid::apply(Sample * sample) {
    if (!samples.count(sample))
       samples.insert(sample);
    return 0;
+}
+
+int Grid::apply(Sample * sample) {
+   return apply(sample,avgWeights);
 }
 
 int Grid::toStruct(struct grid_struct ** gs) {

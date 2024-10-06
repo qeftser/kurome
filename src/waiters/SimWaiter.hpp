@@ -20,17 +20,14 @@ public:
                                        fov.xwid,
                                        fov.ywid,
                                        fov.type,
-                                       0),
-                                Eigen::MatrixXi((int)std::ceil((fov.xwid*2)/fullenv.getUnitSize()),
-                                                (int)std::ceil((fov.ywid*2)/fullenv.getUnitSize())),
+                                       self.rot),
+                                Eigen::MatrixXi((int)std::ceil((fov.xwid)/fullenv.getUnitSize()),
+                                                (int)std::ceil((fov.ywid)/fullenv.getUnitSize())),
                                 fullenv.getUnitSize());
       switch (fov.type) {
          case KUROME_TYPE_RECT:
             ri = RectIterator(&ret->orgin,&fullenv);
             while (!ri.done) {
-               if (*ri) {
-                  printf("val!\n");
-               }
                ret->localVal(ri.locinfo().posx,ri.locinfo().posy) = *ri;
                ++ri;
             }
@@ -49,6 +46,14 @@ public:
             return;
          break;
       }
+      /*
+      putchar('\n');
+      for (int i = 0; i < ret->values.rows(); ++i) {
+         for (int j = 0; j < ret->values.cols(); ++j)
+            printf("%02x ",ret->values(i,j));
+         putchar('\n');
+      }
+      */
    }
 
 };
