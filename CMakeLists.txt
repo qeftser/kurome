@@ -23,3 +23,10 @@ target_include_directories(scratch PUBLIC src/headers src/waiters)
 target_link_libraries(serv PUBLIC k_lib Eigen3::Eigen)
 target_link_libraries(viewer PUBLIC k_lib Eigen3::Eigen sfml-window sfml-graphics sfml-system)
 target_link_libraries(scratch PUBLIC k_lib Eigen3::Eigen)
+
+#################################
+# Generate Docs
+#################################
+find_package(Doxygen)
+set(DOXYGEN_OUTPUT_DIRECTORY ../docs)
+doxygen_add_docs(docs src)

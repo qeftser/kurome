@@ -376,6 +376,27 @@ int Grid::apply(Sample * sample) {
    return apply(sample,avgWeights);
 }
 
+Sample Grid::application(Sample * s) {
+   Sample nev = Sample(s->orgin,Eigen::MatrixXi((int)root(s->orgin.xwid),(int)root(s->orgin.ywid)),unitSize);
+   EllipseIterator ei = EllipseIterator(&nev.orgin,this);
+   RectIterator ri = RectIterator(&nev.orgin,this);
+   switch(nev.orgin.type) {
+      case KUROME_TYPE_ELPS:
+         while (!ei.done) {
+            nev.localVal(ei.locinfo().posx,ei.locinfo().posy) = *ei;
+            ++ei;
+         }
+         break;
+      case KUROME_TYPE_RECT:
+         while (!ri.done) {
+            nev.localVal(ri.locinfo().posx,ri.locinfo().posy) = *ri;
+            ++ri;
+         }
+         break;
+   }
+   return nev;
+}
+
 int Grid::toStruct(struct grid_struct ** gs) {
    int size = sizeof(grid_struct)+(sizeof(int)*(blocksXmax-blocksXmin)*(blocksYmax-blocksYmin));
    *gs = (struct grid_struct *)realloc(*gs,size);

@@ -17,7 +17,7 @@ void kurome_sserv_start_handler(KB * msg, khandle * from, void * flag) {
 }
 
 static int maxWeightSelect(int w1, int w2) {
-   return (w1>w2?w1:w2);
+   return (w1+w2)/2;
 }
 
 int main(void) {
@@ -65,13 +65,14 @@ int main(void) {
          if (w->poll()) {
             Sample * next = w->serve();
             OO7.environment.apply(next,maxWeightSelect);
-            OO7.sendAll(OO7.environment);
+            Sample appli = OO7.environment.application(next);
+            OO7.sendAll(appli);
+            delete next;
          }
       }
       usleep(10000);
       if (step%5 == 0 && shouldMove) {
          OO7.mapper.callback(0);
-         me.rot = atan2(me.posx-goal.posx,me.posy-goal.posy);
          Frame next = OO7.mapper.nextPoint(good);
          if (!good) {
             me.posx = next.posx;

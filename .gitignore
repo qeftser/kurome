@@ -35,6 +35,10 @@
 # build dir
 build/*
 
+#docs dir
+docs/*
+
 # Python stuff
 *.pyc
 py/*
+

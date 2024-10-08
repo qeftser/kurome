@@ -72,6 +72,24 @@ void kurome_viewer_place_NILRotAStarMapper(Reporter * me, sf::RenderWindow * w, 
       */
 }
 
+static int kurome_viewer_prioritize_new_weight(int w1, int w2) {
+   return w1;
+}
+
+void kurome_viewer_MSG_SAMPLE_handler(KB * msg, void * me) {
+   if (((Reporter *)me)->environment) {
+      struct kurome_samplemsg * sm = (struct kurome_samplemsg *)msg;
+      ((Reporter *)me)->environment->apply(new Sample(&sm->s),kurome_viewer_prioritize_new_weight);
+   }
+}
+
+void kurome_viewer_MSG_FSAMPLE_handler(KB * msg, void * me) {
+   if (((Reporter *)me)->environment) {
+      struct kurome_samplemsg * sm = (struct kurome_samplemsg *)msg;
+      ((Reporter *)me)->environment->apply(new Sample(&sm->s),kurome_viewer_prioritize_new_weight);
+   }
+}
+
 int main(void) {
 
    srand(time(NULL)*clock());
@@ -81,6 +99,8 @@ int main(void) {
    sf::Event event;
 
    Reporter reporter;
+   reporter.registerHandler(KUROME_MSG_SAMPLE,kurome_viewer_MSG_SAMPLE_handler);
+   reporter.registerHandler(KUROME_MSG_FSAMPLE,kurome_viewer_MSG_FSAMPLE_handler);
    reporter.launchClient();
 
    struct timeval tv = {0,500000};
@@ -104,7 +124,7 @@ int main(void) {
    double startX, startY, posX, posY;
 
    int mouseState = KUROME_VIEWER_MNONE;
-   int drawState = KUROME_VIEWER_DKNOWN;
+   int drawState = KUROME_VIEWER_DKNOWN|KUROME_VIEWER_DBORDER|KUROME_VIEWER_DGOAL;
    int agentState;
 
 connection:
@@ -458,7 +478,7 @@ connection:
       }
 
       if (reporter.environment) {
-         if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DKNOWN)) {
+         if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DBORDER)) {
             r.setFillColor(sf::Color(0,0,0,0));
             r.setOutlineColor(sf::Color::White);
             r.setOutlineThickness(1);
@@ -480,6 +500,8 @@ connection:
          sf::Vector2u currS = window.getSize();
          posX = (((pos.x))/(winScale))*reporter.ginfo.unitSize;
          posY = (((pos.y))/(winScale))*reporter.ginfo.unitSize;
+         r.setOutlineColor(sf::Color(0,0,0,0));
+         e.setOutlineColor(sf::Color(0,0,0,0));
          r.setFillColor(sf::Color(0,0,255,255));
          e.setFillColor(sf::Color(0,0,255,255));
          switch (mouseState) {

@@ -39,8 +39,6 @@ public:
     * Sample data.
     */
    int & localVal(double x, double y) {
-      static int null;
-      null = 0;
       x -= orgin.posx;
       y -= orgin.posy;
       double temp;
@@ -50,8 +48,12 @@ public:
       int xp = (int)std::round(x/unitSize);
       int yp = (int)std::round(y/unitSize);
       if (xp >= values.rows() || xp < 0 ||
-          yp >= values.cols() || yp < 0)
-         return null;
+          yp >= values.cols() || yp < 0) {
+         xp = (xp >= values.rows() ? values.rows()-1 : xp);
+         yp = (yp >= values.cols() ? values.cols()-1 : yp);
+         xp = (xp < 0 ? 0 : xp);
+         yp = (yp < 0 ? 0 : yp);
+      }
       return values(xp,yp);
    }
 

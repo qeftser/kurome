@@ -49,6 +49,8 @@ public:
    int  apply(Sample *);
    int  apply(Sample *, int(*)(int,int));
 
+   Sample application(Sample *);
+
    static int  avgWeights(int,int);
    int  avgWeights(int,int,double);
 
