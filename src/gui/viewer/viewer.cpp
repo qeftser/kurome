@@ -192,20 +192,22 @@ connection:
    //printf("getting fullEnv\n");
    //before = reporter.recved.load();
 
-   if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
-      kcmd::getFullGrid(&reporter.reqs);
-
-      while (!reporter.full_env) usleep(10000);
-      kcmd::fAllEntities(&reporter.reqs);
-      kcmd::fAllSamples(&reporter.reqs);
-   }
-
+   printf("main\n");
    {
       kcmd::getGrid(&reporter.reqs);
 
       while (!reporter.environment) usleep(10000);
       kcmd::allSamples(&reporter.reqs);
       kcmd::allEntities(&reporter.reqs);
+   }
+
+   printf("aux\n");
+   if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
+      kcmd::getFullGrid(&reporter.reqs);
+
+      while (!reporter.full_env) usleep(10000);
+      kcmd::fAllEntities(&reporter.reqs);
+      kcmd::fAllSamples(&reporter.reqs);
    }
 
    //reporter.wait(before);
