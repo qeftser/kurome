@@ -7,7 +7,7 @@
 #include <mutex>
 #include <cstdlib>
 
-/*
+/*! \class lf_queue
  * lock-free queue. 
  * Untested :/
  */
@@ -28,7 +28,7 @@ public:
    bool empty();
 };
 
-/*
+/*! \class ll_queue
  * lock based queue.
  * Untested :/
  */
@@ -59,7 +59,7 @@ struct lf_queue<T>::lf_queue_node * lf_queue<T>::new_node() {
    return ret;
 }
 
-/*
+/**
  * Construct a new queue
  */
 template <typename T>
@@ -69,7 +69,7 @@ lf_queue<T>::lf_queue() {
    head = tail = node;
 }
 
-/*
+/**
  * Add an element to the queue.
  */
 template <typename T>
@@ -95,7 +95,7 @@ void lf_queue<T>::enqueue(T val) {
    this->tail.compare_exchange_strong(tail,node);
 }
 
-/*
+/**
  * Remove an element from the queue.
  */
 template <typename T>
@@ -125,7 +125,7 @@ bool lf_queue<T>::dequeue(T * val) {
    return true;
 }
 
-/*
+/**
  * Check if the queue contains any more elements.
  */
 template <typename T>
@@ -155,7 +155,7 @@ struct ll_queue<T>::ll_queue_node * ll_queue<T>::new_node() {
    return (struct ll_queue_node *)calloc(sizeof(struct ll_queue_node),1);
 }
 
-/*
+/**
  * Construct a new queue
  */
 template <typename T>
@@ -166,7 +166,7 @@ ll_queue<T>::ll_queue()
    head = tail = node;
 }
 
-/*
+/**
  * Add an element to the queue.
  */
 template <typename T>
@@ -180,7 +180,7 @@ void ll_queue<T>::enqueue(T val) {
    tmutex.unlock();
 }
 
-/*
+/**
  * Remove an element from the queue.
  */
 template <typename T>
@@ -199,7 +199,7 @@ bool ll_queue<T>::dequeue(T * val) {
    return true;
 }
 
-/*
+/**
  * Check if the queue contains any more elements.
  */
 template <typename T>

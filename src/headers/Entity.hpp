@@ -6,16 +6,20 @@
 
 extern int KUROME_ENTITY_ID_NUM;
 
+/*! \class Entity
+ * This class is built as basically a hitbox. It has functionallity for a lot of things.
+ * We probably won't see it outside of being used as a hitbox though.
+ */
 class Entity {
 public:
-   double posx;
-   double posy;
-   double xwid;
-   double ywid;
-   double rot;
-   int    type;
-   int    val;
-   int    id;
+   double posx; /**< x position of the Entity */
+   double posy; /**< y position of the Entity */
+   double xwid; /**< width of the Entity */
+   double ywid; /**< height of the Entity */
+   double rot;  /**< current Entity rotation */
+   int    type; /**< Entity type: Rectangle, Circle, or Point */
+   int    val;  /**< Weight of the Entity */
+   int    id;   /**< Unique id to associate the Entity with */
    
    Entity(double posx, double posy, double xwid, double ywid, int type, int val) 
       : posx(posx), posy(posy), xwid(xwid), ywid(ywid), rot(0.0), type(type), val(val) {
@@ -39,7 +43,7 @@ public:
       : posx(es->posx), posy(es->posy), xwid(es->xwid), ywid(es->ywid), 
         rot(es->rot), type(es->type), val(es->val), id(es->id) {}
 
-   /* 
+   /**
     * Populate the given struct with the
     * data from this entity.
     */
@@ -54,7 +58,7 @@ public:
       es->id   = id;
    }
 
-   /* 
+   /**
     * Compute the distance squared between this
     * Entity and another Entity.
     */
@@ -62,7 +66,7 @@ public:
       return (((other.posx-posx)*(other.posx-posx))+((other.posy-posy)*(other.posy-posy)));
    }
 
-   /*
+   /**
     * Copy the data from another
     * Entity into this one.
     */

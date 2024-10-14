@@ -5,10 +5,10 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 
-/* Ellipse shape. Poached directly from:
+/*! \class EllipseShape
+ * Ellipse shape. Poached directly from:
  * https://www.sfml-dev.org/tutorials/2.6/graphics-shape.php
  */
-
 class EllipseShape : public sf::Shape
 {
 public :

@@ -6,12 +6,16 @@
 #include <cmath>
 #include <Eigen/Dense>
 
+/*! \class Sample
+ * Contains a sample collected by an arbitrary sensor. This will
+ * then be fed into an associated Grid.
+ */
 class Sample {
 public:
-   Entity          orgin;
-   Eigen::MatrixXi values;
-   double unitSize;
-   double crr, srr;
+   Entity          orgin;  /**< the location the sample came from, as well as it's size and shape */
+   Eigen::MatrixXi values; /**< grid of values at the location */
+   double unitSize;        /**< scale of the Sample */
+   double crr, srr;        
    double ssx, ssy;
    
    Sample(Entity e, Eigen::MatrixXi m, double d) 
@@ -34,7 +38,7 @@ public:
       ssy = (orgin.ywid/2);
    }
 
-   /* 
+   /** 
     * Map 'realspace' coordinates into the matrix of 
     * Sample data.
     */
@@ -57,7 +61,7 @@ public:
       return values(xp,yp);
    }
 
-   /*
+   /**
     * Reallocate and populate the given
     * sample_struct with the data from
     * me, the Sample.
