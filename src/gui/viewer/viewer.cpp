@@ -5,6 +5,9 @@
 #include <SFML/Graphics.hpp>
 #include <chrono>
 #include <errno.h>
+#include <fcntl.h>
+#include <setjmp.h>
+#include <signal.h>
 
 #define KUROME_VIEWER_FRAMERATE 30
 
@@ -25,6 +28,19 @@
 #define KUROME_VIEWER_MMOVE   5
 #define KUROME_VIEWER_MSMOVE  6
 #define KUROME_VIEWER_MGMOVE  7
+
+struct viewer_map_save_header {
+   int magic;
+   int total;
+};
+
+/*
+jmp_buf cleanup_jmp;
+
+void kurome_viewer_interrupt_handler(int signo) {
+   longjmp(cleanup_jmp,69);
+}
+*/
 
 void kurome_viewer_draw_entity(Entity & en, sf::RenderWindow & w, double winScale) {
    sf::RectangleShape r;
@@ -66,10 +82,8 @@ void kurome_viewer_place_NILRotAStarMapper(Reporter * me, sf::RenderWindow * w, 
       r.setFillColor(sf::Color(255,255,0));
       w->draw(r);
    }
-   /*
    for (Frame * f : nrm.allocated) 
-      free(f);
-      */
+      delete f;
 }
 
 static int kurome_viewer_prioritize_new_weight(int w1, int w2) {
@@ -127,6 +141,16 @@ int main(void) {
    int drawState = KUROME_VIEWER_DKNOWN|KUROME_VIEWER_DBORDER|KUROME_VIEWER_DGOAL;
    int agentState;
 
+   /*
+   struct sigaction sa;
+   bzero(&sa,sizeof(sa));
+   sa.sa_handler = kurome_viewer_interrupt_handler;
+   sigaction(SIGINT,&sa,NULL);
+
+   if (setjmp(cleanup_jmp))
+      goto cleanup;
+   */
+
 connection:
    while (1) {
       struct agent_values * curr = reporter.avaliable;
@@ -155,6 +179,7 @@ connection:
    xpos = window.getSize().x/2;
    ypos = window.getSize().y/2;
    scale = 1.0;
+
 
    /* get all the data we want and need */
 
@@ -206,7 +231,63 @@ connection:
    /* run gui */
 
    printf("running\n");
+
+   printf("enter map name to load\n");
+   printf("or enter s followed by a name\nto save a config\n");
+   fprintf(stderr,"> ");
    while (window.isOpen()) {
+
+      useset = stdin_set;
+      tv.tv_sec  = 0;
+      tv.tv_usec = 0;
+      n = select(STDIN_FILENO+1,&useset,NULL,NULL,&tv);
+      if (n) {
+         bzero(buf,1024);
+         buf[strlen(fgets(buf,1023,stdin))-1]=0;
+         if (*buf) {
+            if (*buf == 's') {
+               char * cpy = buf;
+               do { ++cpy; } while(isspace(*cpy));
+               printf("saving as %s...\n",cpy);
+               int fd = open(cpy,O_WRONLY|O_CREAT,S_IRWXU);
+               struct viewer_map_save_header 
+                  msave = { .magic = 0xc234fda, .total = 0 }; 
+               struct entity_struct use;
+               lseek(fd,sizeof(msave),SEEK_SET);
+               for (Entity * e : reporter.full_env->entities) {
+                  ++msave.total;
+                  e->toStruct(&use);
+                  write(fd,&use,sizeof(use));
+               }
+               lseek(fd,0,SEEK_SET);
+               write(fd,&msave,sizeof(msave));
+               close(fd);
+            }
+            else if (access(buf,F_OK) == 0) {
+               printf("opening %s...\n",buf);
+               int fd = open(buf,O_RDONLY);
+               struct viewer_map_save_header msave;
+               read(fd,&msave,sizeof(msave));
+               if (msave.magic != 0xc234fda) {
+                  printf("not a viewer map file\n");
+                  close(fd);
+                  goto draw_step;
+               }
+               kcmd::fClense(&reporter.reqs);
+               reporter.full_env->clense();
+               struct entity_struct use;
+               for (int i = 0; i < msave.total; ++i) {
+                  read(fd,&use,sizeof(use));
+                  Entity * nev = new Entity(&use);
+                  kcmd::fAddEntity(*nev,&reporter.reqs);
+                  reporter.full_env->addEntity(nev);
+               }
+               close(fd);
+            }
+         }
+draw_step:
+         fprintf(stderr,"> ");
+      }
 
       int sizeX = reporter.ginfo.blocksXmax-reporter.ginfo.blocksXmin;
       int sizeY = reporter.ginfo.blocksYmax-reporter.ginfo.blocksYmin;
@@ -555,9 +636,17 @@ connection:
    }
 
 
+cleanup:
+
+   /*
+   if (setjmp(cleanup_jmp))
+      goto cleanup;
+   */
+
    reporter.disconnectClient();
-   printf("Connection closed. Connect again? [y/n]: ");
-   char res = getc(stdin);
+   printf("\nConnection closed. Connect again? [y/n]: ");
+   char res;
+   res = getc(stdin);
    if (res == 'y')
       goto connection;
 

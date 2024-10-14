@@ -96,7 +96,7 @@ breakaway:
             return;
          }
          if (n == -1) {
-            if (gerror() == GEWOULDBLOCK)
+            if (gerror() == GEWOULDBLOCK || gerror() == GEINTR)
                continue;
             rstate.known = 0;
             free(rstate.state.buf);

@@ -17,7 +17,8 @@ void kurome_sserv_start_handler(KB * msg, khandle * from, void * flag) {
 }
 
 static int maxWeightSelect(int w1, int w2) {
-   return (w1+w2)/2;
+   return (w1>w2?w1:w2);
+   //return (w1+w2)/2;
 }
 
 int main(void) {
