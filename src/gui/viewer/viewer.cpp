@@ -93,14 +93,16 @@ static int kurome_viewer_prioritize_new_weight(int w1, int w2) {
 void kurome_viewer_MSG_SAMPLE_handler(KB * msg, void * me) {
    if (((Reporter *)me)->environment) {
       struct kurome_samplemsg * sm = (struct kurome_samplemsg *)msg;
-      ((Reporter *)me)->environment->apply(new Sample(&sm->s),kurome_viewer_prioritize_new_weight);
+      Sample nev = Sample(&sm->s);
+      ((Reporter *)me)->environment->apply(&nev,kurome_viewer_prioritize_new_weight);
    }
 }
 
 void kurome_viewer_MSG_FSAMPLE_handler(KB * msg, void * me) {
    if (((Reporter *)me)->environment) {
       struct kurome_samplemsg * sm = (struct kurome_samplemsg *)msg;
-      ((Reporter *)me)->environment->apply(new Sample(&sm->s),kurome_viewer_prioritize_new_weight);
+      Sample nev = Sample(&sm->s);
+      ((Reporter *)me)->environment->apply(&nev,kurome_viewer_prioritize_new_weight);
    }
 }
 
@@ -189,23 +191,23 @@ connection:
 
    //printf("getting fullEnv\n");
    //before = reporter.recved.load();
-   {
-      uint64_t before = reporter.recved;
-      kcmd::getGrid(&reporter.reqs);
-      reporter.wait(before);
 
+   if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
+      kcmd::getFullGrid(&reporter.reqs);
+
+      while (!reporter.full_env) usleep(10000);
+      kcmd::fAllEntities(&reporter.reqs);
+      kcmd::fAllSamples(&reporter.reqs);
+   }
+
+   {
+      kcmd::getGrid(&reporter.reqs);
+
+      while (!reporter.environment) usleep(10000);
       kcmd::allSamples(&reporter.reqs);
       kcmd::allEntities(&reporter.reqs);
    }
 
-   if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
-      uint64_t before = reporter.recved;
-      kcmd::getFullGrid(&reporter.reqs);
-      reporter.wait(before);
-
-      kcmd::fAllEntities(&reporter.reqs);
-      kcmd::fAllSamples(&reporter.reqs);
-   }
    //reporter.wait(before);
 
    //printf("getting self\n");
@@ -222,8 +224,6 @@ connection:
    //before = reporter.recved.load();
    kcmd::getMapperInfo(&reporter.reqs);
    //reporter.wait(before);
-
-
 
    kcmd::pause(&reporter.reqs);
    agentState = KUROME_VIEWER_APAUSE;

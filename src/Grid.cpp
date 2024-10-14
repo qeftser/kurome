@@ -14,7 +14,7 @@ Grid::Grid(double unitSize, double sizeX, double sizeY) {
    this->entities = std::set<Entity *>();
    this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
-   //clear();
+   clear();
 }
 
 Grid::Grid(double unitSize, double sizeXmin, double sizeXmax, double sizeYmin, double sizeYmax) {
@@ -27,7 +27,7 @@ Grid::Grid(double unitSize, double sizeXmin, double sizeXmax, double sizeYmin, d
    this->entities = std::set<Entity *>();
    this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
-   //clear();
+   clear();
 }
 
 void Grid::clear() {
@@ -172,6 +172,8 @@ void Grid::info() {
 }
 
 void Grid::print() {
+   printf("printing\n");
+   printf("%d %d\n",blocksYmax-blocksYmin,blocksXmax-blocksXmin);
    for (int j = 0; j < blocksYmax-blocksYmin; ++j) {
       for (int i = 0; i < blocksXmax-blocksXmin; ++i) {
          /*

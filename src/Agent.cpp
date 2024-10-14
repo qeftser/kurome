@@ -1,6 +1,7 @@
 
 #include "Kurome.h"
 #include <fcntl.h>
+#include <signal.h>
 
 /*
  * Connection server for kurome Agent class. Each
@@ -15,6 +16,7 @@ void kurome_agent_connection(gsock_fd fd, Agent * me) {
    ll_queue<KB *> mydata;
    me->conns.insert(&mydata);
 
+   signal(SIGPIPE,SIG_IGN);
    fd_set lset, uset, wset, vset;
    FD_ZERO(&lset);
    FD_ZERO(&wset);
@@ -59,6 +61,11 @@ void kurome_agent_connection(gsock_fd fd, Agent * me) {
          if (n == -1) {
             if (gerror() == GEWOULDBLOCK)
                goto breakaway;
+            if (errno == EPIPE) {
+               perror("caught");
+               free(wstate.state.buf);
+               goto end_conn;
+            }
             wstate.known = 0;
             free(wstate.state.buf);
             perror("gnbwrite");
@@ -86,9 +93,12 @@ breakaway:
          //printf("conn: reading\n");
          n = gnbread(fd,&rstate.state);
          if (!n) {
+end_conn:
             //printf("conn: closing connection\n");
             gclose(fd);
+            me->lock.lock();
             me->conns.erase(&mydata);
+            me->lock.unlock();
             KB * curr;
             while (mydata.dequeue(&curr)) {
                free(curr);
@@ -306,9 +316,11 @@ void Agent::setDefaultHandlers(void) {
  * Send all connections an entity
  */
 void Agent::sendAll(Entity & e) {
+   //lock.lock();
    for (ll_queue<KB *> * q : conns) {
       kcmd::entity(e,q);
    }
+   //lock.unlock();
 }
 
 /*
@@ -316,6 +328,7 @@ void Agent::sendAll(Entity & e) {
  * in the message type specified.
  */
 void Agent::sendAll(Entity & e, int mtype) {
+   //lock.lock();
    switch (mtype) {
       case KUROME_MSG_ADD_ENTITY:
          for (ll_queue<KB *> * q : conns) {
@@ -353,24 +366,29 @@ void Agent::sendAll(Entity & e, int mtype) {
          }
          break;
    }
+   //lock.unlock();
 }
 
 /*
  * Send all connections a sample
  */
 void Agent::sendAll(Sample & s) {
+   //lock.lock();
    for (ll_queue<KB *> * q : conns) {
       kcmd::sample(s,q);
    }
+   //lock.unlock();
 }
 
 /*
  * send all connections a grid
  */
 void Agent::sendAll(Grid & g) {
+   //lock.lock();
    for (ll_queue<KB *> * q : conns) {
       kcmd::grid(g,q);
    }
+   //lock.unlock();
 }
 
 /*
@@ -378,6 +396,7 @@ void Agent::sendAll(Grid & g) {
  * specified message type.
  */
 void Agent::sendAll(Grid & g, int mtype) {
+   //lock.lock();
    switch (mtype) {
       case KUROME_MSG_GRID:
          for (ll_queue<KB *> * q : conns) {
@@ -395,5 +414,6 @@ void Agent::sendAll(Grid & g, int mtype) {
          }
          break;
    }
+   //lock.unlock();
 }
 

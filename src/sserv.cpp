@@ -68,7 +68,7 @@ int main(void) {
             OO7.environment.apply(next,maxWeightSelect);
             Sample appli = OO7.environment.application(next);
             OO7.sendAll(appli);
-            delete next;
+            //delete next;
          }
       }
       usleep(10000);

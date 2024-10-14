@@ -29,6 +29,7 @@ public:
    Grid   * full_env;                                                   /**< optionally defined 
                                                                          * - holds the given simulation environment if there is one */
    std::thread serv;                                                    /**< holds the thread the server is running on */
+   std::mutex  lock;                                                    /**< protect actions that may affect multiple threads */
    ll_queue<std::tuple<KB *,khandle *>> reqs;                           /**< holds the queued requests that need to be processed */
    std::set<khandle *>conns;                                            /**< holds the currently established connections */
    std::unordered_map<int,void (*)(KB *, khandle *, void *)> handlers; /**< holds the handlers used to process each message. 
