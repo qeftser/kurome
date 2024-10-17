@@ -49,12 +49,14 @@ void Grid::clense() {
 /* kinda slow ... */
 void Grid::smooth() {
    Eigen::MatrixXi cpy = Eigen::MatrixXi(blocks.rows(),blocks.cols());
-   for (int i = 1; i < (blocksXmax-blocksXmin)-1; ++i)
-      for (int j = 1; j < (blocksYmax-blocksYmin)-1; ++j)
+   for (int i = 1; i < (blocksXmax-blocksXmin)-1; ++i) {
+      for (int j = 1; j < (blocksYmax-blocksYmin)-1; ++j) {
          cpy(i,j) = (blocks(i,j)+blocks(i+1,j)+blocks(i-1,j)+blocks(i,j+1)+blocks(i,j-1)+
                         blocks(i+1,j+1)+blocks(i-1,j+1)+blocks(i+1,j-1)+blocks(i-1,j-1)) / 9;
-   for (int i = 1; i < (blocksXmax-blocksXmin)-1; ++i)
-      for (int j = 1; j < (blocksYmax-blocksYmin)-1; ++j)
+      }
+   }
+   for (int i = 0; i < (blocksXmax-blocksXmin); ++i)
+      for (int j = 0; j < (blocksYmax-blocksYmin); ++j)
          blocks(i,j) = cpy(i,j);
 }
 
@@ -172,18 +174,28 @@ void Grid::info() {
 }
 
 void Grid::print() {
-   printf("printing\n");
-   printf("%d %d\n",blocksYmax-blocksYmin,blocksXmax-blocksXmin);
+   int maxv = 0;
    for (int j = 0; j < blocksYmax-blocksYmin; ++j) {
       for (int i = 0; i < blocksXmax-blocksXmin; ++i) {
-         /*
-         if (blocks(i,j) == KUROME_UNDETERMINED) {
-            printf("zz\033[0m");
-         }
-         */
-         if (blocks(i,j) > 0x0f)
+         if (blocks(i,j) > maxv)
+            maxv = blocks(i,j);
+      }
+   }
+   int stepv = maxv/5;
+   int scalev = maxv/255;
+   for (int j = 0; j < blocksYmax-blocksYmin; ++j) {
+      for (int i = 0; i < blocksXmax-blocksXmin; ++i) {
+         if (blocks(i,j) > stepv*4)
+            printf("\033[35m");
+         else if (blocks(i,j) > stepv*3)
             printf("\033[31m");
-         printf("%02x\033[0m",blocks(i,j));
+         else if (blocks(i,j) > stepv*2)
+            printf("\033[33m");
+         else if (blocks(i,j) > stepv)
+            printf("\033[32m");
+         else if (blocks(i,j))
+            printf("\033[36m");
+         printf("%02x\033[0m",std::abs(blocks(i,j)/scalev));
       }
       printf("\n");
    }
@@ -414,6 +426,19 @@ int Grid::toStruct(struct grid_struct ** gs) {
    for (int i = 0; i < (blocksXmax-blocksXmin)*(blocksYmax-blocksYmin); ++i)
       (*gs)->matrix[i] = blocks(i/(blocksXmax-blocksXmin),i%(blocksXmax-blocksXmin));
    return size;
+}
+
+int Grid::collectInfo(struct partial_grid_struct * pgs) {
+   pgs->unitSize   = unitSize;
+   pgs->blocksXmax = blocksXmax;
+   pgs->blocksYmax = blocksYmax;
+   pgs->blocksXmin = blocksXmin;
+   pgs->blocksYmin = blocksYmin;
+   pgs->sizeXmax   = sizeXmax;
+   pgs->sizeYmax   = sizeYmax;
+   pgs->sizeXmin   = sizeXmin;
+   pgs->sizeYmin   = sizeYmin;
+   return 1;
 }
 
 Grid::Grid(struct grid_struct * gs)

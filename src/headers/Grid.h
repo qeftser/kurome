@@ -225,6 +225,16 @@ public:
     * to a malloc'ed pointer otherwise the program will crash.
     */
    int toStruct(struct grid_struct **);
+
+   /**
+    * fill a partial_grid_struct with information
+    * about the current Grid. This info is not
+    * linked to the actual values, and may 
+    * become incorrect over time.
+    * Returns 1.
+    */
+   int collectInfo(struct partial_grid_struct *);
+
 };
 
 #endif

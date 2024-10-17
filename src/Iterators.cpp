@@ -283,6 +283,11 @@ EllipseIterator::EllipseIterator(double offx, double offy, double rot, Entity * 
 }
 
 EllipseIterator & EllipseIterator::operator++(void) {
+   if (ye == ys == xs == xe == 0.0) {
+      done = true;
+      info.val = NULL;
+      goto finish;
+   }
    do {
       ys -= shifty;
       xs -= shiftx;
@@ -303,6 +308,7 @@ EllipseIterator & EllipseIterator::operator++(void) {
          xs = (xs * crr - temp * srr) + offx;
       }
    } while (!g->inBounds(xs,ys) || seen.count((((uint64_t)g->roor(xs))<<32|(g->roor(ys)&UINT_MAX))));
+finish:
    info.posy = (g->roor(ys)*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    info.posx = (g->roor(xs)*g->getUnitSize())+(g->getUnitSize()/2.0000001);
    info.val = g->getIdxPtr(xs,ys);

@@ -122,5 +122,7 @@ extern int errno_kurome;
 
 #include "headers/kcmd.h"
 
+#include "headers/Generator.h"
+
 #endif
 

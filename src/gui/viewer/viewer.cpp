@@ -106,7 +106,17 @@ void kurome_viewer_MSG_FSAMPLE_handler(KB * msg, void * me) {
    }
 }
 
-int main(void) {
+void kurome_viewer_MSG_PAUSE_handler(KB * msg, void * me) {
+   int * agentState = (int *)me;
+   *agentState = KUROME_VIEWER_APAUSE;
+}
+
+void kurome_viewer_MSG_START_handler(KB * msg, void * me) {
+   int * agentState = (int *)me;
+   *agentState = KUROME_VIEWER_ASTART;
+}
+
+int main(int argc, char ** argv) {
 
    srand(time(NULL)*clock());
 
@@ -117,7 +127,15 @@ int main(void) {
    Reporter reporter;
    reporter.registerHandler(KUROME_MSG_SAMPLE,kurome_viewer_MSG_SAMPLE_handler);
    reporter.registerHandler(KUROME_MSG_FSAMPLE,kurome_viewer_MSG_FSAMPLE_handler);
+
+   int agentState = KUROME_VIEWER_APAUSE;
+   reporter.registerHandler(KUROME_MSG_PAUSE,kurome_viewer_MSG_PAUSE_handler);
+   reporter.registerHandler(KUROME_MSG_START,kurome_viewer_MSG_START_handler);
+   reporter.registerHandlerData(KUROME_MSG_PAUSE,&agentState);
+   reporter.registerHandlerData(KUROME_MSG_START,&agentState);
+
    reporter.launchClient();
+
 
    struct timeval tv = {0,500000};
    fd_set stdin_set, useset;
@@ -141,7 +159,6 @@ int main(void) {
 
    int mouseState = KUROME_VIEWER_MNONE;
    int drawState = KUROME_VIEWER_DKNOWN|KUROME_VIEWER_DBORDER|KUROME_VIEWER_DGOAL;
-   int agentState;
 
    /*
    struct sigaction sa;
@@ -227,15 +244,20 @@ connection:
    kcmd::getMapperInfo(&reporter.reqs);
    //reporter.wait(before);
 
-   kcmd::pause(&reporter.reqs);
-   agentState = KUROME_VIEWER_APAUSE;
+   kcmd::state(&reporter.reqs);
 
    /* run gui */
 
    printf("running\n");
 
+   if (argc == 3 && strcmp(argv[1],"-m") == 0) {
+      strncpy(buf,argv[2],sizeof(buf)-1);
+      goto open_file;
+   }
+
    printf("enter map name to load\n");
    printf("or enter s followed by a name\nto save a config\n");
+
    fprintf(stderr,"> ");
    while (window.isOpen()) {
 
@@ -247,6 +269,7 @@ connection:
          bzero(buf,1024);
          buf[strlen(fgets(buf,1023,stdin))-1]=0;
          if (*buf) {
+open_file:
             if (*buf == 's') {
                char * cpy = buf;
                do { ++cpy; } while(isspace(*cpy));

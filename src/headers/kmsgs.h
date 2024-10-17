@@ -53,6 +53,7 @@
 #define KUROME_MSG_START        32
 #define KUROME_MSG_STOP         33
 #define KUROME_MSG_PAUSE        34
+#define KUROME_MSG_STATE        39
 
 /*
  * Struct to hold all releavant data for the Grid

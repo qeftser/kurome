@@ -151,6 +151,9 @@ public:
    /**
     * add a message of type KUROME_MSG_PAUSE to the provided queue */
    static void pause(khandle *);
+   /**
+    * add a message of type KUROME_MSG_STATE to the provided queue */
+   static void state(khandle *);
 };
 
 #endif

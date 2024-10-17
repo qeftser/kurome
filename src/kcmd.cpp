@@ -188,6 +188,10 @@ void kcmd::pause(khandle * reqs) {
    kurome_base_req_base(reqs,KUROME_MSG_PAUSE);
 }
 
+void kcmd::state(khandle * reqs) {
+   kurome_base_req_base(reqs,KUROME_MSG_STATE);
+}
+
 void kcmd::sample(Sample & s, khandle * reqs) {
    struct sample_struct * ss = (struct sample_struct *)malloc(sizeof(struct sample_struct));
    struct kurome_samplemsg * msg = (struct kurome_samplemsg *)malloc(sizeof(struct kurome_samplemsg));

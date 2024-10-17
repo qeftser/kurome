@@ -16,6 +16,13 @@ void kurome_sserv_start_handler(KB * msg, khandle * from, void * flag) {
    *((bool *)flag) = true;
 }
 
+void kurome_sserv_state_handler(KB * msg, khandle * from, void * flag) {
+   if (*((bool *)flag)) 
+      kcmd::start(from);
+   else
+      kcmd::pause(from);
+}
+
 static int maxWeightSelect(int w1, int w2) {
    return (w1>w2?w1:w2);
    //return (w1+w2)/2;
@@ -47,7 +54,7 @@ int main(void) {
    OO7.waiters.push_back(w);
    OO7.full_env = &env;
 
-   bool shouldMove = false;
+   bool shouldMove = true;
    OO7.registerHandler(KUROME_MSG_START,kurome_sserv_start_handler);
    OO7.registerHandler(KUROME_MSG_PAUSE,kurome_sserv_pause_handler);
    OO7.registerHandlerData(KUROME_MSG_START,&shouldMove);
