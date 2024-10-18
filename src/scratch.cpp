@@ -5,9 +5,9 @@ int main(void) {
 
    srand(time(NULL)*clock());
 
-   Grid g = Grid(5,0,100,0,100);
+   Grid g = Grid(0.5,0,230,0,120);
 
-   (void)Generator::dune(&g,20,5,7);
+   (void)Generator::dune(&g,60,5,7);
 
    g.print();
 

@@ -54,10 +54,10 @@ void kurome_viewer_draw_entity(Entity & en, sf::RenderWindow & w, double winScal
          w.draw(r);
          break;
       case KUROME_TYPE_ELPS:
-         e.setRadius(sf::Vector2f(en.xwid*winScale,en.ywid*winScale));
+         e.setRadius(sf::Vector2f((en.xwid/2)*winScale,(en.ywid/2)*winScale));
          e.setRotation(en.rot);
          e.setFillColor(sf::Color(160,32,240,255));
-         e.setPosition((en.posx*winScale)-(e.getRadius().x/2.0),(en.posy*winScale)-(e.getRadius().y/2.0));
+         e.setPosition((en.posx*winScale)-(e.getRadius().x),(en.posy*winScale)-(e.getRadius().y));
          w.draw(e);
          break;
       case KUROME_TYPE_PONT:
@@ -79,7 +79,7 @@ void kurome_viewer_place_NILRotAStarMapper(Reporter * me, sf::RenderWindow * w, 
       sf::RectangleShape r;
       r.setSize(sf::Vector2f(invU,invU));
       r.setPosition((curr.posx)*invU,(curr.posy)*invU);
-      r.setFillColor(sf::Color(255,255,0));
+      r.setFillColor(sf::Color(0,255,255));
       w->draw(r);
    }
    for (Frame * f : nrm.allocated) 
@@ -143,6 +143,9 @@ int main(int argc, char ** argv) {
    FD_SET(STDIN_FILENO,&stdin_set);
    long i, j, n;
    char buf[1024];
+
+   int mdivisor = KUROME_NOGO_COST/255;
+   int fdivisor = KUROME_NOGO_COST/150;
 
    KUROME_ENTITY_ID_NUM = (INT_MAX/2); // ensure no overlap between our entities
                                        // and the agent provided ones.
@@ -383,7 +386,7 @@ draw_step:
                            if (e->id > KUROME_ENTITY_ID_NUM)
                               KUROME_ENTITY_ID_NUM = e->id;
                         }
-                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_RECT,20);
+                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_RECT,SHRT_MAX);
                         nev->posx += (nev->xwid/2.0);
                         nev->posy += (nev->ywid/2.0);
                         reporter.full_env->addEntity(nev);
@@ -399,7 +402,7 @@ draw_step:
                            if (e->id > KUROME_ENTITY_ID_NUM)
                               KUROME_ENTITY_ID_NUM = e->id;
                         }
-                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_ELPS,20);
+                        nev = new Entity(startX,startY,(posX-startX),(posY-startY),KUROME_TYPE_ELPS,SHRT_MAX);
                         nev->posx += (nev->xwid/2.0);
                         nev->posy += (nev->ywid/2.0);
                         reporter.full_env->addEntity(nev);
@@ -519,10 +522,13 @@ draw_step:
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DFULL)) {
             double altScale = winScale*(reporter.fginfo.unitSize/reporter.ginfo.unitSize);
             r.setSize(sf::Vector2f(altScale,altScale));
-            r.setFillColor(sf::Color(155,155,155,255));
             for (i = reporter.fginfo.blocksXmin; i < reporter.fginfo.blocksXmax; ++i) {
                for (j = reporter.fginfo.blocksYmin; j < reporter.fginfo.blocksYmax; ++j) {
-                  if (reporter.full_env->blocks(i,j)) {
+                  int cco = reporter.full_env->blocks(i,j)/fdivisor;
+                  if (cco) {
+                     if (cco > 255)
+                        cco = 255;
+                     r.setFillColor(sf::Color(cco,cco,cco,255));
                      r.setPosition(i*altScale,j*altScale);
                      window.draw(r);
                   }
@@ -536,7 +542,11 @@ draw_step:
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DKNOWN)) {
             for (i = reporter.ginfo.blocksXmin; i < reporter.ginfo.blocksXmax; ++i) {
                for (j = reporter.ginfo.blocksYmin; j < reporter.ginfo.blocksYmax; ++j) {
-                   if (reporter.environment->blocks(i,j)) {
+                   int vvo = reporter.environment->blocks(i,j)/mdivisor;
+                   if (vvo) {
+                     if (vvo > 255)
+                        vvo = 255;
+                      r.setFillColor(sf::Color(vvo,255-vvo,0,255));
                       r.setPosition(i*winScale,j*winScale);
                       window.draw(r);
                    }

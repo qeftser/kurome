@@ -53,7 +53,7 @@ public:
          nFrame->posy = curr->posy-step;
          if (env->inBounds(nFrame->posx,nFrame->posy) && !visited.count(nFrame->id())) {
             nFrame->nextptr = curr;
-            nFrame->weight = 0.5*nFrame->dist2(dest) + 10*nFrame->cost(*self,*env);
+            nFrame->weight = 0.1*nFrame->dist2(dest) + nFrame->cost(*self,*env);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
             visited.emplace(nFrame->id());
@@ -67,7 +67,7 @@ public:
          nFrame->posy = curr->posy-step;
          if (env->inBounds(nFrame->posx,nFrame->posy) && !visited.count(nFrame->id())) {
             nFrame->nextptr = curr;
-            nFrame->weight = 0.5*nFrame->dist2(dest) + 10*nFrame->cost(*self,*env);
+            nFrame->weight = 0.1*nFrame->dist2(dest) + nFrame->cost(*self,*env);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
             visited.emplace(nFrame->id());
@@ -81,7 +81,7 @@ public:
          nFrame->posy = curr->posy+step;
          if (env->inBounds(nFrame->posx,nFrame->posy) && !visited.count(nFrame->id())) {
             nFrame->nextptr = curr;
-            nFrame->weight = 0.5*nFrame->dist2(dest) + 10*nFrame->cost(*self,*env);
+            nFrame->weight = 0.1*nFrame->dist2(dest) + nFrame->cost(*self,*env);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
             visited.emplace(nFrame->id());
@@ -95,7 +95,7 @@ public:
          nFrame->posy = curr->posy+step;
          if (env->inBounds(nFrame->posx,nFrame->posy) && !visited.count(nFrame->id())) {
             nFrame->nextptr = curr;
-            nFrame->weight = 0.5*nFrame->dist2(dest) + 10*nFrame->cost(*self,*env);
+            nFrame->weight = 0.1*nFrame->dist2(dest) + nFrame->cost(*self,*env);
             currPaths.push(nFrame);
             allocated.push_back(nFrame);
             visited.emplace(nFrame->id());

@@ -100,6 +100,9 @@ extern int errno_kurome;
 /* how long do we sleep between checks? */
 #define KUROME_POLL_DELAY_MS 100
 
+/* at what cost do we completely avoid? */
+#define KUROME_NOGO_COST USHRT_MAX
+
 #include "headers/Queues.hpp"
 
 #include "headers/kmsgs.h"

@@ -445,18 +445,12 @@ Grid::Grid(struct grid_struct * gs)
    : blocksXmax(gs->blocksXmax), blocksYmax(gs->blocksYmax), 
      blocksXmin(gs->blocksXmin), blocksYmin(gs->blocksYmin),
      sizeXmax(gs->sizeXmax), sizeYmax(gs->sizeYmax), unitSize(gs->unitSize) {
-        printf("%d %d\n",gs->blocksXmax,gs->blocksYmax);
-        printf("%d %d\n",gs->blocksXmin,gs->blocksYmin);
    this->blocks = Eigen::MatrixXi(gs->blocksXmax-gs->blocksXmin,gs->blocksYmax-gs->blocksYmin);
    this->entities = std::set<Entity *>();
    this->samples = std::set<Sample *>();
    this->generator = std::default_random_engine(clock());
-   printf("x %d %d\n",blocksXmax,blocksYmax);
-   printf("y %d %d\n",blocksXmin,blocksYmin);
    for (int i = 0; i < (gs->blocksXmax-gs->blocksXmin)*(gs->blocksYmax-gs->blocksYmin); ++i) {
       blocks(i/(gs->blocksXmax-blocksXmin),i%(gs->blocksXmax-gs->blocksXmin)) = gs->matrix[i];
    }
-   printf("z %d %d\n",blocksXmax,blocksYmax);
-   printf("a %d %d\n",blocksXmin,blocksYmin);
 }
 

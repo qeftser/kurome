@@ -323,8 +323,6 @@ void kurome_reporter_default_MSG_GRID_handler(KB * msg, void * me) {
 void kurome_reporter_default_MSG_FULLGRID_handler(KB * msg, void * me) {
    struct kurome_gridmsg * gmsg = (struct kurome_gridmsg *)msg;
    memcpy(&((Reporter *)me)->fginfo,&gmsg->gs,sizeof(partial_grid_struct));
-   printf("%d %d\n",gmsg->gs.blocksXmax,gmsg->gs.blocksYmax);
-     printf("%d %d\n",gmsg->gs.blocksXmin,gmsg->gs.blocksYmin);
    ((Reporter *)me)->full_env = std::make_shared<Grid>(&gmsg->gs);
 }
 

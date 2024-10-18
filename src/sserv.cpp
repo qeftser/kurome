@@ -37,10 +37,10 @@ int main(void) {
    env.clear();
    Entity tst{100,100,12,12,KUROME_TYPE_ELPS,20};
    //env.addEntity(&tst);
-   //g.addEntity(&tst);
 
    Entity fov{0,0,16,16,KUROME_TYPE_RECT,0};
    Entity me{10,10,8,3,KUROME_TYPE_ELPS,20};
+   g.addEntity(&me);
    Entity goal{190,190,10,10,KUROME_TYPE_PONT,0};
 
    Waiter * w = new SimWaiter(env,fov,me);
@@ -54,7 +54,7 @@ int main(void) {
    OO7.waiters.push_back(w);
    OO7.full_env = &env;
 
-   bool shouldMove = true;
+   bool shouldMove = false;
    OO7.registerHandler(KUROME_MSG_START,kurome_sserv_start_handler);
    OO7.registerHandler(KUROME_MSG_PAUSE,kurome_sserv_pause_handler);
    OO7.registerHandlerData(KUROME_MSG_START,&shouldMove);

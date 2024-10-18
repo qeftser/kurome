@@ -90,7 +90,7 @@ public:
 
 class EllipseIterator {
 private:
-   double shiftx, shifty, granularity;
+   double shiftx, shifty, granularity, ussq;
    double k, wrad, hrad, xs, ys, xe, ye;
    double rot, srr, crr, offx, offy;
    Grid * g;

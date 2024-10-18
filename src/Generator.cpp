@@ -12,7 +12,7 @@ Grid * Generator::sparse(Grid * tomap, int elements, double avgSize, double maxS
    std::uniform_real_distribution<double> unif(minSize,maxSize);
    std::default_random_engine re;
 
-   int val = INT_MAX;
+   int val = KUROME_NOGO_COST;
    for (int i = 0; i < elements; ++i) {
       int type = 1+random()%2;
       double xpos = std::fmod(random()*pgs.unitSize,hxval);
@@ -36,7 +36,7 @@ Grid * Generator::dune(Grid * tomap, int elements, double avgSize, double maxSiz
    std::uniform_real_distribution<double> unif(minSize,maxSize);
    std::default_random_engine re;
 
-   int val = INT_MAX;
+   int val = KUROME_NOGO_COST;
    for (int i = 0; i < elements; ++i) {
       int type = 1+random()%2;
       double xpos = std::fmod(random()*pgs.unitSize,hxval);
