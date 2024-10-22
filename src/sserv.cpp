@@ -52,6 +52,7 @@ int main(void) {
    m->self = &me;
    m->goal = &goal;
    OO7.waiters.push_back(w);
+   (void)Generator::dune(&env,100,5,7);
    OO7.full_env = &env;
 
    bool shouldMove = false;

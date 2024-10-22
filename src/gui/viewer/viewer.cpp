@@ -212,7 +212,6 @@ connection:
    //printf("getting fullEnv\n");
    //before = reporter.recved.load();
 
-   printf("main\n");
    {
       kcmd::getGrid(&reporter.reqs);
 
@@ -221,7 +220,6 @@ connection:
       kcmd::allEntities(&reporter.reqs);
    }
 
-   printf("aux\n");
    if (reporter.conn->flags&KUROME_AFLAG_FULLENV) {
       kcmd::getFullGrid(&reporter.reqs);
 
