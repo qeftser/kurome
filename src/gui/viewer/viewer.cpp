@@ -2,6 +2,7 @@
 #include "../../Kurome.h"
 #include "../../headers/EllipseShape.hpp"
 #include "../../mappers/NILRotAStarMapper.hpp"
+#include "../../mappers/SimpleAnyRotStaticPotentialFieldMapper.hpp"
 #include <SFML/Graphics.hpp>
 #include <chrono>
 #include <errno.h>
@@ -84,6 +85,81 @@ void kurome_viewer_place_NILRotAStarMapper(Reporter * me, sf::RenderWindow * w, 
    }
    for (Frame * f : nrm.allocated) 
       delete f;
+}
+
+void kurome_viewer_place_SimpleAnyRotStaticPotentialFieldMapper(Reporter * me, int c2, sf::RenderWindow * w, double wS, double uS) {
+   static SimpleAnyRotStaticPotentialFieldMapper sarspfm = SimpleAnyRotStaticPotentialFieldMapper(c2,me);
+   sarspfm.callback(0); 
+   double scale = wS*(sarspfm.binfo.unitSize/uS);
+   double hcale = scale/2;
+   for (int i = sarspfm.binfo.blocksXmin; i < sarspfm.binfo.blocksXmax; ++i) {
+      for (int j = sarspfm.binfo.blocksYmin; j < sarspfm.binfo.blocksYmax; ++j) {
+         int v = (sarspfm.base->blocks(i,j)*2 > 255 ? 255 : sarspfm.base->blocks(i,j)*2);
+         sf::RectangleShape r;
+         r.setSize(sf::Vector2f(scale,scale));
+         r.setPosition(i*scale,j*scale);
+         r.setFillColor(sf::Color(v,255-v,255-v,100));
+         w->draw(r);
+      }
+   }
+   for (int i = sarspfm.binfo.blocksXmin+1; i < sarspfm.binfo.blocksXmax-1; ++i) {
+      for (int j = sarspfm.binfo.blocksYmin+1; j < sarspfm.binfo.blocksYmax-1; ++j) {
+         if (sarspfm.base->blocks(i,j) != SHRT_MAX) {
+            int min = sarspfm.base->blocks(i+1,j);
+            int v = 1;
+            if (sarspfm.base->blocks(i-1,j) == min) {
+               v |= 2;
+            }
+            else if (sarspfm.base->blocks(i-1,j) < min) {
+               min = sarspfm.base->blocks(i-1,j);
+               v = 2;
+            }
+            if (sarspfm.base->blocks(i,j+1) == min) {
+               v |= 4;
+            }
+            else if (sarspfm.base->blocks(i,j+1) < min) {
+               min = sarspfm.base->blocks(i,j+1);
+               v = 4;
+            }
+            if (sarspfm.base->blocks(i,j-1) == min) {
+               v |= 8;
+            }
+            else if (sarspfm.base->blocks(i,j-1) < min) {
+               min = sarspfm.base->blocks(i,j-1);
+               v = 8;
+            }
+            sf::Vertex r[2];
+            if (v&2) {
+               r[0].position = sf::Vector2f(i*scale,j*scale+hcale);
+               r[1].position = sf::Vector2f(i*scale,j*scale);
+               r[0].color = sf::Color::White;
+               r[1].color = sf::Color::Yellow;
+               w->draw(r,2,sf::Lines);
+            }
+            if (v&1) {
+               r[0].position = sf::Vector2f(i*scale+hcale,j*scale+hcale);
+               r[1].position = sf::Vector2f(i*scale+hcale,j*scale);
+               r[0].color = sf::Color::Yellow;
+               r[1].color = sf::Color::White;
+               w->draw(r,2,sf::Lines);
+            }
+            if (v&8) {
+               r[0].position = sf::Vector2f(i*scale+hcale,j*scale);
+               r[1].position = sf::Vector2f(i*scale,j*scale);
+               r[0].color = sf::Color::Yellow;
+               r[1].color = sf::Color::White;
+               w->draw(r,2,sf::Lines);
+            }
+            if (v&4) {
+               r[0].position = sf::Vector2f(i*scale+hcale,j*scale+hcale);
+               r[1].position = sf::Vector2f(i*scale,j*scale+hcale);
+               r[0].color = sf::Color::White;
+               r[1].color = sf::Color::Yellow;
+               w->draw(r,2,sf::Lines);
+            }
+         }
+      }
+   }
 }
 
 static int kurome_viewer_prioritize_new_weight(int w1, int w2) {
@@ -568,6 +644,9 @@ draw_step:
          if (drawState&(KUROME_VIEWER_DALL|KUROME_VIEWER_DMAPP) && mouseState == KUROME_VIEWER_MNONE) {
             if (strcmp(reporter.mapper.name,"NILRotAStarMapper") == 0) {
                kurome_viewer_place_NILRotAStarMapper(&reporter,&window,invU);
+            }
+            else if (strcmp(reporter.mapper.name,"SARSPFM Mapper") == 0) {
+               kurome_viewer_place_SimpleAnyRotStaticPotentialFieldMapper(&reporter,reporter.mapper.state,&window,winScale,reporter.ginfo.unitSize);
             }
          }
       }
