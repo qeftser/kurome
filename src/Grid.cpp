@@ -83,8 +83,8 @@ bool Grid::inBounds(int xpos, int ypos) {
 }
 
 int Grid::getIdx(double xpos, double ypos) {
-   int ax = roob(xpos);
-   int ay = roob(ypos);
+   int ax = roor(xpos);
+   int ay = roor(ypos);
 #ifndef KUROME_NOCHECK
    if (!inBounds(ax,ay)) {
       errnok = KUROME_ERANGE;
@@ -126,8 +126,8 @@ int Grid::getIdx(double xpos, double ypos, double error) {
 }
 
 int Grid::setIdx(double xpos, double ypos, int val) {
-   int ax = roob(xpos);
-   int ay = roob(ypos);
+   int ax = roor(xpos);
+   int ay = roor(ypos);
 #ifndef KUROME_NOCHECK
    if (!inBounds(ax,ay)) {
       errnok = KUROME_ERANGE;

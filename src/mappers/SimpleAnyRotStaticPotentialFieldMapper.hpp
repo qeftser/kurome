@@ -52,10 +52,11 @@ public:
          delete base;
          base = grids.top(); grids.pop();
          step = base->getUnitSize();
+         double hstep = step/2;
          RectIterator ri;
          for (int i = 0; i < base->blocks.rows(); ++i) {
             for (int j = 0; j < base->blocks.cols(); ++j) {
-               ri = RectIterator(i*step,j*step,&max_space,base);
+               ri = RectIterator(i*step+hstep,j*step+hstep,&max_space,base);
                long total = 0;
                while (!ri.done) {
                   total += *ri;
@@ -93,7 +94,7 @@ public:
                   base->blocks(x+1,y) = sarspfm_v(p)+1;
                   points.push((sarspfm_i(p)+(1L<<32))|(y<<16)|(x+1));
                }
-               else if (((v>>16) - sarspfm_t(p)) && sarspfm_c(p) > 2) {
+               else if (((v>>16) - sarspfm_t(p)) && sarspfm_c(p) > 1) {
                   edge_points.insert((y<<16)|(x+1));
                }
             }
@@ -103,7 +104,7 @@ public:
                   base->blocks(x-1,y) = sarspfm_v(p)+1;
                   points.push((sarspfm_i(p)+(1L<<32))|(y<<16)|(x-1));
                }
-               else if (((v>>16) - sarspfm_t(p)) && sarspfm_c(p) > 2) {
+               else if (((v>>16) - sarspfm_t(p)) && sarspfm_c(p) > 1) {
                   edge_points.insert((y<<16)|(x-1));
                }
             }
@@ -113,7 +114,7 @@ public:
                   base->blocks(x,y+1) = sarspfm_v(p)+1;
                   points.push((sarspfm_i(p)+(1L<<32))|((y+1)<<16)|(x));
                }
-               else if (((v>>16) - sarspfm_t(p)) && sarspfm_c(p) > 2) {
+               else if (((v>>16) - sarspfm_t(p)) && sarspfm_c(p) > 1) {
                   edge_points.insert(((y+1)<<16)|(x));
                }
             }
@@ -123,7 +124,7 @@ public:
                   base->blocks(x,y-1) = sarspfm_v(p)+1;
                   points.push((sarspfm_i(p)+(1L<<32))|((y-1)<<16)|(x));
                }
-               else if (((v>>16) - sarspfm_t(p)) && sarspfm_c(p) > 2) {
+               else if (((v>>16) - sarspfm_t(p)) && sarspfm_c(p) > 1) {
                   edge_points.insert(((y-1)<<16)|(x));
                }
             }
@@ -296,15 +297,15 @@ private:
          seen = std::set<sarspfm_point>();
          this->cutoff_cost = cutoff_cost;
          base = new Grid(*env);
-         double maxLen = self->xwid > self->ywid ? self->xwid : self->ywid;
+         double maxLen = (self->xwid > self->ywid ? self->xwid : self->ywid)*1.5;
          max_space.xwid = maxLen;
          max_space.ywid = maxLen;
          step = base->getUnitSize();
-         for (int i = 0; i < 5; ++i) {
+         do {
             grids.push(base);
             step *= 2;
             base = base->compress(step);
-         }
+         } while(base->getHighBlocks()/step > 30);
          grids.push(base);
          base = NULL;
          mapped = 0;
