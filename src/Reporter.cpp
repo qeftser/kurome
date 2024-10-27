@@ -42,7 +42,7 @@ void reporter_client(Reporter * me) {
       else
          FD_ZERO(&wset);
       bzero(&tv,sizeof(tv));
-      tv.tv_sec = 5;
+      tv.tv_usec = 100000;
       if (connfd && !me->conn)
          goto close;
       nready = select(nfds+1,&rset,&wset,NULL,&tv);

@@ -48,6 +48,10 @@ public:
     * Construct a Grid with the provided grid_struct
     */
    Grid(struct grid_struct *);
+   /**
+    * Construct a Grid given a Grid
+    */
+   Grid(Grid &);
 
    /* normal operations */
 
@@ -61,9 +65,13 @@ public:
    bool inBounds(int,int);
 
    /**
-    * Return the value at the given position
+    * return the value at the given position
     */
    int  getIdx(double,double);
+   /**
+    * return the highest value around the given position
+    */
+   int  getIdxHigh(double,double);
    /**
     * Set the value at the given position
     */
@@ -234,6 +242,12 @@ public:
     * Returns 1.
     */
    int collectInfo(struct partial_grid_struct *);
+
+   /**
+    * return a grid with a lower scale that holds the
+    * same data and error bounds
+    */
+   Grid * compress(double);
 
 };
 

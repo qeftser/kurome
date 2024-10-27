@@ -2,6 +2,7 @@
 #include "Kurome.h"
 #include "waiters/SimWaiter.hpp"
 #include "mappers/NILRotAStarMapper.hpp"
+#include "mappers/SimpleAnyRotStaticPotentialFieldMapper.hpp"
 #include <unistd.h>
 
 void kurome_sserv_pause_handler(KB * msg, khandle * from, void * flag) {
@@ -30,30 +31,31 @@ static int maxWeightSelect(int w1, int w2) {
 
 int main(void) {
 
-   Grid g{0.5,200,200};
+   srand(time(NULL)*clock());
+
+   Grid g{0.5,200,200}; 
 
    Grid env{0.5,200,200};
    
    env.clear();
    Entity tst{100,100,12,12,KUROME_TYPE_ELPS,20};
-   //env.addEntity(&tst);
 
    Entity fov{0,0,16,16,KUROME_TYPE_RECT,0};
    Entity me{10,10,8,3,KUROME_TYPE_ELPS,20};
-   g.addEntity(&me);
    Entity goal{190,190,10,10,KUROME_TYPE_PONT,0};
 
    Waiter * w = new SimWaiter(env,fov,me);
 
-   Mapper * m = new NILRotAStarMapper();
+   Mapper * m = NULL;
    
-   Agent OO7 = Agent(me,goal,*m,g);
-   m->env = &g;
-   m->self = &me;
-   m->goal = &goal;
+   (void)Generator::sparse(&g,60,5,7);
+   Agent OO7 = Agent(me,goal,m,g);
    OO7.waiters.push_back(w);
-   (void)Generator::dune(&env,100,5,7);
    OO7.full_env = &env;
+
+   m = new SimpleAnyRotStaticPotentialFieldMapper(100,&OO7);
+   OO7.mapper = m;
+   OO7.mapper->callback(0);
 
    bool shouldMove = false;
    OO7.registerHandler(KUROME_MSG_START,kurome_sserv_start_handler);
@@ -79,10 +81,10 @@ int main(void) {
             //delete next;
          }
       }
-      usleep(10000);
+      usleep(70000);
       if (step%5 == 0 && shouldMove) {
-         OO7.mapper.callback(0);
-         Frame next = OO7.mapper.nextPoint(good);
+         OO7.mapper->callback(0);
+         Frame next = OO7.mapper->nextPoint(good);
          if (!good) {
             me.posx = next.posx;
             me.posy = next.posy;

@@ -43,8 +43,8 @@ double Frame::dist2(const Frame & other) {
    return (((posx-other.posx)*(posx-other.posx))+((posy-other.posy)*(posy-other.posy)));
 }
 
-int Frame::cost(Entity & hitbox, Grid & env) {
-   uint sum = 0;
+ulong Frame::cost(Entity & hitbox, Grid & env) {
+   ulong sum = 0;
    RectIterator ri;
    EllipseIterator ei;
    switch(hitbox.type) {

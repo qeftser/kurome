@@ -83,8 +83,8 @@ bool Grid::inBounds(int xpos, int ypos) {
 }
 
 int Grid::getIdx(double xpos, double ypos) {
-   int ax = roor(xpos);
-   int ay = roor(ypos);
+   int ax = roob(xpos);
+   int ay = roob(ypos);
 #ifndef KUROME_NOCHECK
    if (!inBounds(ax,ay)) {
       errnok = KUROME_ERANGE;
@@ -92,6 +92,24 @@ int Grid::getIdx(double xpos, double ypos) {
    }
 #endif
    return oblocks(ax,ay);
+}
+
+int Grid::getIdxHigh(double xpos, double ypos) {
+   int axl = roob(xpos);
+   int ayl = roob(ypos);
+   int axh = root(xpos);
+   int ayh = root(ypos);
+#ifndef KUROME_NOCHECK
+   if (!inBounds(axl,ayl) || !inBounds(axh,ayh)) {
+      errnok = KUROME_ERANGE;
+      return -1;
+   }
+#endif
+   int max = oblocks(axl,ayl);
+   max = (max > oblocks(axl,ayh) ? max : oblocks(axl,ayh));
+   max = (max > oblocks(axh,ayh) ? max : oblocks(axh,ayh));
+   max = (max > oblocks(axh,ayl) ? max : oblocks(axh,ayl));
+   return max;
 }
 
 int Grid::getIdx(double xpos, double ypos, double error) {
@@ -108,8 +126,8 @@ int Grid::getIdx(double xpos, double ypos, double error) {
 }
 
 int Grid::setIdx(double xpos, double ypos, int val) {
-   int ax = roor(xpos);
-   int ay = roor(ypos);
+   int ax = roob(xpos);
+   int ay = roob(ypos);
 #ifndef KUROME_NOCHECK
    if (!inBounds(ax,ay)) {
       errnok = KUROME_ERANGE;
@@ -182,7 +200,7 @@ void Grid::print() {
       }
    }
    int stepv = maxv/5;
-   int scalev = maxv/255;
+   int scalev = (maxv/255 ? maxv/255 : 1);
    for (int j = 0; j < blocksYmax-blocksYmin; ++j) {
       for (int i = 0; i < blocksXmax-blocksXmin; ++i) {
          if (blocks(i,j) > stepv*4)
@@ -199,6 +217,7 @@ void Grid::print() {
       }
       printf("\n");
    }
+   printf("\n");
 }
 
 int Grid::changeUnitSize(double newSize) {
@@ -454,3 +473,42 @@ Grid::Grid(struct grid_struct * gs)
    }
 }
 
+Grid * Grid::compress(double newUnitSize) {
+#ifndef KUROME_NOCHECK
+   if (newUnitSize < unitSize) {
+      errnok = KUROME_EBADNUM;
+      return NULL;
+   }
+#endif
+   Grid * newGrid = new Grid(newUnitSize,sizeXmin,sizeXmax,sizeYmin,sizeYmax);
+   int old;
+   for (int i = 0; i < newGrid->blocks.rows(); ++i) 
+      for (int j = 0; j  < newGrid->blocks.cols(); ++j)
+         newGrid->blocks(i,j) = -1;
+   for (int i = 0; i < blocksXmax-blocksXmin; ++i) {
+      for (int j = 0; j < blocksYmax-blocksYmin; ++j) {
+         old = newGrid->getIdx(i*unitSize,j*unitSize);
+         newGrid->setIdx(i*unitSize,j*unitSize,(old > blocks(i,j) ? old : blocks(i,j)));
+      }
+   }
+   return newGrid;
+}
+
+Grid::Grid(Grid & other) {
+   this->unitSize   = other.unitSize;
+   this->blocksXmax = other.blocksXmax;
+   this->blocksXmin = other.blocksXmin;
+   this->blocksYmax = other.blocksYmax;
+   this->blocksYmin = other.blocksYmin;
+   this->sizeXmin   = other.sizeXmin;
+   this->sizeXmax   = other.sizeXmax;
+   this->sizeYmin   = other.sizeYmin;
+   this->sizeYmax   = other.sizeYmax;
+   this->entities   = std::set<Entity *>(other.entities);
+   this->samples    = std::set<Sample *>(other.samples);
+   this->generator  = std::default_random_engine(clock());
+   this->blocks     = Eigen::MatrixXi(other.blocks);
+   for (int i = 0; i < other.blocks.rows(); ++i)
+      for (int j = 0; j < other.blocks.cols(); ++j)
+         blocks(i,j) = other.blocks(i,j);
+}

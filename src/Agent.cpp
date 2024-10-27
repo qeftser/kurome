@@ -38,7 +38,7 @@ void kurome_agent_connection(gsock_fd fd, Agent * me) {
       else
          FD_ZERO(&vset);
       bzero(&tv,sizeof(tv));
-      tv.tv_sec = 1;
+      tv.tv_usec = 100000;
       nready = select(fd+1,&uset,&vset,NULL,&tv);
       if (nready == -1)
          perror("select");

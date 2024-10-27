@@ -12,8 +12,8 @@ void kurome_agent_default_MSG_ADD_ENTITY_handler(KB * msg, khandle * from, void 
 
 void kurome_agent_default_MSG_MAPCALLBACK_handler(KB * msg, khandle * from, void * me) {
    struct kurome_intmsg * fm = (struct kurome_intmsg *)msg;
-   ((Agent *)me)->mapper.callback(fm->val);
-   kcmd::mapperInfo(((Agent *)me)->mapper,from);
+   ((Agent *)me)->mapper->callback(fm->val);
+   kcmd::mapperInfo(*((Agent *)me)->mapper,from);
 }
 
 void kurome_agent_default_MSG_SET_IDX_handler(KB * msg, khandle * from, void * me) {
@@ -53,7 +53,7 @@ void kurome_agent_default_MSG_GET_GRID_handler(KB * msg, khandle * from, void * 
 
 void kurome_agent_default_MSG_GETMAPPER_handler(KB * msg, khandle * from, void * me) {
    (void)msg;
-   kcmd::mapperInfo(((Agent *)me)->mapper,from);
+   kcmd::mapperInfo(*((Agent *)me)->mapper,from);
 }
 
 void kurome_agent_default_MSG_GETWAITERS_handler(KB * msg, khandle * from, void * me) {

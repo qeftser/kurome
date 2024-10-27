@@ -24,7 +24,7 @@ public:
    Entity & self;                                                       /**< define the shape and location of the robot */
    Entity & goal;                                                       /**< define the shape and location of the goal */
    std::vector<Waiter *> waiters;                                       /**< collection of all waiters in the robot */
-   Mapper & mapper;                                                     /**< the current mapping algorithm in use */
+   Mapper * mapper;                                                     /**< the current mapping algorithm in use */
    Grid   & environment;                                                /**< the current representation of the environment */
    Grid   * full_env;                                                   /**< optionally defined 
                                                                          * - holds the given simulation environment if there is one */
@@ -37,7 +37,7 @@ public:
                                                                         * arbitrary extra value that defaults to the Agent */
    std::unordered_map<int,void *> handlerData;                         /**< holds any special data to be associated with a handler */
 
-   Agent(Entity & self, Entity & goal, Mapper & mapper, Grid & env)
+   Agent(Entity & self, Entity & goal, Mapper * mapper, Grid & env)
       : self(self), goal(goal), mapper(mapper), environment(env), full_env(NULL) { 
          setDefaultHandlers();
       }

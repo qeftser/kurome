@@ -67,7 +67,7 @@ public:
     * Return the sum of the weights inside the provided hitbox at the Frame
     * position in the provided environment
     */
-   int cost(Entity &, Grid &);
+   ulong cost(Entity &, Grid &);
    /**
     * Return the distance squared between this Frame and the provided one
     */
