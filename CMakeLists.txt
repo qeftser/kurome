@@ -8,7 +8,7 @@ find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(SFML COMPONENTS window graphics system)
 
 add_library(k_lib STATIC src/Grid.cpp src/Iterators.cpp src/Frame.cpp src/Agent.cpp src/Reporter.cpp
-                         src/gsocket.cpp src/handlers.cpp src/kcmd.cpp src/Generator.cpp)
+                         src/gsocket.cpp src/handlers.cpp src/kcmd.cpp src/Generator.cpp src/nearest.cpp)
 
 add_executable(serv src/sserv.cpp)
 add_executable(viewer src/gui/viewer/viewer.cpp)

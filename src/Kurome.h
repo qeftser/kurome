@@ -127,5 +127,7 @@ extern int errno_kurome;
 
 #include "headers/Generator.h"
 
+#include "headers/nearest.h"
+
 #endif
 

@@ -41,7 +41,7 @@ int main(void) {
    Entity tst{100,100,12,12,KUROME_TYPE_ELPS,20};
 
    Entity fov{0,0,16,16,KUROME_TYPE_RECT,0};
-   Entity me{10,10,8,3,KUROME_TYPE_ELPS,20};
+   Entity me{10,10,3,8,KUROME_TYPE_ELPS,20};
    Entity goal{190,190,10,10,KUROME_TYPE_PONT,0};
 
    Waiter * w = new SimWaiter(env,fov,me);
