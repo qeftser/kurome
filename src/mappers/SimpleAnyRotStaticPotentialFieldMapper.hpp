@@ -16,6 +16,8 @@ typedef uint64_t sarspfm_point;
 #define sarspfm_t(v) ((v&0xffff000000000000)>>48)
 #define sarspfm_c(v) ((v&0x0000ffff00000000)>>32)
 
+#define KUROME_SARSPFM_NOGO_VALUE (SHRT_MAX+SHRT_MAX)
+
 
 class SimpleAnyRotStaticPotentialFieldMapper : public Mapper {
 public:
@@ -25,7 +27,7 @@ public:
    std::set<sarspfm_point> seen;
    Grid * base;
    Entity max_space;
-   int cutoff_cost;
+   long cutoff_cost;
    int mapped;
    int gx;
    int gy;
@@ -56,7 +58,7 @@ public:
          RectIterator ri;
          for (int i = 0; i < base->blocks.rows(); ++i) {
             for (int j = 0; j < base->blocks.cols(); ++j) {
-               ri = RectIterator(i*step+hstep,j*step+hstep,&max_space,base);
+               ri = RectIterator(i*step,j*step,&max_space,base);
                long total = 0;
                while (!ri.done) {
                   total += *ri;
@@ -145,13 +147,13 @@ public:
                if ((base->blocks(i,j)&0xffff) != 0)
                   base->blocks(i,j) = -1;
                else
-                  base->blocks(i,j) = SHRT_MAX;
+                  base->blocks(i,j) = KUROME_SARSPFM_NOGO_VALUE;
             }
          }
 #ifdef SARSPFM_DEBUG
          printf("%ld\n",edge_points.size());
          for (sarspfm_point s : edge_points)
-            base->blocks(sarspfm_x(s),sarspfm_y(s)) = SHRT_MAX/2;
+            base->blocks(sarspfm_x(s),sarspfm_y(s)) = KUROME_SARSPFM_NOGO_VALUE;
          base->print();
 #endif
          for (sarspfm_point s : edge_points)
@@ -193,7 +195,7 @@ public:
          }
          for (int i = 0; i < base->blocks.rows(); ++i) {
             for (int j = 0; j < base->blocks.cols(); ++j) {
-               if (base->blocks(i,j) == SHRT_MAX)
+               if (base->blocks(i,j) == KUROME_SARSPFM_NOGO_VALUE)
                   base->blocks(i,j) = -2;
             }
          }
@@ -203,7 +205,7 @@ public:
          for (int i = 0; i < base->blocks.rows(); ++i) {
             for (int j = 0; j < base->blocks.cols(); ++j) {
                if (base->blocks(i,j) == -2)
-                  base->blocks(i,j) = SHRT_MAX;
+                  base->blocks(i,j) = KUROME_SARSPFM_NOGO_VALUE;
             }
          }
          for (sarspfm_point s : edge_points) {
@@ -246,7 +248,7 @@ public:
             }
          }
       } while ((base->getIdx(self->posx,self->posy) == -1 || 
-                base->getIdx(self->posx,self->posy) == SHRT_MAX) &&
+                base->getIdx(self->posx,self->posy) == KUROME_SARSPFM_NOGO_VALUE) &&
                !grids.empty());
       while (!grids.empty()) {
          Grid * g = grids.top(); grids.pop();
@@ -254,7 +256,7 @@ public:
       }
       for (int i = 0; i < base->blocks.rows(); ++i) {
          for (int j = 0; j < base->blocks.cols(); ++j) {
-            if (base->blocks(i,j) == SHRT_MAX)
+            if (base->blocks(i,j) == KUROME_SARSPFM_NOGO_VALUE)
                base->blocks(i,j) = -2;
          }
       }
@@ -262,7 +264,7 @@ public:
       for (int i = 0; i < base->blocks.rows(); ++i) {
          for (int j = 0; j < base->blocks.cols(); ++j) {
             if (base->blocks(i,j) == -2)
-               base->blocks(i,j) = SHRT_MAX;
+               base->blocks(i,j) = KUROME_SARSPFM_NOGO_VALUE;
          }
       }
       base->collectInfo(&binfo);

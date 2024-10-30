@@ -53,7 +53,7 @@ int main(void) {
    OO7.waiters.push_back(w);
    OO7.full_env = &env;
 
-   m = new SimpleAnyRotStaticPotentialFieldMapper(100,&OO7);
+   m = new SimpleAnyRotStaticPotentialFieldMapper(50,&OO7);
    OO7.mapper = m;
    OO7.mapper->callback(0);
 
