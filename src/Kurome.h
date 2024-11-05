@@ -70,7 +70,7 @@ extern int errno_kurome;
 #define KUROME_MFLAG_MOVE   4
 /* cumulative movement from after 
  * last trigger exceeds threshold */
-#define KUROME_MGLAG_CMOVE 32
+#define KUROME_MFLAG_CMOVE 32
 /* some exceptional condition occured */
 #define KUROME_MFLAG_EXEC   8
 /* the goal for the mapper has changed */
