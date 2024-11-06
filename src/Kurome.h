@@ -129,5 +129,7 @@ extern int errno_kurome;
 
 #include "headers/nearest.h"
 
+#include "headers/binary_heap.hpp"
+
 #endif
 
