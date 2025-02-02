@@ -33,12 +33,15 @@
 *.e
 
 # build dir
-build/*
+*/build/*
 
 #docs dir
-docs/*
+*/docs/*
+
+# old filed
+old/*
 
 # Python stuff
 *.pyc
-py/*
+*/py/*
 

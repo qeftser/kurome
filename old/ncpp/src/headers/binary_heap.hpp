@@ -21,7 +21,7 @@ public:
    ~binary_heap() {
    }
 
-   void insert(uint64_t key, V val) {
+   void insert(__uint128_t key, V val) {
       struct pair * nev = (struct pair *)malloc(sizeof(struct pair));
       nev->key = key; nev->pos = total; nev->val = val;
       elements.push_back(nev);
@@ -35,12 +35,16 @@ public:
       --total;
       temp = elements[0];
       elements[0] = elements[total];
-      members.erase(elements[total]->key);
+      members.erase(temp->key);
       elements.pop_back();
       down_heap(0);
       V ret = temp->val;
       free(temp);
       return ret;
+   }
+
+   V min(void) {
+      return elements[0]->val;
    }
 
    void update_key(uint64_t old, uint64_t nev) {
@@ -50,6 +54,24 @@ public:
          up_heap(curr->pos);
       else
          down_heap(curr->pos);
+   }
+
+   void update(void) {
+      for (int i = total-1; i >= 0; --i)
+         down_heap(i);
+   }
+
+   V remove(uint64_t key) {
+      struct pair * curr = members.at(key);
+      --total;
+      struct pair * temp = elements[curr->pos];
+      elements[curr->pos] = elements[total];
+      members.erase(curr->key);
+      elements.pop_back();
+      down_heap(curr->pos);
+      V ret = curr->val;
+      free(curr);
+      return ret;
    }
 
    bool contains(uint64_t key) {
