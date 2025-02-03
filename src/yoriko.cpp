@@ -24,6 +24,33 @@ public:
 
 private:
 
+   /* =================== publishers =================== */
+   /* The path we produce with our pathfinding algorith for use
+    * by a controller or for our own use in creating a series of 
+    * Twist messages to send directly to something like a 
+    * ros2_control controller.                                   */
+   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr       path_out;
+   /* Velocity output we send to our control node for processing.
+    * This will give the movement we want between two nodes on our
+    * path. This value may or may not be used, it depends on how
+    * good of a controller we can get our hands on.              */
+   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr vel_out;
+
+   /* =================== subscribers =================== */
+   /* Subscription to the goal of the navigation system, presumably
+    * published to this node by the system brain. It doesn't have
+    * to be though. The system will attempt to navigate towards this
+    * goal.                                                      */
+   rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr        goal_in;
+   /* The current besst estimate of the robot's position. Provided by
+    * Pino, our resident GraphSLAM algorithm. Yoriko will use this to aid
+    * in following our path, and in constructing it.             */
+   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr position_in;
+   /* Subscription to the occupancy grid, which is published
+    * periodically by Pino. This system will path through this map,
+    * attempting to reach the goal provided.                     */
+   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr    grid_in;
+
 };
 
 int main(int argc, char ** argv) {
