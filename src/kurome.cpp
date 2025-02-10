@@ -15,3 +15,9 @@ std::vector<std::string> split(std::string & str, const std::string & delimiter)
 
    return splits;
 }
+
+
+sensor_msgs::msg::LaserScan transform_scan(const sensor_msgs::msg::LaserScan & scan,
+                                           const geometry_msgs::msg::TransformStamped & transform) {
+}
+

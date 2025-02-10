@@ -4,11 +4,36 @@
 #define __KUROME_GLOBALS
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <rclcpp/rclcpp.hpp>
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/transform.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
+#include "nav_msgs/msg/path.hpp"
+
+/* A handy method for use with maps. 
+ * We basically or v1 with v2 shifted
+ * to the upper 32 bits.             */
+#define long_from_ints(v1,v2) \
+   (((long)(v1))|(((long)(v2))<<32))
+
+/* a nice abstraction over the very verbose method
+ * of removing an element completely from a vector */
+#define erase_from_vector(vector,element)                                 \
+   do {                                                                   \
+      auto result = std::remove((vector).begin(),(vector).end(),element); \
+      (vector).erase(result,(vector).end());                              \
+   } while (false)
+
+/* a dirty method of getting a
+ * value to be seen as a long. 
+ * Note: this will only convert
+ * the first 8 bytes to a long, as
+ * that is all the long holds */
+#define value_to_long(ptr) \
+   (*(long *)((void *)&(ptr)))
 
 /* Return a vector of strings that are the individual parts
  * of the passed value str, but split along the passed string

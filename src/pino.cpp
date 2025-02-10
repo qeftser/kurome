@@ -17,6 +17,7 @@
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 
+
 /* The SLAM system for Kurome. This is an implimentation of the GraphSLAM
  * algorithm using odometry, LiDAR, Point Cloud, and IMU data. Fixing nodes
  * is also allowed via input from a local beacon                           */

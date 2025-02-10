@@ -1,0 +1,18 @@
+/kurome/yoriko:
+  ros__parameters:
+    path_topic: "path"
+    goal_topic: "goal"
+    position_topic: "odom"
+    grid_topic: "map"
+    algorithm: "rrt_x_fn"
+    collision_radius: 0.5
+    publish_rate: 0.1
+    launch_gui: true
+#
+# Following parameters are specifically for
+# the rrt_x_fn and mi_rrt_x_fn algorithms
+    dominance_region: 2.0
+    cull_range: 1.5
+    node_limit: 30000
+    generation_tick_speed: 10
+    bin_size: 2.0
