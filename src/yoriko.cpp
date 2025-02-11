@@ -13,12 +13,12 @@
 #include "kurome.h"
 #include "pathfinder.hpp"
 #include "rrt_x_fn.hpp"
+#include "a_star.hpp"
 #include "spatial_bin.hpp"
 
 /* The navigation system for Kurome. Responsible for planning a route 
- * through the map provided by Pino (the SLAM system) and communicating
- * with the control system to correctly reach the position dictated by
- * the brain                                                            */
+ * through the map provided by Pino (the SLAM system) and forwarding 
+ * it to the smoother.                                               */
 
 using std::placeholders::_1;
 
@@ -43,9 +43,9 @@ public:
       /* topic to accept the occupancy grid on */
       this->declare_parameter("grid_topic","map");
 
-      /* the algorithm to use for the pathfinding. Right
-       * now the sole choice is rrt_x_fn.               */
-      this->declare_parameter("algorithm","rrt_x_fn");
+      /* the algorithm to use for the pathfinding. Options
+       * are rrt_x_fn and a_star                         */
+      this->declare_parameter("algorithm","a_star");
 
       /* the distance we want to maintain from all surrounding
        * obstacles. used for all pathfinding algorithms.      */
@@ -67,6 +67,12 @@ public:
       this->declare_parameter("generation_tick_speed",10);
       this->declare_parameter("bin_size",2.0);
 
+      /* values for the a_star algorithm only. See
+       * the comments in the a_star file for info
+       * on these parameters.                     */
+      this->declare_parameter("queue_limit",20000);
+      this->declare_parameter("backtrack_count",10);
+
       /* set our pathfinding algorithm given the 
        * parameters we have been given.         */
       if (this->get_parameter("algorithm").as_string() == "rrt_x_fn") {
@@ -77,6 +83,16 @@ public:
                                   this->get_parameter("expansion_length").as_double(),
                                   this->get_parameter("node_limit").as_int(),
                                   this->get_parameter("generation_tick_speed").as_int());
+      }
+      else if (this->get_parameter("algorithm").as_string() == "a_star") {
+         pathfinder = new AStar(this->get_parameter("collision_radius").as_double(),
+                                this->get_parameter("backtrack_count").as_int(),
+                                this->get_parameter("queue_limit").as_int());
+
+      }
+      else {
+         RCLCPP_ERROR(this->get_logger(),"Invalid algorithm selected. Please choose" 
+                                         "one of: [ rrt_x_fn, a_star ]");
       }
 
       /* instantiate our publisher */
@@ -173,9 +189,6 @@ private:
       /* we are in the map frame of reference */
       msg.header.frame_id = "base_link";
 
-      printf("msg->poses: %d\n",msg.poses.size());
-      printf("msg->time: %lu %lu\n",msg.header.stamp.sec,msg.header.stamp.nanosec);
-
       /* send out the message */
       path_out->publish(msg);
 
@@ -218,7 +231,6 @@ private:
       
       /* grab the metadata for later use */
       grid_metadata = msg.info;
-
 
    }
 
@@ -296,8 +308,8 @@ private:
                      scale *= 1.1;
                      break;
                   case sf::Keyboard::G:
-                     goal_pose.position.x = (mouse.x / 10)+grid_metadata.origin.position.x;
-                     goal_pose.position.y = (mouse.y / 10)+grid_metadata.origin.position.y;
+                     goal_pose.position.x = ((grid_metadata.resolution * mouse.x / 10)+grid_metadata.origin.position.x);
+                     goal_pose.position.y = ((grid_metadata.resolution * mouse.y / 10)+grid_metadata.origin.position.y);
                      pathfinder->set_goal(goal_pose);
                      break;
               }

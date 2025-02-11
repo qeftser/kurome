@@ -40,6 +40,11 @@ add_executable(yoriko src/yoriko.cpp)
 target_link_libraries(yoriko sfml-window sfml-graphics sfml-system)
 ament_target_dependencies(yoriko rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
 
+# misao node
+add_executable(misao src/misao.cpp)
+target_link_libraries(misao sfml-window sfml-graphics sfml-system)
+ament_target_dependencies(misao rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
+
 # the iron rod node 
 add_executable(the_iron_rod src/the_iron_rod.cpp)
 ament_target_dependencies(the_iron_rod rclcpp geometry_msgs nav_msgs)
@@ -49,7 +54,7 @@ add_executable(hardcoded_path_publisher src/hardcoded_path_publisher.cpp)
 ament_target_dependencies(hardcoded_path_publisher rclcpp nav_msgs geometry_msgs)
 
 
-install(TARGETS brain wall_filter pino yoriko the_iron_rod hardcoded_path_publisher
+install(TARGETS brain wall_filter pino yoriko misao the_iron_rod hardcoded_path_publisher
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch config
         DESTINATION share/${PROJECT_NAME})

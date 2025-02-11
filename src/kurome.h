@@ -32,8 +32,15 @@
  * Note: this will only convert
  * the first 8 bytes to a long, as
  * that is all the long holds */
-#define value_to_long(ptr) \
-   (*(long *)((void *)&(ptr)))
+#define value_to_long(val) \
+   (*(long *)((void *)&(val)))
+
+/* another dirty method of getting
+ * a pointer to be seen as a long.
+ * This is useful for storing pointers
+ * in sets.                         */
+#define ptr_to_long(ptr) \
+   ((long)(ptr))
 
 /* Return a vector of strings that are the individual parts
  * of the passed value str, but split along the passed string

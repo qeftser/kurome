@@ -572,8 +572,6 @@ public:
 
       /* get the closest point to our current position */
       node * nearest = closest(origin);
-      printf("nearest: %f %f\n",nearest->pos.x,nearest->pos.y);
-      printf("origin : %f %f\n",origin.x,origin.y);
 
       /* if we cannot reach that point, then the RRT
        * path generation fails and we return NULL   */
@@ -591,17 +589,12 @@ public:
          pose.pose.position.y = (nearest->pos.y * grid_metadata.resolution) + grid_metadata.origin.position.y;
 
          ret.poses.push_back(pose);
-         printf("+1\n");
 
          nearest = nearest->parent;
       }
 
-      printf("ret->poses: %d\n",ret.poses.size());
-
       /* release the tree */
       mut.unlock();
-
-      printf("done\n");
 
       return ret;
    }
@@ -624,7 +617,7 @@ public:
 
       while (true) {
 
-         if (!nodes.bin_list.empty()) {
+         if (!no_goal) {
 
             /* take hold of the tree */
             mut.lock();

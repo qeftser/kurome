@@ -4,6 +4,7 @@
 #define __PATHFINDER_BASE
 #include "kurome.h"
 #include <cstddef>
+#include <mutex>
 
 #include <SFML/Graphics.hpp>
 
@@ -43,6 +44,8 @@ protected:
    point origin = { 0.0, 0.0 };
    /* where we are trying to go */
    point goal = { 0.0, 0.0 };
+   /* true if there is no valid goal */
+   int no_goal = true;
 
    /* the points on the radius of the circle
     * that represents the boundary of collision
@@ -54,6 +57,10 @@ protected:
    double collision_radius;
 
 private:
+
+   /* mutex for ensuring that we don't draw the
+    * environment while we are deleting it.    */
+   std::mutex mut;
 
    /* compute the points on the radius of the collision
     * boundary circle. This will be used in the map
@@ -132,6 +139,9 @@ public:
           map.info.width != grid_metadata.width           ||
           map.info.height != grid_metadata.height           ) {
 
+         /* ensure we have full hold of the map */
+         mut.lock();
+
          /* get rid of the old vector */
          free(grid);
          free(grid_flag);
@@ -145,6 +155,9 @@ public:
          grid_length = grid_metadata.width * grid_metadata.height;
          grid = (uint8_t *)(calloc(sizeof(uint8_t),grid_length));
          grid_flag = (uint8_t *)(calloc(sizeof(uint8_t),grid_length));
+
+         /* release the mutex as soon as possible */
+         mut.unlock();
 
          /* fill our vector with the current values */
          for (int i = 0; i < grid_length; ++i) {
@@ -236,6 +249,8 @@ public:
           map.info.width != grid_metadata.width           ||
           map.info.height != grid_metadata.height           ) {
 
+         mut.lock();
+
          free(grid);
          free(grid_flag);
 
@@ -245,6 +260,8 @@ public:
          grid_length = grid_metadata.width * grid_metadata.height;
          grid = (uint8_t *)(calloc(sizeof(uint8_t),grid_length));
          grid_flag = (uint8_t *)(calloc(sizeof(uint8_t),grid_length));
+
+         mut.unlock();
 
          for (int i = 0; i < grid_length; ++i) {
             if (map.data[i] > occupant_cutoff) {
@@ -282,7 +299,7 @@ public:
                   for (size_t j = 0; j < circle_vals.size(); ++j) {
                      block pos = {circle_vals[j].x + (int)(i%grid_metadata.width), 
                                   circle_vals[j].y + (int)(i/grid_metadata.width) };
-                     if (pos.x >= 0 && pos.y >= 0 && pos.x < (int)grid_metadata.width ||
+                     if (pos.x >= 0 && pos.y >= 0 && pos.x < (int)grid_metadata.width &&
                          pos.y < (int)grid_metadata.height) {
 
                         grid[pos.x + pos.y*grid_metadata.width] += 1;
@@ -315,8 +332,19 @@ public:
 
    /* Set the new goal for our pathfinder */
    virtual void set_goal(const geometry_msgs::msg::Pose & pose) {
-      goal.x = pose.position.x - grid_metadata.origin.position.x;
-      goal.y = pose.position.y - grid_metadata.origin.position.y;
+      goal.x = (pose.position.x - grid_metadata.origin.position.x) / grid_metadata.resolution;
+      goal.y = (pose.position.y - grid_metadata.origin.position.y) / grid_metadata.resolution;
+
+      /* if we are out of bounds or in a colliding area, do not
+       * set it as a valid goal for the system.                */
+      if (goal.x < 0 || goal.x >= grid_metadata.width  ||
+          goal.y < 0 || goal.y >= grid_metadata.height ||
+         (grid && grid[(int)(goal.x + (goal.y * grid_metadata.width))])) {
+         no_goal = true;
+      }
+      else /* goal is valid */
+         no_goal = false;
+ 
    }
 
    /* collect the current best path
@@ -328,6 +356,9 @@ public:
     * will be faster.                                 */
    virtual void draw_environment(sf::RenderWindow * window) {
       sf::RectangleShape rect;
+
+      /* grab full control of the grid */
+      mut.lock();
 
       /* draw border */
       rect.setSize(sf::Vector2f(10*grid_metadata.width,10*grid_metadata.height));
@@ -347,6 +378,9 @@ public:
             window->draw(rect);
          }
       }
+
+      /* release control */
+      mut.unlock();
    }
 
 };

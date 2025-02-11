@@ -4,7 +4,7 @@
     goal_topic: "goal"
     position_topic: "odom"
     grid_topic: "map"
-    algorithm: "rrt_x_fn"
+    algorithm: "a_star"
     collision_radius: 0.5
     publish_rate: 0.1
     launch_gui: true
@@ -16,3 +16,9 @@
     node_limit: 30000
     generation_tick_speed: 10
     bin_size: 2.0
+#
+# Following parameters are specifically for
+# the a_star and mi_a_star algorithms
+    queue_limit: 20000
+    backtrack_count: 10
+
