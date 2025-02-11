@@ -57,16 +57,6 @@ private:
     * generation to the tree (100 nodes)                 */
    int generation_tick_speed;
 
-   /* minimum values sampled so far. */
-   point min_len;
-   /* maximum values sampled so far */
-   point max_len;
-
-   /* values that determine the sample radius. These
-    * are set dyamically given the size of the tree
-    * and the size of the environment.              */
-   double x_len, y_len, x_off, y_off;
-
    /* mutex for running commands on the tree. Ensures
     * we do not try and modify the tree as it is growing */
    std::mutex mut;
@@ -77,11 +67,20 @@ private:
     * the current path.                              */
    std::thread tree_handler;
 
+   /* minimum values sampled so far. */
+   point min_len;
+   /* maximum values sampled so far */
+   point max_len;
 
    /* size of the area we are sampling from */
    point sample_area;
    /* half of the sample area               */
    point sample_offset;
+
+   /* values that determine the sample radius. These
+    * are set dyamically given the size of the tree
+    * and the size of the environment.              */
+   double x_len, y_len, x_off, y_off;
 
    /* compute the euclidian distance squared between
     * a node and a point or two nodes               */
@@ -210,6 +209,7 @@ private:
             current_node->parent = anchor;
             anchor->children.push_back(current_node);
             current_node->cost = dist;
+            make_relative_to_parent(current_node);
 
             /* If we are adopting an orphan,
              * trigger the appropriate routine. */
@@ -276,6 +276,7 @@ private:
                current_node->parent = orphan;
                orphan->children.push_back(current_node);
                current_node->cost = dist;
+               make_relative_to_parent(current_node);
 
                /* If the current node is an orphan and we have not
                 * already seen it, add it to the list of nodes to
@@ -398,6 +399,7 @@ private:
                                        std::vector<node *>(),
                                        proposed_parent,
                                        false};
+            make_relative_to_parent(new_node);
 
             /* parent is no longer infertile */
             if (proposed_parent->children.empty())
@@ -484,9 +486,23 @@ private:
       return nodes.closest(position);
    }
 
+   /* generate a new random point in the environment */
+   inline const point generate_random() const {
+      return point{(((double)std::rand()/RAND_MAX)*x_len) + sample_offset.x - x_off,
+                   (((double)std::rand()/RAND_MAX)*y_len) + sample_offset.y - y_off};
+   }
+
+protected:
+
+   /* Does nothing here, but can be overriden to influence
+    * a node's relationship with it's parent.             */
+   virtual inline void make_relative_to_parent(node * n) {
+      (void)n;
+   }
+
    /* use the given map and the bresenham collision algorithm 
     * to determine if this edge is colliding with the map. */
-   inline bool is_collision(const point & p1, const point & p2) {
+   virtual inline bool is_collision(const point & p1, const point & p2) {
 
       /* get the endpoints of our line */
       int x0 = p1.x;
@@ -534,8 +550,6 @@ private:
       return false;
    }
 
-
-
 public:
 
    RRTX_FN(double collision_radius, double dominance_region, double cull_range,
@@ -575,7 +589,7 @@ public:
 
       /* if we cannot reach that point, then the RRT
        * path generation fails and we return NULL   */
-      if (is_collision(nearest->pos,origin)) {
+      if (RRTX_FN::is_collision(nearest->pos,origin)) {
          mut.unlock();
          return ret;
       }

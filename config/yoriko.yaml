@@ -21,4 +21,8 @@
 # the a_star and mi_a_star algorithms
     queue_limit: 20000
     backtrack_count: 10
+#
+# Following parameter is for the motion
+# informed algorithm variants.
+    turning_radius: 1.0
 

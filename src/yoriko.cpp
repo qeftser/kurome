@@ -13,6 +13,7 @@
 #include "kurome.h"
 #include "pathfinder.hpp"
 #include "rrt_x_fn.hpp"
+#include "mi_rrt_x_fn.hpp"
 #include "a_star.hpp"
 #include "spatial_bin.hpp"
 
@@ -45,7 +46,7 @@ public:
 
       /* the algorithm to use for the pathfinding. Options
        * are rrt_x_fn and a_star                         */
-      this->declare_parameter("algorithm","a_star");
+      this->declare_parameter("algorithm","mi_rrt_x_fn");
 
       /* the distance we want to maintain from all surrounding
        * obstacles. used for all pathfinding algorithms.      */
@@ -73,6 +74,11 @@ public:
       this->declare_parameter("queue_limit",20000);
       this->declare_parameter("backtrack_count",10);
 
+      /* Additional parameter for the motion informed
+       * varients of the pathfinders. The turning radius
+       * that is allowed by the robot being planned for */
+      this->declare_parameter("turning_radius",1.5);
+
       /* set our pathfinding algorithm given the 
        * parameters we have been given.         */
       if (this->get_parameter("algorithm").as_string() == "rrt_x_fn") {
@@ -89,6 +95,16 @@ public:
                                 this->get_parameter("backtrack_count").as_int(),
                                 this->get_parameter("queue_limit").as_int());
 
+      }
+      else if (this->get_parameter("algorithm").as_string() == "mi_rrt_x_fn") {
+         pathfinder = new MI_RRTX_FN(this->get_parameter("collision_radius").as_double(),
+                                     this->get_parameter("dominance_region").as_double(),
+                                     this->get_parameter("cull_range").as_double(),
+                                     this->get_parameter("bin_size").as_double(),
+                                     this->get_parameter("expansion_length").as_double(),
+                                     this->get_parameter("node_limit").as_int(),
+                                     this->get_parameter("generation_tick_speed").as_int(),
+                                     this->get_parameter("turning_radius").as_double());
       }
       else {
          RCLCPP_ERROR(this->get_logger(),"Invalid algorithm selected. Please choose" 

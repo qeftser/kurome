@@ -16,6 +16,7 @@ protected:
    struct point {
       double x;
       double y;
+      double theta = 0.0;
    };
 
    /* Represents a slot on
