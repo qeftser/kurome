@@ -15,6 +15,7 @@
 #include "rrt_x_fn.hpp"
 #include "mi_rrt_x_fn.hpp"
 #include "a_star.hpp"
+#include "mi_a_star.hpp"
 #include "spatial_bin.hpp"
 
 /* The navigation system for Kurome. Responsible for planning a route 
@@ -46,7 +47,7 @@ public:
 
       /* the algorithm to use for the pathfinding. Options
        * are rrt_x_fn and a_star                         */
-      this->declare_parameter("algorithm","mi_rrt_x_fn");
+      this->declare_parameter("algorithm","a_star");
 
       /* the distance we want to maintain from all surrounding
        * obstacles. used for all pathfinding algorithms.      */
@@ -57,6 +58,10 @@ public:
 
       /* whether or not to use the gui interface */
       this->declare_parameter("launch_gui",true);
+
+      /* The threshold (0 - 100) at which to consider
+       * a position on the occupancy grid an obstacle */
+      this->declare_parameter("obstacle_threshold",60);
 
       /* values for the rrt_x_fn algorithm only. See
        * the comments in it's file for info on what
@@ -77,7 +82,16 @@ public:
       /* Additional parameter for the motion informed
        * varients of the pathfinders. The turning radius
        * that is allowed by the robot being planned for */
-      this->declare_parameter("turning_radius",1.5);
+      this->declare_parameter("turning_radius",2.5);
+
+      /* values for the mi_a_star algorithm only. Find
+       * more details in the associated implimentation
+       * file. Note: angle_slice values are provided
+       * in degrees for ease of use but are used internally
+       * as radians, hence the conversion.            */
+      this->declare_parameter("angle_slice",15.0);
+      this->declare_parameter("position_slice",0.25);
+      this->declare_parameter("forward_step",1.0);
 
       /* set our pathfinding algorithm given the 
        * parameters we have been given.         */
@@ -106,9 +120,18 @@ public:
                                      this->get_parameter("generation_tick_speed").as_int(),
                                      this->get_parameter("turning_radius").as_double());
       }
+      else if (this->get_parameter("algorithm").as_string() == "mi_a_star") {
+         pathfinder = new MI_AStar(this->get_parameter("collision_radius").as_double(),
+                                   this->get_parameter("backtrack_count").as_int(),
+                                   this->get_parameter("node_limit").as_int(),
+                                   this->get_parameter("turning_radius").as_double(),
+                                   (M_PI/180.0) * this->get_parameter("angle_slice").as_double(),
+                                   this->get_parameter("position_slice").as_double(),
+                                   this->get_parameter("forward_step").as_double());
+      }
       else {
          RCLCPP_ERROR(this->get_logger(),"Invalid algorithm selected. Please choose" 
-                                         "one of: [ rrt_x_fn, a_star ]");
+                                         "one of: [ rrt_x_fn, a_star, mi_rrt_x_fn, mi_a_star ]");
       }
 
       /* instantiate our publisher */
@@ -243,7 +266,7 @@ private:
 
 
       /* pass the message to the pathfinder */
-      pathfinder->load_map(msg, 80);
+      pathfinder->load_map(msg, this->get_parameter("obstacle_threshold").as_int());
       
       /* grab the metadata for later use */
       grid_metadata = msg.info;

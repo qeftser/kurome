@@ -72,6 +72,8 @@ private:
     * running out.                                    */
    int node_limit;
 
+   /* Record of the best values at each map position */
+   node ** best_at = NULL;
 
 public:
 
@@ -79,9 +81,6 @@ public:
       : PathfinderBase(collision_radius), 
         backtrack_count(backtrack_count), node_limit(node_limit) {}
 
-   /* This is exposed for the draw_environment function
-    * to make use of.                                  */
-   node ** best_at = NULL;
 
    void load_map(const nav_msgs::msg::OccupancyGrid & map, int occupant_cutoff) override {
 

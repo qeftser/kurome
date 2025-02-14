@@ -57,6 +57,10 @@ public:
    SpatialBin(double divisor) : divisor(divisor) {}
 
    V * closest(const K & k) {
+      return closest_in_range(k,0);
+   }
+
+   V * closest_in_range(const K & k, int range_limit) {
 
       V * closest_value = NULL;
       double min_distance = DBL_MAX;
@@ -76,7 +80,7 @@ public:
          int range = 1;
 
          /* Contine until we find a value */
-         while (true) {
+         while (range - range_limit) {
 
             /* Compute the upper and lower
              * edges we are searching. This works
@@ -152,6 +156,10 @@ public:
              * find anything.         */
             ++range;
          }
+
+         /* we capped out the range limit and
+          * no values were found, return NULL */
+         return NULL;
       }
       /* Otherwise, we only need to check 
        * the bin we map to and some of the
