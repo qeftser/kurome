@@ -23,6 +23,7 @@ private:
       double bubble_rad;
       node * next;
       node * prev;
+      bool new_node = false;
    };
 
    /* needed for keeping memory seperate */
@@ -194,23 +195,17 @@ private:
             }
          }
 
-         /* increase the range */
          ++range;
       }
       return closest;
    }
 
    double compute_bubble(node & n) {
-      /* get the closest obstacle and it's 
-       * distance from us                 */
       point closest = closest_obstacle(n.pos);
       double dist = sqrt(point_dist2(closest,n.pos));
 
-      /* set the closest obstacle in the node */
       n.obs = closest;
 
-      /* return the distance if it is less
-       * than the max_bubble, but max_bubble otherwise */
       if (dist > max_bubble)
          return max_bubble;
       return dist;
@@ -220,11 +215,9 @@ private:
     * for the elastic band at it's current configuration */
    void movement_step() {
 
-      /* initialize our looping variables */
       node * curr = path->next;
       int step_remainder = band_length;
 
-      /* make sure our program doesn't crash */
       if (curr == NULL)
          return;
 
@@ -244,9 +237,9 @@ private:
           * related to the distance. This pushes the node away from the obstacle
           * by a decreasing amount as the node gets farther away.               */
          point repulsion_force = { 0.0, 0.0 };
-         if (influence_range < curr->bubble_rad) {
-            double repulsive_multiplier = repulsion_gain / ((curr->bubble_rad - influence_range) * 
-               curr->bubble_rad * curr->bubble_rad * curr->bubble_rad);
+         if (influence_range >= curr->bubble_rad) {
+            double repulsive_multiplier = repulsion_gain * (influence_range - curr->bubble_rad) * 
+               (1.0 / curr->bubble_rad);
             repulsion_force = point{ (curr->pos.x - curr->obs.x) * repulsive_multiplier,
                                      (curr->pos.y - curr->obs.y) * repulsive_multiplier };
          }
@@ -256,13 +249,20 @@ private:
          point force = { (1.0 - damping_gain) * ( contraction_force.x + repulsion_force.x ),
                          (1.0 - damping_gain) * ( contraction_force.y + repulsion_force.y ) };
 
-         /* apply the force */
+         /* check if force is greater than the size of the bubble and reduce it if
+          * so. This is to avoid massive fluxuations in the path.                */
+         if (sqrt(force.x*force.x + force.y*force.y) > curr->bubble_rad) {
+            /* compute the unit vector going in the same direction and
+             * scale it to a length of bubble_rad for the new force.  */
+            double theta = atan2(force.y,force.x);
+
+            force = point{ cos(theta)*curr->bubble_rad, sin(theta)*curr->bubble_rad };
+         }
+
          curr->pos = point{ curr->pos.x + force.x, curr->pos.y + force.y };
 
-         /* update the internal variables */
          curr->bubble_rad = compute_bubble(*curr);
 
-         /* advance our position */
          curr = curr->next;
       }
 
@@ -272,7 +272,6 @@ private:
     * to the point that it is difficult to maintain the structure of the band */
    void addition_step() {
 
-      /* initialize our looping variables */
       node * curr = path;
       int step_remainder = band_length;
 
@@ -280,20 +279,20 @@ private:
 
          /* if our nodes are too far apart, but there is still 
           * collision free area between them, add a node.     */
-         if (point_dist2(curr->pos,curr->next->pos) > 
-             (curr->bubble_rad + curr->next->bubble_rad) / 4.0) {
+         if (sqrt(point_dist2(curr->pos,curr->next->pos)) > 
+             (curr->bubble_rad + curr->next->bubble_rad) / 2.0) {
 
-            /* construct and add the new node */
             node * new_node = new node{ {(curr->pos.x + curr->next->pos.x) / 2.0,
                                          (curr->pos.y + curr->next->pos.y) / 2.0 },
                                         {0.0,0.0}, 0.0, curr->next, curr };
             new_node->bubble_rad = compute_bubble(*new_node);
 
+            new_node->new_node = true;
+
             curr->next->prev = new_node;
             curr->next = new_node;
          }
 
-         /* go to the next node ( could be a new one! ) */
          curr = curr->next;
       }
 
@@ -304,10 +303,8 @@ private:
     * between removal and addition to ensure that the system is stable.      */
    void removal_step() {
 
-      /* take hold of the memory */
       mut.lock();
 
-      /* initialize our looping variables */
       node * curr = path;
       int step_remainder = band_length;
 
@@ -315,11 +312,10 @@ private:
          
          /* if the next node is inside of our bubble radius and our bubble intersects with
           * the node two up, the current node can be seen as redundant and removed.       */
-         if (curr->next->next && point_dist2(curr->pos,curr->next->pos) < curr->bubble_rad &&
-             point_dist2(curr->next->next->pos,curr->pos) < 
+         if (curr->next->next && sqrt(point_dist2(curr->pos,curr->next->pos)) < curr->bubble_rad &&
+             sqrt(point_dist2(curr->next->next->pos,curr->pos)) < 
             (curr->bubble_rad + curr->next->next->bubble_rad) / 2.0) {
 
-            /* update the appropriate values and delete the node */
             curr->next->next->prev = curr;
             node * to_delete = curr->next;
             curr->next = to_delete->next;
@@ -332,7 +328,6 @@ private:
             curr = curr->next;
       }
 
-      /* release the memory */
       mut.unlock();
    }
 
@@ -352,14 +347,9 @@ public:
 
    bool propose_path(const nav_msgs::msg::Path & msg) override {
 
-      /* if we already have a path that works
-       * don't take the new path.            */
       if (valid_path)
          return false; /* reject path */
 
-      /* build the internal path using the
-       * poses on the requested path.    */
-      /* take hold of the memory on the system */
       mut.lock();
 
       /* get rid of the old path */
@@ -370,7 +360,6 @@ public:
          delete to_delete;
       }
 
-      /* release the memory */
       mut.unlock();
 
       /* please be gentle... */
@@ -388,7 +377,6 @@ public:
             { (msg.poses[i].pose.position.x - grid_metadata.origin.position.x) / grid_metadata.resolution,
               (msg.poses[i].pose.position.y - grid_metadata.origin.position.y) / grid_metadata.resolution };
 
-         /* construct the node to add to the path */
          node * next_node = new node{converted_coords,{INFINITY,INFINITY},0.0,NULL,prev_node};
          next_node->bubble_rad = compute_bubble(*next_node);
          prev_node->next = next_node;
@@ -398,17 +386,14 @@ public:
 
       valid_path = true;
 
-      for (int i = 0; i < 10000; ++i) {
+      for (int i = 0; i < 1000; ++i) {
 
          movement_step();
          addition_step();
          removal_step();
 
-         std::this_thread::sleep_for(std::chrono::milliseconds(300));
-
       }
 
-      /* mark the path as valid */
       valid_path = true;
 
       /* accept the path */
@@ -436,10 +421,8 @@ public:
       circle.setOutlineThickness(2);
       circle.setFillColor(sf::Color(0,0,0,0));
 
-      /* take hold of the memory */
       mut.lock();
 
-      /* return if there is no path */
       if (!valid_path || !path) {
          mut.unlock();
          return;
@@ -448,11 +431,18 @@ public:
       node * curr = path;
       while (curr->next) {
 
-
          /* draw the bubble around the node */
          circle.setRadius(curr->bubble_rad * 5);
          circle.setPosition((curr->pos.x*10) - circle.getRadius(),
                             (curr->pos.y*10) - circle.getRadius());
+
+         if (curr->new_node) {
+            circle.setOutlineColor(sf::Color::Green);
+            curr->new_node = false;
+         }
+         else
+            circle.setOutlineColor(sf::Color::White);
+
          window->draw(circle);
 
          /* draw the edge between this and the next point */
@@ -460,11 +450,9 @@ public:
          point[1].position = sf::Vector2f(curr->next->pos.x * 10, curr->next->pos.y * 10);
          window->draw(point,2,sf::Lines);
 
-         /* step forward in the path */
          curr = curr->next;
       }
 
-      /* release the memory */
       mut.unlock();
 
 
