@@ -138,7 +138,7 @@ public:
       path_out = this->create_publisher<nav_msgs::msg::Path>(
             this->get_parameter("path_topic").as_string(), 10);
       path_callback = this->create_wall_timer(
-            std::chrono::milliseconds((long)(1000 * this->get_parameter("publish_rate").as_double())),
+            std::chrono::milliseconds((long)(1000.0 * this->get_parameter("publish_rate").as_double())),
             std::bind(&Yoriko::publish_path, this));
 
       /* instantiate the subsriptions */
@@ -226,7 +226,7 @@ private:
       /* set generic values for the path */
       msg.header.stamp = this->get_clock()->now();
       /* we are in the map frame of reference */
-      msg.header.frame_id = "base_link";
+      msg.header.frame_id = "map";
 
       /* send out the message */
       path_out->publish(msg);

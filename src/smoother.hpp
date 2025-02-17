@@ -118,6 +118,10 @@ public:
 
    }
 
+   virtual visualization_msgs::msg::MarkerArray construct_visualization() {
+      return visualization_msgs::msg::MarkerArray();
+   }
+
 };
 
 #endif

@@ -26,6 +26,14 @@ private:
       bool new_node = false;
    };
 
+   /* The position of the robot in the 
+    * 2d dof case.                    */
+   struct pose_2d {
+      point pos;
+      double theta;
+   };
+
+
    /* needed for keeping memory seperate */
    std::mutex mut;
 
@@ -60,6 +68,22 @@ private:
     * it wants to go.                                                */
    double damping_gain; 
 
+   /* the number of times to run the elastic band steps when 
+    * recomputing or updating the path                      */
+   int cycle_count;
+
+   /* speed desired for the robot when following the path. In
+    * meters per second.                                     */
+   double desired_speed;
+
+   /* current position of the robot on the path. */
+   int path_position = 0;
+   geometry_msgs::msg::Twist current_vel;
+
+   /* distance from a node the robot needs to be
+    * in order for it's position on the path to advance */
+   double advance_distance;
+
    /* the front of our path */
    node * path = NULL;
 
@@ -67,7 +91,6 @@ private:
     * to determine if this edge is colliding with the map. */
    inline bool is_collision(const point & p1, const point & p2) {
 
-      /* get the endpoints of our line */
       int x0 = p1.x;
       int x1 = p2.x;
       int y0 = p1.y;
@@ -211,6 +234,22 @@ private:
       return dist;
    }
 
+   /* Produce a z rotation in radians given a
+    * quaternion ros2 message. Note that this
+    * assumes the 3-2-1 rotation application order */
+   double quaternion_to_z_rotation(const geometry_msgs::msg::Quaternion & q) {
+      double siny_cosp = 2 * (q.w * q.z + q.x * q.y);
+      double cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+      return atan2(siny_cosp,cosy_cosp);
+   }
+
+   /* Produce a pose_2d value given a pose
+    * ros2 message. Note that this assumes the
+    * 3-2-1 rotation application order.       */
+   pose_2d ros2_pose_to_pose_2d(const geometry_msgs::msg::Pose & p) {
+      return {{p.position.x,p.position.y},quaternion_to_z_rotation(p.orientation)};
+   }
+
    /* compute the motion or optimization update
     * for the elastic band at it's current configuration */
    void movement_step() {
@@ -334,14 +373,21 @@ private:
 public:
 
    ElasticBand(int band_length, double influence_range, double max_bubble,
-         double contraction_gain, double repulsion_gain, double damping_gain) 
+         double contraction_gain, double repulsion_gain, double damping_gain,
+         int cycle_count, double desired_speed, double advance_distance) 
       : band_length(band_length), influence_range(influence_range),
         max_bubble(max_bubble), contraction_gain(contraction_gain), 
-        repulsion_gain(repulsion_gain), damping_gain(damping_gain) {
+        repulsion_gain(repulsion_gain), damping_gain(damping_gain),
+        cycle_count(cycle_count), desired_speed(desired_speed), 
+        advance_distance(advance_distance) {
 
       assert(max_bubble >= influence_range &&
             "Elastic Band algorithm requires that the max bubble length be greater than the influence range.");
       assert(damping_gain < 1.0 && "Damping Gain must be less than 1.0");
+
+      assert(damping_gain >= 0.0 && "Damping Gain must be greater than 0.0");
+      assert(contraction_gain >= 0.0 && "Contraction Gain must be greater than 0.0");
+      assert(repulsion_gain >= 0.0 && "Repulsion Gain must be greater than 0.0");
    }
 
 
@@ -384,9 +430,10 @@ public:
 
       }
 
+      path_position = 0;
       valid_path = true;
 
-      for (int i = 0; i < 1000; ++i) {
+      for (int i = 0; i < cycle_count; ++i) {
 
          movement_step();
          addition_step();
@@ -401,15 +448,120 @@ public:
    }
 
    void advance_path(const nav_msgs::msg::Odometry & msg) override {
+
+      if ( !valid_path || !path || !path->next)
+         return;
+
+      pose_2d curr_pose = ros2_pose_to_pose_2d(msg.pose.pose);
+      curr_pose.pos.x = (curr_pose.pos.x - grid_metadata.origin.position.x) / grid_metadata.resolution;
+      curr_pose.pos.y = (curr_pose.pos.y - grid_metadata.origin.position.y) / grid_metadata.resolution;
+      printf("curr_pose: %f %f %f\n",curr_pose.pos.x,curr_pose.pos.y,curr_pose.theta);
+      printf("path_pose: %f %f\n",path->pos.x,path->pos.y);
+
+      /* if we have not started on the path yet, turn to face it */
+      if ( path_position == 0) {
+
+         point in_frame = { path->next->pos.x*cos(curr_pose.theta) - path->next->pos.y*sin(curr_pose.theta),
+                            path->next->pos.y*sin(curr_pose.theta) + path->next->pos.y*cos(curr_pose.theta) };
+
+         double theta = atan2(in_frame.y - path->next->pos.y, in_frame.x - path->next->pos.x);
+
+         printf("theta %f\n",theta);
+
+         if (fabs(theta) > (M_PI/2.0)) {
+            current_vel.linear.x = 0.0;
+            current_vel.angular.z = desired_speed * (theta < 0 ? -1.0 : 1.0);
+            return;
+         }
+      }
+
+      printf("dist: %f %f\n",
+            sqrt(point_dist2(curr_pose.pos,path->pos)),advance_distance/grid_metadata.resolution);
+
+      /* check if we are within the distance to a node that we can advance on
+       * the path. If so, compute the new linear and angular velocity needed to
+       * hit the next node, then wait until it is hit to continue.            */
+      if (sqrt(point_dist2(curr_pose.pos,path->pos)) < advance_distance / grid_metadata.resolution) {
+
+         mut.lock();
+
+         node * to_delete = path;
+         path = path->next;
+         path_position += 1;
+         delete to_delete;
+
+         mut.unlock();
+
+         if (!path)
+            return; /* end of the road */
+
+         point p2 = path->pos;
+         point p3;
+
+         if ( !path->next ) {
+            p3.x = cos(curr_pose.theta) + p2.x;
+            p3.y = sin(curr_pose.theta) + p2.y;
+         }
+         else
+            p3 = path->next->pos;
+
+         point curr_vector = { -sin(curr_pose.theta), cos(curr_pose.theta) };
+         point goal_vector = { p3.x - p2.x, p3.y - p2.y };
+
+         double between = sqrt(point_dist2(curr_pose.pos,path->pos));
+         
+         double theta = acos((curr_vector.x * goal_vector.x) + (curr_vector.y * goal_vector.y) /
+                             sqrt(goal_vector.x * goal_vector.x + goal_vector.y * goal_vector.y));
+
+         double rad = between / (2.0 * cos( theta / 2.0));
+
+         double arc_length = theta * rad;
+
+         double w = arc_length / desired_speed;
+         w = (std::isnan(w) || std::isinf(w) || w > 1000 ? 0 : w);
+
+         current_vel.linear.x = desired_speed;
+         current_vel.angular.z = w;
+
+      }
+
    }
 
    geometry_msgs::msg::Twist get_vel() override {
+
+      if (valid_path)
+         return current_vel;
 
       return geometry_msgs::msg::Twist();
    }
 
    void load_map(const nav_msgs::msg::OccupancyGrid & map, int occupant_cutoff) override {
       SmootherBase::load_map(map,occupant_cutoff);
+
+      /* ensure that the path is still valid, and if so perform some 
+       * smoothing on it.                                           */
+      if (is_path_valid() && path) {
+
+         node * curr = path;
+
+         while (curr->next) {
+
+            if (is_collision(curr->pos,curr->next->pos)) {
+               invalidate_path();
+               return;
+            }
+
+            curr = curr->next;
+         }
+
+         for (int i = 0; i < cycle_count; ++i) {
+
+            movement_step();
+            addition_step();
+            removal_step();
+
+         }
+      }
    }
 
    void draw_environment(sf::RenderWindow * window) override {
@@ -456,6 +608,41 @@ public:
       mut.unlock();
 
 
+   }
+
+   visualization_msgs::msg::MarkerArray construct_visualization() override {
+
+      visualization_msgs::msg::MarkerArray ret;
+
+      if ( !valid_path || !path )
+         return ret;
+
+      node * curr = path;
+
+      while (curr) {
+
+         visualization_msgs::msg::Marker next;
+         next.action = 0;
+         next.type = visualization_msgs::msg::Marker::SPHERE;
+         next.lifetime.sec = 1;
+         next.color.r = 1.0;
+         next.color.g = 0.0;
+         next.color.b = 1.0;
+         next.color.a = 0.25;
+         next.ns = "elastic_band";
+         next.scale.x = advance_distance;
+         next.scale.y = advance_distance;
+         next.scale.z = advance_distance;
+
+         next.pose.position.x = (curr->pos.x * grid_metadata.resolution) + grid_metadata.origin.position.x;
+         next.pose.position.y = (curr->pos.y * grid_metadata.resolution) + grid_metadata.origin.position.y;
+
+         curr = curr->next;
+
+         ret.markers.push_back(next);
+      }
+
+      return ret;
    }
 
 };

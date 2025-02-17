@@ -16,8 +16,10 @@ std::vector<std::string> split(std::string & str, const std::string & delimiter)
    return splits;
 }
 
-
-sensor_msgs::msg::LaserScan transform_scan(const sensor_msgs::msg::LaserScan & scan,
-                                           const geometry_msgs::msg::TransformStamped & transform) {
+double time_dist(const builtin_interfaces::msg::Time & t1, const rclcpp::Time & t2) {
+   return fabs(rclcpp::Time(t1.sec,t1.nanosec).seconds() - t2.seconds());
 }
 
+double time_dist(const builtin_interfaces::msg::Time & t1, const builtin_interfaces::msg::Time & t2) {
+   return fabs(rclcpp::Time(t1.sec,t1.nanosec).seconds() - rclcpp::Time(t2.sec,t2.nanosec).seconds());
+}

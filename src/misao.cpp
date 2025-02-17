@@ -29,13 +29,13 @@ public:
       this->declare_parameter("path_in","path");
 
       /* The topic to recieve odometry on */
-      this->declare_parameter("odom_in","odom");
+      this->declare_parameter("odom_in","demo/odom");
 
       /* The topic to recieve the goal position on */
       this->declare_parameter("goal_in","goal");
 
       /* The topic to send out the velocity on */
-      this->declare_parameter("vel_out","cmd_vel");
+      this->declare_parameter("vel_out","demo/cmd_vel");
 
       /* The topic to receive the environment map on */
       this->declare_parameter("map_in","map");
@@ -50,6 +50,10 @@ public:
       /* whether to launch the accompanying gui for the node */
       this->declare_parameter("launch_gui",true);
 
+      /* whether to also publish a visualization of the path */
+      this->declare_parameter("run_visualization",true);
+      this->declare_parameter("visualization_topic","misao/visual");
+
       /* the algorithm to use on the smoother. Right now
        * the only option avaliable is elastic_band.     */
       this->declare_parameter("algorithm","elastic_band");
@@ -63,6 +67,9 @@ public:
       this->declare_parameter("contraction_gain",1.0);
       this->declare_parameter("repulsion_gain",1.0);
       this->declare_parameter("damping_gain",0.50);
+      this->declare_parameter("cycle_count",128);
+      this->declare_parameter("desired_speed",0.1);
+      this->declare_parameter("advance_distance",0.3);
 
 
       /* construct the smoother with the provided algorithm */
@@ -72,17 +79,18 @@ public:
                                     this->get_parameter("max_bubble").as_double(),
                                     this->get_parameter("contraction_gain").as_double(),
                                     this->get_parameter("repulsion_gain").as_double(),
-                                    this->get_parameter("damping_gain").as_double());
+                                    this->get_parameter("damping_gain").as_double(),
+                                    this->get_parameter("cycle_count").as_int(),
+                                    this->get_parameter("desired_speed").as_double(),
+                                    this->get_parameter("advance_distance").as_double());
       }
 
-      /* instantiate the publisher */
       vel_out = this->create_publisher<geometry_msgs::msg::Twist>(
                 this->get_parameter("vel_out").as_string(), 10);
       vel_callback = this->create_wall_timer(
-            std::chrono::milliseconds((long)(1000 * this->get_parameter("publish_rate").as_double())),
+            std::chrono::milliseconds((long)(1000.0 * this->get_parameter("publish_rate").as_double())),
             std::bind(&Misao::publish_vel, this));
 
-      /* instantiate subscribers */
       path_in = this->create_subscription<nav_msgs::msg::Path>(
             this->get_parameter("path_in").as_string(), 10,
             std::bind(&Misao::collect_path, this, _1));
@@ -101,12 +109,19 @@ public:
 
       if (this->get_parameter("launch_gui").as_bool()) {
 
-         /* instantiate the publisher that the gui will use */
          goal_out = this->create_publisher<geometry_msgs::msg::PoseStamped>(
                this->get_parameter("goal_in").as_string(), 10);
 
-         /* launch the gui in a seperate thread */
          gui_handler = std::thread(&Misao::handle_gui, this);
+      }
+
+      if (this->get_parameter("run_visualization").as_bool()) {
+
+         visual_out = this->create_publisher<visualization_msgs::msg::MarkerArray>(
+               this->get_parameter("visualization_topic").as_string(), 10);
+         visual_callback = this->create_wall_timer(
+               std::chrono::milliseconds(1000), std::bind(&Misao::publish_visual, this));
+
       }
 
    }
@@ -132,6 +147,11 @@ private:
     * if the gui is enabled in the parameters.  */
    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_out;
 
+   /* publisher for the visualizations produced if the
+    * parameter is set accordingly.                   */
+   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr visual_out;
+   rclcpp::TimerBase::SharedPtr visual_callback;
+
    /* Handle to the smoothing algorithm being used */
    SmootherBase * smoother;
 
@@ -147,17 +167,12 @@ private:
 
    void collect_path(const nav_msgs::msg::Path & msg) {
 
-      /* check if the smoother is currently following a path */
       if ( !smoother->is_path_valid() ) {
 
-         /* check that the received path ends at the
-          * latest goal, otherwise do not take it   */
          if (fabs(msg.poses.back().pose.position.x - goal.pose.position.x) > grid_metadata.resolution ||
              fabs(msg.poses.back().pose.position.y - goal.pose.position.y) > grid_metadata.resolution)
             return;
 
-         /* path is invalid, propose this path as a
-          * new option for the smoother to follow  */
          smoother->propose_path(msg);
 
       }
@@ -166,7 +181,6 @@ private:
 
    void collect_map(const nav_msgs::msg::OccupancyGrid & msg) {
 
-      /* load the map into the smoother */
       smoother->load_map(msg,this->get_parameter("obstacle_threshold").as_int());
 
       grid_metadata = msg.info;
@@ -175,9 +189,6 @@ private:
 
    void collect_odom(const nav_msgs::msg::Odometry & msg) {
 
-      /* send the odometry to the smoother, which
-       * will potentially increment it's position
-       * on some internal path.                  */
       smoother->advance_path(msg);
 
    }
@@ -189,22 +200,16 @@ private:
       if (msg.pose.position == goal.pose.position)
          return;
 
-      /* invalidate the current path the smoother
-       * is following                            */
       smoother->invalidate_path();
 
-      /* update vars */
       goal = msg;
 
    }
 
    void publish_vel() {
 
-      /* collect the current velocity that
-       * the smoother desires.            */
       geometry_msgs::msg::Twist msg = smoother->get_vel();
 
-      /* publish the collected velocity */
       vel_out->publish(msg);
 
    }
@@ -228,7 +233,6 @@ private:
 
       geometry_msgs::msg::PoseStamped goal_pose;
 
-      /* construct our window */
       window.create(sf::VideoMode(1280,720),"misao");
       window.setFramerateLimit(30);
 
@@ -304,10 +308,24 @@ private:
          /* draw everything */
          smoother->draw_environment(&window);
 
-         /* display */
          window.display();
 
       }
+
+   }
+
+   void publish_visual() {
+
+      visualization_msgs::msg::MarkerArray msg = smoother->construct_visualization();
+      int marker_id = 0;
+
+      for (visualization_msgs::msg::Marker & m : msg.markers) {
+         m.header.frame_id = "map";
+         m.header.stamp = this->get_clock()->now();
+         m.id = marker_id++;
+      }
+
+      visual_out->publish(msg);
 
    }
 

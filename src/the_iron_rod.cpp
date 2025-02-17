@@ -18,6 +18,8 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
+#include "kurome.h"
+
 using std::placeholders::_1;
 
 class TheIronRod : public rclcpp::Node {
@@ -389,13 +391,6 @@ private:
                       target.theta - frame.theta }; /* don't bother normalizing */
    }
 
-   /* return the distance between two ros2 time values */
-   double time_dist(const builtin_interfaces::msg::Time & t1, const rclcpp::Time & t2) {
-      return fabs(rclcpp::Time(t1.sec,t1.nanosec).seconds() - t2.seconds());
-   }
-   double time_dist(const builtin_interfaces::msg::Time & t1, const builtin_interfaces::msg::Time & t2) {
-      return fabs(rclcpp::Time(t1.sec,t1.nanosec).seconds() - rclcpp::Time(t2.sec,t2.nanosec).seconds());
-   }
 
 };
 

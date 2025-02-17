@@ -17,9 +17,13 @@ find_package(visualization_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_sensor_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(Ceres REQUIRED)
 
 find_package(SFML COMPONENTS window graphics system)
+
+add_library(kurome_base STATIC src/kurome.cpp)
+ament_target_dependencies(kurome_base rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
 
 # brain node
 add_executable(brain src/brain.cpp)
@@ -32,8 +36,9 @@ ament_target_dependencies(wall_filter rclcpp sensor_msgs geometry_msgs visualiza
 
 # pino node
 add_executable(pino src/pino.cpp)
-target_link_libraries(pino Ceres::ceres)
-ament_target_dependencies(pino rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
+target_link_libraries(pino Ceres::ceres kurome_base)
+ament_target_dependencies(pino rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs
+                          tf2 tf2_ros tf2_geometry_msgs)
 
 # yoriko node
 add_executable(yoriko src/yoriko.cpp)
@@ -47,7 +52,8 @@ ament_target_dependencies(misao rclcpp sensor_msgs geometry_msgs visualization_m
 
 # the iron rod node 
 add_executable(the_iron_rod src/the_iron_rod.cpp)
-ament_target_dependencies(the_iron_rod rclcpp geometry_msgs nav_msgs)
+target_link_libraries(the_iron_rod kurome_base)
+ament_target_dependencies(the_iron_rod rclcpp geometry_msgs nav_msgs sensor_msgs visualization_msgs)
 
 # the hardcoded path publisher 
 add_executable(hardcoded_path_publisher src/hardcoded_path_publisher.cpp)

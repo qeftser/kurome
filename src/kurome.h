@@ -12,6 +12,9 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
+#include "visualization_msgs/msg/marker.hpp"
+
 
 /* A handy method for use with maps. 
  * We basically or v1 with v2 shifted
@@ -47,20 +50,9 @@
  * delimiter. Do not include the delimiter in the returned values. */
 std::vector<std::string> split(std::string & str, const std::string & delimiter);
 
-/* Convert a LaserScan message to the new coordinate system given
- * by the TransformStamped transform. This is done by changing the
- * angle_min and angle_max values according to the Z rotation described
- * in the transformation. Note that this assumes that the LiDAR is 
- * mounted permendicular to the Z axis. The range_min and range_max
- * values, as well as the values in the ranges array, are changed
- * according to the pose difference in the transformation. This
- * results in the effect that when the LaserScan is converted to
- * cartesian coordinates, these values will be the appropriate
- * positions relative to the robot. If this scan is used for other
- * purposes, such as map construction, it has the effect that all
- * scans will appear to come from the origin of the robot, which
- * could be seen as a good thing.                                 */
-sensor_msgs::msg::LaserScan transform_scan(const sensor_msgs::msg::LaserScan & scan,
-                                           const geometry_msgs::msg::TransformStamped & transform);
+/* return the distance between two ros2 time values */
+double time_dist(const builtin_interfaces::msg::Time & t1, const rclcpp::Time & t2);
+double time_dist(const builtin_interfaces::msg::Time & t1, const builtin_interfaces::msg::Time & t2);
+
 
 #endif
