@@ -10,6 +10,11 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
+#include "tf2_ros/transform_listener.h"
+#include "tf2_ros/buffer.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2/exceptions.h"
+
 #include "kurome.h"
 #include "pathfinder.hpp"
 #include "rrt_x_fn.hpp"
@@ -160,6 +165,9 @@ public:
          gui_handler = std::thread(&Yoriko::handle_gui, this);
       }
 
+      /* instantiate our transform listener */
+      tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+      tf_listener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer);
 
    }
 
@@ -188,12 +196,17 @@ private:
     * attempting to reach the goal provided.                     */
    rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr    grid_in;
 
+   /* values needed for transforming the odometry into the map 
+    * reference frame, as that is the frame we are pathfinding in. */
+   std::unique_ptr<tf2_ros::TransformListener> tf_listener;
+   std::unique_ptr<tf2_ros::Buffer> tf_buffer;
+
    /* Pathing algorithm. This is an generic class that we will 
     * use multiple different pathfinding algorithms with.     */
    PathfinderBase * pathfinder;
 
    /* Last best input of transformation */
-   nav_msgs::msg::Odometry transform;
+   geometry_msgs::msg::PoseStamped transform;
    
    /* Last input of goal */
    geometry_msgs::msg::PoseStamped goal;
@@ -219,7 +232,7 @@ private:
          /* add one node that corresponds to our
           * current position estimate.          */
          geometry_msgs::msg::PoseStamped pose;
-         pose.pose = transform.pose.pose;
+         pose.pose = transform.pose;
          msg.poses.push_back(pose);
       }
 
@@ -251,15 +264,28 @@ private:
    }
 
    void collect_position(const nav_msgs::msg::Odometry & msg) {
+      static int fail_count = 0;
+      try {
 
+         /* transform to map frame */
+         geometry_msgs::msg::PoseStamped pose_out;
+         geometry_msgs::msg::PoseStamped pose_in;
+         pose_in.pose = msg.pose.pose;
+         pose_in.header = msg.header;
+         tf_buffer->transform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,"map",
+               tf2::Duration(std::chrono::milliseconds(100)));
 
-      /* update our current odometry */
-      transform = msg;
+         /* update our current odometry */
+         transform = pose_out;
 
-      /* set the origin of the path */
-      pathfinder->set_origin(msg.pose.pose);
+         /* set the origin of the path */
+         pathfinder->set_origin(pose_out.pose);
 
-
+      } 
+      catch (const tf2::TransformException & ex) {
+         RCLCPP_WARN(this->get_logger(),"transformation of odometry failed for the %dth time",fail_count++);
+         return;
+      }
    }
 
    void collect_grid(const nav_msgs::msg::OccupancyGrid & msg) {

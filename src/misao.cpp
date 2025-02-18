@@ -10,6 +10,11 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
+#include "tf2_ros/transform_listener.h"
+#include "tf2_ros/buffer.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2/exceptions.h"
+
 #include "kurome.h"
 #include "smoother.hpp"
 #include "elastic_band.hpp"
@@ -124,6 +129,10 @@ public:
 
       }
 
+      /* instantiate our transform listener */
+      tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+      tf_listener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer);
+
    }
 
 
@@ -151,6 +160,11 @@ private:
     * parameter is set accordingly.                   */
    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr visual_out;
    rclcpp::TimerBase::SharedPtr visual_callback;
+
+   /* values needed for transforming the odometry into the map 
+    * reference frame, as that is the frame we are pathfinding in. */
+   std::unique_ptr<tf2_ros::TransformListener> tf_listener;
+   std::unique_ptr<tf2_ros::Buffer> tf_buffer;
 
    /* Handle to the smoothing algorithm being used */
    SmootherBase * smoother;
@@ -188,9 +202,24 @@ private:
    }
 
    void collect_odom(const nav_msgs::msg::Odometry & msg) {
+      static int fail_count = 0;
+      try {
 
-      smoother->advance_path(msg);
+         /* transform to map frame */
+         geometry_msgs::msg::PoseStamped pose_out;
+         geometry_msgs::msg::PoseStamped pose_in;
+         pose_in.pose = msg.pose.pose;
+         pose_in.header = msg.header;
+         tf_buffer->transform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,"map",
+               tf2::Duration(std::chrono::milliseconds(100)));
 
+         smoother->advance_path(pose_out);
+
+      } 
+      catch (const tf2::TransformException & ex) {
+         RCLCPP_WARN(this->get_logger(),"transformation of odometry failed for the %dth time",fail_count++);
+         return;
+      }
    }
 
    void collect_goal(const geometry_msgs::msg::PoseStamped & msg) {

@@ -13,13 +13,6 @@
 class SmootherBase {
 protected:
 
-   /* Represents a position
-    * on the map           */
-   struct point {
-      double x;
-      double y;
-   };
-
    /* A vector that represents a grid of points
     * in 2d space. We are using uint8_t values 
     * because we will exploit thier ability to
@@ -46,7 +39,7 @@ public:
 
    virtual bool propose_path(const nav_msgs::msg::Path & msg) = 0;
 
-   virtual void advance_path(const nav_msgs::msg::Odometry & msg) = 0;
+   virtual void advance_path(const geometry_msgs::msg::PoseStamped & msg) = 0;
 
    virtual geometry_msgs::msg::Twist get_vel() = 0;
 

@@ -26,14 +26,6 @@ private:
       bool new_node = false;
    };
 
-   /* The position of the robot in the 
-    * 2d dof case.                    */
-   struct pose_2d {
-      point pos;
-      double theta;
-   };
-
-
    /* needed for keeping memory seperate */
    std::mutex mut;
 
@@ -234,22 +226,6 @@ private:
       return dist;
    }
 
-   /* Produce a z rotation in radians given a
-    * quaternion ros2 message. Note that this
-    * assumes the 3-2-1 rotation application order */
-   double quaternion_to_z_rotation(const geometry_msgs::msg::Quaternion & q) {
-      double siny_cosp = 2 * (q.w * q.z + q.x * q.y);
-      double cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
-      return atan2(siny_cosp,cosy_cosp);
-   }
-
-   /* Produce a pose_2d value given a pose
-    * ros2 message. Note that this assumes the
-    * 3-2-1 rotation application order.       */
-   pose_2d ros2_pose_to_pose_2d(const geometry_msgs::msg::Pose & p) {
-      return {{p.position.x,p.position.y},quaternion_to_z_rotation(p.orientation)};
-   }
-
    /* compute the motion or optimization update
     * for the elastic band at it's current configuration */
    void movement_step() {
@@ -447,12 +423,12 @@ public:
       return true;
    }
 
-   void advance_path(const nav_msgs::msg::Odometry & msg) override {
+   void advance_path(const geometry_msgs::msg::PoseStamped & msg) override {
 
       if ( !valid_path || !path || !path->next)
          return;
 
-      pose_2d curr_pose = ros2_pose_to_pose_2d(msg.pose.pose);
+      pose_2d curr_pose = ros2_pose_to_pose_2d(msg.pose);
       curr_pose.pos.x = (curr_pose.pos.x - grid_metadata.origin.position.x) / grid_metadata.resolution;
       curr_pose.pos.y = (curr_pose.pos.y - grid_metadata.origin.position.y) / grid_metadata.resolution;
       printf("curr_pose: %f %f %f\n",curr_pose.pos.x,curr_pose.pos.y,curr_pose.theta);

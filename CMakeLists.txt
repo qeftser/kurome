@@ -38,17 +38,19 @@ ament_target_dependencies(wall_filter rclcpp sensor_msgs geometry_msgs visualiza
 add_executable(pino src/pino.cpp)
 target_link_libraries(pino Ceres::ceres kurome_base)
 ament_target_dependencies(pino rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs
-                          tf2 tf2_ros tf2_geometry_msgs)
+                          tf2 tf2_ros tf2_geometry_msgs tf2_sensor_msgs)
 
 # yoriko node
 add_executable(yoriko src/yoriko.cpp)
-target_link_libraries(yoriko sfml-window sfml-graphics sfml-system)
-ament_target_dependencies(yoriko rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
+target_link_libraries(yoriko sfml-window sfml-graphics sfml-system kurome_base)
+ament_target_dependencies(yoriko rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs 
+                          tf2 tf2_ros tf2_geometry_msgs)
 
 # misao node
 add_executable(misao src/misao.cpp)
-target_link_libraries(misao sfml-window sfml-graphics sfml-system)
-ament_target_dependencies(misao rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
+target_link_libraries(misao sfml-window sfml-graphics sfml-system kurome_base)
+ament_target_dependencies(misao rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs 
+                          tf2 tf2_ros tf2_geometry_msgs)
 
 # the iron rod node 
 add_executable(the_iron_rod src/the_iron_rod.cpp)

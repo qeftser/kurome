@@ -15,6 +15,19 @@
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 
+/* Represents a position
+ * on the map           */
+struct point {
+   double x;
+   double y;
+};
+
+/* represents a pose in the
+ * world assuming 3 dof    */
+struct pose_2d {
+   point pos;
+   double theta = 0.0;
+};
 
 /* A handy method for use with maps. 
  * We basically or v1 with v2 shifted
@@ -54,5 +67,22 @@ std::vector<std::string> split(std::string & str, const std::string & delimiter)
 double time_dist(const builtin_interfaces::msg::Time & t1, const rclcpp::Time & t2);
 double time_dist(const builtin_interfaces::msg::Time & t1, const builtin_interfaces::msg::Time & t2);
 
+/* Produce a z rotation in radians given a
+ * quaternion ros2 message. Note that this
+ * assumes the 3-2-1 rotation application order */
+double quaternion_to_z_rotation(const geometry_msgs::msg::Quaternion & q);
+
+/* Produce a pose_2d value given a pose
+ * ros2 message. Note that this assumes the
+ * 3-2-1 rotation application order.       */
+pose_2d ros2_pose_to_pose_2d(const geometry_msgs::msg::Pose & p);
+
+/* Simple transformation in the order rotation -> translation */
+point transform(const point & target, const pose_2d & transformation);
+
+/* Simple inverse transformation in the order inv_translation -> inv_rotation
+ * This is such that A = inv_transform(transform(A,X),X) when A is a point and
+ * X is a transform.                                                           */
+point inv_transform(const point & target, const pose_2d & transformation);
 
 #endif
