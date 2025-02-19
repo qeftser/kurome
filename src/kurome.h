@@ -29,6 +29,14 @@ struct pose_2d {
    double theta = 0.0;
 };
 
+/* represents the relative 
+ * velocity information in
+ * the 2d case.           */
+struct velocity_2d {
+   double linear;
+   double angular;
+};
+
 /* A handy method for use with maps. 
  * We basically or v1 with v2 shifted
  * to the upper 32 bits.             */
@@ -84,5 +92,9 @@ point transform(const point & target, const pose_2d & transformation);
  * This is such that A = inv_transform(transform(A,X),X) when A is a point and
  * X is a transform.                                                           */
 point inv_transform(const point & target, const pose_2d & transformation);
+
+/* Estimate the position of the robot given an initial position, velocity
+ * and timestep.                                                         */
+pose_2d estimate_movement(pose_2d pose, velocity_2d vel, double timestep);
 
 #endif

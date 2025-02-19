@@ -42,7 +42,24 @@ point transform(const point & target, const pose_2d & trans) {
 
 point inv_transform(const point & target, const pose_2d & trans) {
    point translated = { target.x - trans.pos.x, target.y - trans.pos.y };
-   return point{ target.x * cos(trans.theta) + target.y * sin(trans.theta),
-                 target.y * cos(trans.theta) - target.x * cos(trans.theta) };
+   return point{ translated.x * cos(trans.theta) + translated.y * sin(trans.theta),
+                 translated.y * cos(trans.theta) - translated.x * cos(trans.theta) };
+}
+
+pose_2d estimate_movement(pose_2d pose, velocity_2d vel, double timestep) {
+   static double zero_move = 1e-20;
+   if (vel.angular == 0.0) {
+      vel.angular = zero_move;
+      zero_move = -zero_move;
+   }
+   return pose_2d{
+       (-(vel.linear/vel.angular)*(sin(pose.theta)) + 
+        (vel.linear/vel.angular)*(sin(pose.theta + vel.angular*timestep)))
+       + pose.pos.x,
+       ((vel.linear/vel.angular)*(cos(pose.theta)) - 
+        (vel.linear/vel.angular)*(cos(pose.theta + vel.angular*timestep)))
+       + pose.pos.y,
+       vel.angular*timestep + pose.theta
+   };
 }
 

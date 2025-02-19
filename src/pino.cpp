@@ -7,14 +7,21 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/transform.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+
 #include "builtin_interfaces/msg/time.hpp"
+
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_ros/transform_broadcaster.h"
+#include "tf2_ros/transform_listener.h"
 #include "tf2_ros/buffer.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2_sensor_msgs/tf2_sensor_msgs.hpp"
+#include "tf2/exceptions.h"
+
 #include "nav_msgs/msg/map_meta_data.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
+
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
@@ -22,6 +29,7 @@
 #include "kurome.h"
 #include "occupancy_grid.hpp"
 #include "slam_system.hpp"
+#include "qeftser_graph_slam.hpp"
 
 /* The SLAM system for Kurome. This is an implimentation of the GraphSLAM
  * algorithm using odometry, LiDAR, Point Cloud, and IMU data. Fixing nodes
@@ -51,6 +59,35 @@ public:
       this->declare_parameter("scan_in","scan");
       /* topic to listen for incoming point cloud data on */
       this->declare_parameter("cloud_in","points");
+
+      /* whether to use the odometry estimate of velocity
+       * or another, seperate subscription to a twist topic */
+      this->declare_parameter("use_odom_vel",true);
+      /* the topic to listen for velocity values on if above
+       * parameter is set to false.                         */
+      this->declare_parameter("vel_in","cmd_vel");
+
+      /* time difference that excludes an odometry or beacon
+       * observation from being used as a link in the 
+       * construction of an edge on the pose graph. Time
+       * is in seconds.                                     */
+      this->declare_parameter("time_error",0.01);
+      /* time difference at which we assume that we have lost
+       * the beacon and decide to rely on odometry for our
+       * current position updates. In seconds               */
+      this->declare_parameter("beacon_lost_time",0.05);
+
+      /* whether or not to use the internal motion model to 
+       * estimate position up to the exact timestep. Setting
+       * this value to false will result in the closest timewise
+       * value being used for the position estimates.       */
+      this->declare_parameter("estimate_movement_updates",true);
+
+      /* the slam algorithm to use */
+      this->declare_parameter("algorithm","qeftser");
+
+      /* parameters specific to the qeftser slam algorithm */
+      this->declare_parameter("bin_size",1.0); /* meters */
 
       grid_out = this->create_publisher<nav_msgs::msg::OccupancyGrid>(
             this->get_parameter("map_out").as_string(), 10);
@@ -85,6 +122,26 @@ public:
             this->get_parameter("cloud_in").as_string(), 10,
             std::bind(&Pino::collect_cloud, this, _1));
 
+      if (this->get_parameter("use_odom_vel").as_bool() == false) {
+         vel_in = this->create_subscription<geometry_msgs::msg::Twist>(
+               this->get_parameter("vel_in").as_string(), 10,
+               std::bind(&Pino::collect_vel, this, _1));
+      }
+
+      tf_buffer = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+
+      tf_listener = std::make_unique<tf2_ros::TransformListener>(*tf_buffer);
+
+      map_frame = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+      map_frame_callback = this->create_wall_timer(
+            std::chrono::milliseconds(((long)(1000.0 *
+                     this->get_parameter("map_publish_interval").as_double()))),
+            std::bind(&Pino::broadcast_map_frame, this));
+
+      if (this->get_parameter("algorithm").as_string() == "qeftser") {
+         slam_system = new QeftserGraphSlam(this->get_clock(),
+               this->get_parameter("bin_size").as_double());
+      }
 
    }
 
@@ -120,39 +177,75 @@ private:
    /* Input from an associated odometry system. Used for position
     * estimation when the input from the beacon is not avaliable.   */
    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_in;
+   /* Input from another node that provides this one with the current
+    * velocity estimate. This can either be some sort of sensor or
+    * just the desired velocity that is being published to cmd_vel.
+    * Used for state estimation in place of odometry velocity if
+    * the appropriate parameter is set.                           */
+   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr vel_in;
 
    /* =================== transforms =================== */
    /* Publish the map -> odom transformation as described in REP 105.
     * This is done to allow the nessesary transform math to be 
     * carried out in our other systems.                             */
    std::unique_ptr<tf2_ros::TransformBroadcaster> map_frame;
+   rclcpp::TimerBase::SharedPtr map_frame_callback;
+   /* Used to transform incoming scan data into the base_link
+    * reference frame for the robot.                                */
+   std::unique_ptr<tf2_ros::TransformListener> tf_listener;
    /* Performs all nessesary conversions between different 
     * reference frames.                                             */
    std::unique_ptr<tf2_ros::Buffer> tf_buffer;
 
    /* =================== internal =================== */
-   /* The best representation of the map of the environment
-    * that we currently have. Will be continually updated and 
-    * sometimes completely recomputed in the case of a loop 
-    * closure event.                                        */
-   OccupancyGrid global_map;
    /* The slam system used as the core of this node. */
    SlamSystem * slam_system;
    /* Last timestep we have collected a beacon message at. If
     * this value gets too far away, normal odometry must be
     * considered instead.                                   */
    rclcpp::Time last_beacon_time;
+   /* Last timestamp odometry was recieved on. Used for 
+    * determining whether or not to use odometry in the
+    * construction of a observation in the slam system.  */
+   rclcpp::Time last_odom_time;
+   /* The current best estimate for the pose of the robot */
+   pose_2d beacon_pose;
+   Covariance3 beacon_pose_covariance;
+   /* The last received odometry input for the pose of
+    * the robot. Used for the transform calculation.  */
+   pose_2d odom_pose;
+   Covariance3 odom_pose_covariance;
+   /* the current estimate of the robot velocity */
+   velocity_2d curr_vel;
+
+   pose_2d get_best_pose_estimate() {
+      double time_diff = 0.0;
+      pose_2d best_pose;
+
+      /* first check if we can use our beacon time, as this is
+       * the best possible estimate avaliable to us.          */
+      if (this->get_parameter("beacon_lost_time").as_double() >
+          time_dist(last_beacon_time,this->get_clock()->now())) {
+         best_pose = beacon_pose;
+      }
+
+      if (this->get_parameter("estimate_movement_updates").as_bool())
+         best_pose = estimate_movement(best_pose,curr_vel,time_diff);
+
+      best_pose.theta = atan2(sin(best_pose.theta),cos(best_pose.theta));
+   }
 
    void publish_map() {
 
-      nav_msgs::msg::OccupancyGrid msg;
+      nav_msgs::msg::OccupancyGrid * msg = NULL;
 
-      global_map.to_msg(msg);
+       slam_system->get_map(msg);
 
-      msg.header.stamp = this->get_clock()->now();
-      msg.header.frame_id = "map";
+      (*msg).header.stamp = this->get_clock()->now();
+      (*msg).header.frame_id = "map";
 
-      grid_out->publish(msg);
+      grid_out->publish(*msg);
+      delete msg;
    }
 
    void publish_visual() {
@@ -172,16 +265,109 @@ private:
 
    }
 
+   void broadcast_map_frame() {
+
+      /* this is the map -> odom transform */
+      geometry_msgs::msg::TransformStamped msg;
+      msg.header.frame_id = "map";
+      msg.child_frame_id = "odom";
+
+      pose_2d best_pose = get_best_pose_estimate();
+
+      pose_2d diff = { {best_pose.pos.x - odom_pose.pos.x,
+                        best_pose.pos.y - odom_pose.pos.y},
+                       best_pose.theta - odom_pose.theta  };
+      diff.theta = atan2(sin(diff.theta),cos(diff.theta));
+
+      msg.transform.translation.x = diff.pos.x;
+      msg.transform.translation.y = diff.pos.y;
+      msg.transform.translation.z = 0.0;
+      tf2::Quaternion q; q.setRPY(0.0,0.0,diff.theta);
+      msg.transform.rotation.x = q.getX();
+      msg.transform.rotation.y = q.getY();
+      msg.transform.rotation.z = q.getZ();
+      msg.transform.rotation.w = q.getW();
+
+      msg.header.stamp = this->get_clock()->now();
+      map_frame->sendTransform(msg);
+   }
+
    void collect_beacon(const nav_msgs::msg::Odometry & msg) {
+
+      /* hard set the pose of the robot. Assume that
+       * the beacon is a perfect input source.      */
+      beacon_pose = ros2_pose_to_pose_2d(msg.pose.pose);
+      last_beacon_time = msg.header.stamp;
+
    }
 
    void collect_odom(const nav_msgs::msg::Odometry & msg) {
+
+      odom_pose = ros2_pose_to_pose_2d(msg.pose.pose);
+      odom_pose_covariance = Covariance3{msg.pose.covariance[0],   /* xx */
+                                         msg.pose.covariance[1],   /* xy */
+                                         msg.pose.covariance[5],   /* x(theta) */
+                                         msg.pose.covariance[7],   /* yy */
+                                         msg.pose.covariance[11],  /* y(theta) */
+                                         msg.pose.covariance[35]}; /* (theta)(theta) */
+      last_odom_time = msg.header.stamp;
+
+      if (this->get_parameter("use_odom_vel").as_bool()) {
+         curr_vel = {msg.twist.twist.linear.x, msg.twist.twist.angular.z};
+      }
+
    }
 
    void collect_scan(const sensor_msgs::msg::LaserScan & msg) {
+      static int fail_count = 0;
+      Observation * observation = NULL;
+
+      /* convert the lidar data into the frame of
+       * reference for base_link.               */
+      try {
+         geometry_msgs::msg::PoseStamped pose_in;
+         geometry_msgs::msg::PoseStamped pose_out;
+         tf_buffer->transform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,"base_link",
+               tf2::Duration(std::chrono::milliseconds(200)));
+
+         LidarData data = LidarData(msg,pose_out.pose);
+
+         observation = new Observation();
+
+         observation->laser_scan = data;
+
+      }
+      catch(const tf2::TransformException & ex) {
+         RCLCPP_WARN(this->get_logger(),"transformation of scan failed for the %dth time",fail_count++);
+         return;
+      }
+
    }
 
    void collect_cloud(const sensor_msgs::msg::PointCloud2 & msg) {
+      static int fail_count = 0;
+      Observation * observation = NULL;
+
+      /* convert the point cloud into the
+       * frame of reference for base_link */
+      try {
+         sensor_msgs::msg::PointCloud2 cloud_out;
+         tf_buffer->transform<sensor_msgs::msg::PointCloud2>(msg,cloud_out,"base_link",
+               tf2::Duration(std::chrono::milliseconds(200)));
+
+         observation = new Observation();
+
+         observation->point_cloud = cloud_out;
+
+      }
+      catch(const tf2::TransformException & ex) {
+         RCLCPP_WARN(this->get_logger(),"transformation of point cloud failed for the %dth time",fail_count++);
+         return;
+      }
+   }
+
+   void collect_vel(const geometry_msgs::msg::Twist & msg) {
+      curr_vel = {msg.linear.x,msg.angular.z};
    }
 
 };

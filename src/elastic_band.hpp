@@ -428,6 +428,8 @@ public:
       if ( !valid_path || !path || !path->next)
          return;
 
+      printf("current_node: %d\n",path_position);
+
       pose_2d curr_pose = ros2_pose_to_pose_2d(msg.pose);
       curr_pose.pos.x = (curr_pose.pos.x - grid_metadata.origin.position.x) / grid_metadata.resolution;
       curr_pose.pos.y = (curr_pose.pos.y - grid_metadata.origin.position.y) / grid_metadata.resolution;
@@ -446,7 +448,7 @@ public:
 
          if (fabs(theta) > (M_PI/2.0)) {
             current_vel.linear.x = 0.0;
-            current_vel.angular.z = desired_speed * (theta < 0 ? -1.0 : 1.0);
+            current_vel.angular.z = desired_speed * (theta < 0 ? 1.0 : -1.0);
             return;
          }
       }
@@ -468,38 +470,64 @@ public:
 
          mut.unlock();
 
-         if (!path)
+         if (!path) {
+            invalidate_path();
             return; /* end of the road */
-
-         point p2 = path->pos;
-         point p3;
-
-         if ( !path->next ) {
-            p3.x = cos(curr_pose.theta) + p2.x;
-            p3.y = sin(curr_pose.theta) + p2.y;
          }
-         else
-            p3 = path->next->pos;
-
-         point curr_vector = { -sin(curr_pose.theta), cos(curr_pose.theta) };
-         point goal_vector = { p3.x - p2.x, p3.y - p2.y };
-
-         double between = sqrt(point_dist2(curr_pose.pos,path->pos));
-         
-         double theta = acos((curr_vector.x * goal_vector.x) + (curr_vector.y * goal_vector.y) /
-                             sqrt(goal_vector.x * goal_vector.x + goal_vector.y * goal_vector.y));
-
-         double rad = between / (2.0 * cos( theta / 2.0));
-
-         double arc_length = theta * rad;
-
-         double w = arc_length / desired_speed;
-         w = (std::isnan(w) || std::isinf(w) || w > 1000 ? 0 : w);
-
-         current_vel.linear.x = desired_speed;
-         current_vel.angular.z = w;
 
       }
+
+      point p1 = { curr_pose.pos.x * grid_metadata.resolution,
+                   curr_pose.pos.y * grid_metadata.resolution };
+      point p2 = { path->pos.x * grid_metadata.resolution,
+                   path->pos.y * grid_metadata.resolution };
+      point p3;
+
+      if ( !path->next ) {
+         p3.x = (cos(curr_pose.theta) + path->pos.x) * grid_metadata.resolution;
+         p3.y = (sin(curr_pose.theta) + path->pos.y) * grid_metadata.resolution;
+      }
+      else
+         p3 = { path->next->pos.x * grid_metadata.resolution,
+                path->next->pos.y * grid_metadata.resolution };
+
+      printf("p1: %f %f %f\n",p1.x,p1.y,curr_pose.theta);
+      printf("p2: %f %f\n",p2.x,p2.y);
+      printf("p3: %f %f\n",p3.x,p3.y);
+
+      point curr_vector = { -sin(curr_pose.theta), cos(curr_pose.theta) };
+      point goal_vector = { p3.x - p2.x, p3.y - p2.y };
+
+      printf("H1: %f %f\n",curr_vector.x,curr_vector.y);
+      printf("H2: %f %f\n",goal_vector.x,goal_vector.y);
+
+      double between = sqrt(point_dist2(p1,p2));
+
+      printf("L: %f\n",between);
+      
+      double theta = acos(((curr_vector.x * goal_vector.x) + (curr_vector.y * goal_vector.y)) /
+                          sqrt(goal_vector.x * goal_vector.x + goal_vector.y * goal_vector.y));
+
+      printf("theta: %f\n",theta);
+
+      double rad = between / (2.0 * cos( theta / 2.0));
+
+      printf("rad: %f\n",rad);
+
+      double arc_length = theta * rad;
+
+      double time = arc_length / desired_speed;
+
+      printf("arc_length: %f\n",arc_length);
+      printf("time: %f\n",time);
+
+      double w = theta / time;
+      w = (std::isnan(w) || std::isinf(w) || w > 1000 ? 0 : w);
+
+      printf("w: %f\n",w);
+
+      current_vel.linear.x = desired_speed;
+      current_vel.angular.z = w;
 
    }
 
