@@ -98,8 +98,9 @@ public:
       map_lock.unlock();
    }
 
-   pose_2d get_pose(const velocity_2d & vel) override {
-      return {{0,0},0};
+   std::pair<pose_2d,pose_2d> get_last_pose() override {
+      return std::pair(pose_2d{{0,0},0},
+                       pose_2d{{0,0},0});
    }
 
 };

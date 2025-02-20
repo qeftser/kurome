@@ -4,6 +4,7 @@
 #define __OBSERVATION
 #include "kurome.h"
 #include "lidar_data.hpp"
+#include "point_cloud_data.hpp"
 
 class Information3 {
 public:
@@ -51,7 +52,11 @@ public:
 class Observation {
 public:
 
-   /* usually collected from something like odometry */
+   /* used for computing the map -> odom transform
+    * later on. Usually not touched much.         */
+   pose_2d current_odometry;
+
+   /* best estimate of the pose of the robot */
    pose_2d global_pose_estimate;
    Covariance3 global_pose_covariance;
 
@@ -61,11 +66,28 @@ public:
    Covariance3 laser_scan_covariance;
 
    /* usually collected from some kind of depth camera or lidar */
-   sensor_msgs::msg::PointCloud2 point_cloud;
+   PointCloudData point_cloud;
    pose_2d point_cloud_pose_estimate;
    Covariance3 point_cloud_covariance;
 
    Observation() {};
+
+   /* absorb another observation into this one */
+   void aggregate(const Observation & other) {
+
+      /* compute the offset of the next observation
+       * to this one.                              */
+      pose_2d offset = {{other.global_pose_estimate.pos.x - global_pose_estimate.pos.x,
+                         other.global_pose_estimate.pos.y - global_pose_estimate.pos.y},
+                         other.global_pose_estimate.theta - global_pose_estimate.theta };
+      offset.theta = atan2(sin(offset.theta),cos(offset.theta));
+
+      /* merge the LiDAR and point cloud data from other with
+       * this Observation. Will work even if these fields are empty */
+      laser_scan.insert_at_offset(other.laser_scan,offset);
+      point_cloud.insert_at_offset(other.point_cloud,offset);
+
+   }
 
 };
 

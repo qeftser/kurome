@@ -41,6 +41,8 @@ public:
 
    virtual void advance_path(const geometry_msgs::msg::PoseStamped & msg) = 0;
 
+   virtual void simulate_path(pose_2d curr_pose, geometry_msgs::msg::PoseArray & ret_msg) = 0;
+
    virtual geometry_msgs::msg::Twist get_vel() = 0;
 
    virtual bool is_path_valid() {

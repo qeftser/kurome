@@ -40,7 +40,7 @@ public:
       this->declare_parameter("goal_in","goal");
 
       /* The topic to send out the velocity on */
-      this->declare_parameter("vel_out","demo/cmd_vel");
+      this->declare_parameter("vel_out","cmd_vel");
 
       /* The topic to receive the environment map on */
       this->declare_parameter("map_in","map");
@@ -58,6 +58,11 @@ public:
       /* whether to also publish a visualization of the path */
       this->declare_parameter("run_visualization",true);
       this->declare_parameter("visualization_topic","misao/visual");
+
+      /* whether to request and publish simulated trajectories
+       * from the smoother.                                 */
+      this->declare_parameter("simulate_trajectory",true);
+      this->declare_parameter("trajectory_topic","misao/trajectory");
 
       /* the algorithm to use on the smoother. Right now
        * the only option avaliable is elastic_band.     */
@@ -126,7 +131,12 @@ public:
                this->get_parameter("visualization_topic").as_string(), 10);
          visual_callback = this->create_wall_timer(
                std::chrono::milliseconds(1000), std::bind(&Misao::publish_visual, this));
+      }
 
+      if (this->get_parameter("simulate_trajectory").as_bool()) {
+
+         trajectory_out = this->create_publisher<geometry_msgs::msg::PoseArray>(
+               this->get_parameter("trajectory_topic").as_string(), 10);
       }
 
       /* instantiate our transform listener */
@@ -161,6 +171,10 @@ private:
    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr visual_out;
    rclcpp::TimerBase::SharedPtr visual_callback;
 
+   /* publisher for the trajectory poses produced if
+    * the associated parameter is set.              */
+   rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr trajectory_out;
+
    /* values needed for transforming the odometry into the map 
     * reference frame, as that is the frame we are pathfinding in. */
    std::unique_ptr<tf2_ros::TransformListener> tf_listener;
@@ -171,6 +185,9 @@ private:
 
    /* The last goal received */
    geometry_msgs::msg::PoseStamped goal;
+
+   /* The last position value received */
+   geometry_msgs::msg::PoseStamped pose;
 
    /* nice to have this from the last grid accepted */
    nav_msgs::msg::MapMetaData grid_metadata;
@@ -187,7 +204,18 @@ private:
              fabs(msg.poses.back().pose.position.y - goal.pose.position.y) > grid_metadata.resolution)
             return;
 
-         smoother->propose_path(msg);
+         if (smoother->propose_path(msg) || this->get_parameter("simulate_trajectory").as_bool()) {
+
+            geometry_msgs::msg::PoseArray trajectory;
+
+            smoother->simulate_path(ros2_pose_to_pose_2d(pose.pose),trajectory);
+
+
+            trajectory.header.stamp = this->get_clock()->now();
+            trajectory.header.frame_id = "map";
+
+            trajectory_out->publish(trajectory);
+         }
 
       }
 
@@ -212,6 +240,9 @@ private:
          pose_in.header = msg.header;
          tf_buffer->transform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,"map",
                tf2::Duration(std::chrono::milliseconds(100)));
+
+         /* update internal vars */
+         pose = pose_out;
 
          smoother->advance_path(pose_out);
 

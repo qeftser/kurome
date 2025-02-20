@@ -10,10 +10,12 @@
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/transform.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "geometry_msgs/msg/pose_array.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "visualization_msgs/msg/marker.hpp"
+#include "tf2/LinearMath/Quaternion.h"
 
 /* Represents a position
  * on the map           */
@@ -35,6 +37,19 @@ struct pose_2d {
 struct velocity_2d {
    double linear;
    double angular;
+};
+
+/* A point with a z axis
+ * in adition to the other two */
+struct point3 {
+   union {
+      point pos_2d;
+      struct {
+         double x;
+         double y;
+      };
+   };
+   double z;
 };
 
 /* A handy method for use with maps. 
@@ -84,6 +99,9 @@ double quaternion_to_z_rotation(const geometry_msgs::msg::Quaternion & q);
  * ros2 message. Note that this assumes the
  * 3-2-1 rotation application order.       */
 pose_2d ros2_pose_to_pose_2d(const geometry_msgs::msg::Pose & p);
+
+/* Produce a ros2 pose message type given a pose_2d */
+geometry_msgs::msg::Pose pose_2d_to_ros2_pose(const pose_2d & p);
 
 /* Simple transformation in the order rotation -> translation */
 point transform(const point & target, const pose_2d & transformation);

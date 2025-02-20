@@ -75,13 +75,27 @@ public:
       /* time difference at which we assume that we have lost
        * the beacon and decide to rely on odometry for our
        * current position updates. In seconds               */
-      this->declare_parameter("beacon_lost_time",0.05);
+      this->declare_parameter("beacon_lost_time",0.25);
+      /* If this value is set to true, pass a hint to fix
+       * the observation to the slam system if the beacon
+       * was used to estimate position. Otherwise the 
+       * beacon covariance will be used.                */
+      this->declare_parameter("fix_beacon_nodes",true);
 
       /* whether or not to use the internal motion model to 
        * estimate position up to the exact timestep. Setting
        * this value to false will result in the closest timewise
        * value being used for the position estimates.       */
-      this->declare_parameter("estimate_movement_updates",true);
+      this->declare_parameter("estimate_movement_updates",false);
+
+      /* whether to aggregate the sensor data as it comes in
+       * and batch observations. If this value is false, each
+       * sensor observation will be treated as an individual 
+       * measurement.                                       */
+      this->declare_parameter("aggregate_sensor_data",true);
+      /* How long to delay between sensor data collections 
+       * if aggregate_sensor_data is set. Time is in seconds */
+      this->declare_parameter("aggregation_interval",0.1);
 
       /* the slam algorithm to use */
       this->declare_parameter("algorithm","qeftser");
@@ -143,6 +157,13 @@ public:
                this->get_parameter("bin_size").as_double());
       }
 
+      if (this->get_parameter("aggregate_sensor_data").as_bool()) {
+         observation_callback = this->create_wall_timer(
+               std::chrono::milliseconds(((long)(1000.0 * 
+                        this->get_parameter("aggregation_interval").as_double()))),
+               std::bind(&Pino::flush_observation, this));
+      }
+
    }
 
 private:
@@ -158,6 +179,14 @@ private:
     * in the system, as well as relative correlation to the current position. */
    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr visual_out;
    rclcpp::TimerBase::SharedPtr visual_callback;
+
+   /* Used to periodically send aggregated observation data to the
+    * slam system in use if the aggregate_sensor_data flag is set */
+   rclcpp::TimerBase::SharedPtr observation_callback;
+   /* The most recent aggregated observation. Sent to the slam system
+    * by observation_callback if valid and updated by the lidar and
+    * point cloud callbacks.                                         */
+   std::pair<Observation *,bool> current_observation = std::make_pair(nullptr, false);
 
    /* =================== subscribers =================== */
    /* Input from our beacon (local positioning system) if we have one.
@@ -217,22 +246,44 @@ private:
    Covariance3 odom_pose_covariance;
    /* the current estimate of the robot velocity */
    velocity_2d curr_vel;
+   /* the last computed map -> odom transform stored
+    * for local use if needed.                     */
+   pose_2d last_map_odom_transform = { {0, 0}, 0 };
 
-   pose_2d get_best_pose_estimate() {
+   bool get_best_pose_estimate(pose_2d & best_pose, Covariance3 & covariance) {
       double time_diff = 0.0;
-      pose_2d best_pose;
+      bool is_beacon = false;
 
       /* first check if we can use our beacon time, as this is
        * the best possible estimate avaliable to us.          */
       if (this->get_parameter("beacon_lost_time").as_double() >
           time_dist(last_beacon_time,this->get_clock()->now())) {
          best_pose = beacon_pose;
+         covariance = beacon_pose_covariance;
+         is_beacon = true;
+         time_diff = time_dist(last_beacon_time,this->get_clock()->now());
+      }
+
+      /* if we do not have the beacon, use the odometry transformed
+       * into the map frame, with the assumption that this represents
+       * the next best estimate avaliable - i.e. the transform is good. */
+      else {
+
+         best_pose.pos = transform(odom_pose.pos, last_map_odom_transform);
+         best_pose.theta += last_map_odom_transform.theta;
+         best_pose.theta = atan2(sin(best_pose.theta),cos(best_pose.theta));
+
+         covariance = odom_pose_covariance;
+         is_beacon = false;
+         time_diff = time_dist(last_odom_time,this->get_clock()->now());
       }
 
       if (this->get_parameter("estimate_movement_updates").as_bool())
          best_pose = estimate_movement(best_pose,curr_vel,time_diff);
 
       best_pose.theta = atan2(sin(best_pose.theta),cos(best_pose.theta));
+
+      return is_beacon;
    }
 
    void publish_map() {
@@ -272,12 +323,14 @@ private:
       msg.header.frame_id = "map";
       msg.child_frame_id = "odom";
 
-      pose_2d best_pose = get_best_pose_estimate();
+      auto poses = slam_system->get_last_pose();
 
-      pose_2d diff = { {best_pose.pos.x - odom_pose.pos.x,
-                        best_pose.pos.y - odom_pose.pos.y},
-                       best_pose.theta - odom_pose.theta  };
+      pose_2d diff = { {std::get<0>(poses).pos.x - std::get<1>(poses).pos.x,
+                        std::get<0>(poses).pos.y - std::get<1>(poses).pos.y},
+                       std::get<0>(poses).theta - std::get<1>(poses).theta  };
       diff.theta = atan2(sin(diff.theta),cos(diff.theta));
+
+      last_map_odom_transform = diff;
 
       msg.transform.translation.x = diff.pos.x;
       msg.transform.translation.y = diff.pos.y;
@@ -330,11 +383,29 @@ private:
          tf_buffer->transform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,"base_link",
                tf2::Duration(std::chrono::milliseconds(200)));
 
-         LidarData data = LidarData(msg,pose_out.pose);
-
          observation = new Observation();
 
-         observation->laser_scan = data;
+         bool is_beacon = get_best_pose_estimate(observation->global_pose_estimate,
+                                                 observation->global_pose_covariance);
+
+         if (!this->get_parameter("fix_beacon_nodes").as_bool())
+            is_beacon = false;
+
+         observation->laser_scan = LidarData(msg,pose_out.pose);
+
+         if (this->get_parameter("aggregate_sensor_data").as_bool()) {
+
+            if (std::get<0>(current_observation) == NULL)
+               current_observation = std::make_pair(observation,is_beacon);
+            else {
+               std::get<0>(current_observation)->aggregate(*observation);
+               delete observation;
+            }
+
+         }
+         else {
+            slam_system->insert_observation(observation,is_beacon);
+         }
 
       }
       catch(const tf2::TransformException & ex) {
@@ -357,7 +428,27 @@ private:
 
          observation = new Observation();
 
-         observation->point_cloud = cloud_out;
+         bool is_beacon = get_best_pose_estimate(observation->global_pose_estimate,
+                                                 observation->global_pose_covariance);
+
+         if (!this->get_parameter("fix_beacon_nodes").as_bool())
+            is_beacon = false;
+
+         observation->point_cloud = PointCloudData(cloud_out);
+
+         if (this->get_parameter("aggregate_sensor_data").as_bool()) {
+
+            if (std::get<0>(current_observation) == NULL)
+               current_observation = std::make_pair(observation,is_beacon);
+            else {
+               std::get<0>(current_observation)->aggregate(*observation);
+               delete observation;
+            }
+
+         }
+         else {
+            slam_system->insert_observation(observation,is_beacon);
+         }
 
       }
       catch(const tf2::TransformException & ex) {
@@ -368,6 +459,17 @@ private:
 
    void collect_vel(const geometry_msgs::msg::Twist & msg) {
       curr_vel = {msg.linear.x,msg.angular.z};
+   }
+
+   void flush_observation() {
+
+      if (std::get<0>(current_observation) == NULL)
+         return;
+
+      slam_system->insert_observation(std::get<0>(current_observation),std::get<1>(current_observation));
+
+      current_observation = std::make_pair(nullptr,false);
+
    }
 
 };

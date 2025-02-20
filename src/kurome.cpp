@@ -35,6 +35,22 @@ pose_2d ros2_pose_to_pose_2d(const geometry_msgs::msg::Pose & p) {
    return {{p.position.x,p.position.y},quaternion_to_z_rotation(p.orientation)};
 }
 
+geometry_msgs::msg::Pose pose_2d_to_ros2_pose(const pose_2d & p) {
+   tf2::Quaternion q; q.setRPY(0.0,0.0,p.theta);
+
+   geometry_msgs::msg::Pose ret;
+   ret.position.x = p.pos.x;
+   ret.position.y = p.pos.y;
+   ret.position.z = 0.0;
+
+   ret.orientation.x = q.getX();
+   ret.orientation.y = q.getY();
+   ret.orientation.z = q.getZ();
+   ret.orientation.w = q.getW();
+
+   return ret;
+}
+
 point transform(const point & target, const pose_2d & trans) {
    return point{ target.x * cos(trans.theta) - target.y * sin(trans.theta) + trans.pos.x,
                  target.x * sin(trans.theta) + target.y * cos(trans.theta) + trans.pos.y };
@@ -47,18 +63,20 @@ point inv_transform(const point & target, const pose_2d & trans) {
 }
 
 pose_2d estimate_movement(pose_2d pose, velocity_2d vel, double timestep) {
-   static double zero_move = 1e-20;
-   if (vel.angular == 0.0) {
-      vel.angular = zero_move;
-      zero_move = -zero_move;
+   if (vel.angular < 1e-5) {
+      return pose_2d{
+         { vel.linear * -sin(pose.theta) * timestep + pose.pos.x,
+           vel.linear *  cos(pose.theta) * timestep + pose.pos.y },
+         pose.theta
+      };
    }
    return pose_2d{
-       (-(vel.linear/vel.angular)*(sin(pose.theta)) + 
+      {(-(vel.linear/vel.angular)*(sin(pose.theta)) + 
         (vel.linear/vel.angular)*(sin(pose.theta + vel.angular*timestep)))
        + pose.pos.x,
        ((vel.linear/vel.angular)*(cos(pose.theta)) - 
         (vel.linear/vel.angular)*(cos(pose.theta + vel.angular*timestep)))
-       + pose.pos.y,
+       + pose.pos.y },
        vel.angular*timestep + pose.theta
    };
 }

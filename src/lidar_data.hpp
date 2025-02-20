@@ -22,14 +22,16 @@ public:
 
    LidarData() {};
    
-   /* Construct a instance of LidarData from a ros2
+   /* Construct an instance of LidarData from a ros2
     * LaserScan message type. Assume center of 0,0 */
    LidarData(const sensor_msgs::msg::LaserScan & msg) {
 
-      points = std::vector<point>();
 
       int entries = (msg.angle_max - msg.angle_min) / msg.angle_increment;
       double angle = msg.angle_min;
+
+      points = std::vector<point>(entries);
+
       for (int i = 0; i < entries; ++i) {
 
          if (msg.ranges[i] < msg.range_min || msg.ranges[i] > msg.range_max)
@@ -84,6 +86,19 @@ public:
    void change_position(const geometry_msgs::msg::Pose & position) {
       pose_2d as_pose_2d = ros2_pose_to_pose_2d(position);
       change_position(as_pose_2d);
+   }
+
+   /* add another LidarData object's points into this one
+    * at the specified offset from the center.           */
+   void insert_at_offset(const LidarData & other, pose_2d offset) {
+
+      for (size_t i = 0; i < other.points.size(); ++i)
+         points.push_back(transform(other.points[i],offset));
+
+   }
+   void insert_at_offset(const LidarData & other, geometry_msgs::msg::Pose & offset) {
+      pose_2d as_pose_2d = ros2_pose_to_pose_2d(offset);
+      insert_at_offset(other,as_pose_2d);
    }
 
 };

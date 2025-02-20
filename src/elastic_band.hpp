@@ -346,6 +346,64 @@ private:
       mut.unlock();
    }
 
+   /* find the velocity update values based on the current
+    * position of the robot relative to the next node on the path */
+   velocity_2d compute_velocity_output(pose_2d curr_pose, node * curr_node) {
+
+      point p1 = { curr_pose.pos.x * grid_metadata.resolution,
+                   curr_pose.pos.y * grid_metadata.resolution };
+      point p2 = { curr_node->pos.x * grid_metadata.resolution,
+                   curr_node->pos.y * grid_metadata.resolution };
+      point p3;
+
+      if ( !curr_node->next ) {
+         p3.x = (cos(curr_pose.theta) + curr_node->pos.x) * grid_metadata.resolution;
+         p3.y = (sin(curr_pose.theta) + curr_node->pos.y) * grid_metadata.resolution;
+      }
+      else
+         p3 = { curr_node->next->pos.x * grid_metadata.resolution,
+                curr_node->next->pos.y * grid_metadata.resolution };
+
+      printf("p1: %f %f %f\n",p1.x,p1.y,curr_pose.theta);
+      printf("p2: %f %f\n",p2.x,p2.y);
+      printf("p3: %f %f\n",p3.x,p3.y);
+
+      point curr_vector = { -sin(curr_pose.theta), cos(curr_pose.theta) };
+      point goal_vector = { p3.x - p2.x, p3.y - p2.y };
+
+      printf("H1: %f %f\n",curr_vector.x,curr_vector.y);
+      printf("H2: %f %f\n",goal_vector.x,goal_vector.y);
+
+      double between = sqrt(point_dist2(p1,p2));
+
+      printf("L: %f\n",between);
+      
+      double theta = acos(((curr_vector.x * goal_vector.x) + (curr_vector.y * goal_vector.y)) /
+                          sqrt(goal_vector.x * goal_vector.x + goal_vector.y * goal_vector.y));
+
+      printf("theta: %f\n",theta);
+
+      double rad = between / (2.0 * cos( theta / 2.0));
+
+      printf("rad: %f\n",rad);
+
+      double arc_length = theta * rad;
+
+      double time = arc_length / desired_speed;
+
+      printf("arc_length: %f\n",arc_length);
+      printf("time: %f\n",time);
+
+      double w = theta / time;
+      w = (std::isnan(w) || std::isinf(w) || w > 1000 ? 0 : w);
+
+      printf("w: %f\n",w);
+
+      return velocity_2d{desired_speed,w};
+
+   }
+
+
 public:
 
    ElasticBand(int band_length, double influence_range, double max_bubble,
@@ -428,13 +486,13 @@ public:
       if ( !valid_path || !path || !path->next)
          return;
 
-      printf("current_node: %d\n",path_position);
+      //printf("current_node: %d\n",path_position);
 
       pose_2d curr_pose = ros2_pose_to_pose_2d(msg.pose);
       curr_pose.pos.x = (curr_pose.pos.x - grid_metadata.origin.position.x) / grid_metadata.resolution;
       curr_pose.pos.y = (curr_pose.pos.y - grid_metadata.origin.position.y) / grid_metadata.resolution;
-      printf("curr_pose: %f %f %f\n",curr_pose.pos.x,curr_pose.pos.y,curr_pose.theta);
-      printf("path_pose: %f %f\n",path->pos.x,path->pos.y);
+      //printf("curr_pose: %f %f %f\n",curr_pose.pos.x,curr_pose.pos.y,curr_pose.theta);
+      //printf("path_pose: %f %f\n",path->pos.x,path->pos.y);
 
       /* if we have not started on the path yet, turn to face it */
       if ( path_position == 0) {
@@ -444,7 +502,7 @@ public:
 
          double theta = atan2(in_frame.y - path->next->pos.y, in_frame.x - path->next->pos.x);
 
-         printf("theta %f\n",theta);
+         //printf("theta %f\n",theta);
 
          if (fabs(theta) > (M_PI/2.0)) {
             current_vel.linear.x = 0.0;
@@ -453,8 +511,8 @@ public:
          }
       }
 
-      printf("dist: %f %f\n",
-            sqrt(point_dist2(curr_pose.pos,path->pos)),advance_distance/grid_metadata.resolution);
+      //printf("dist: %f %f\n",
+      //      sqrt(point_dist2(curr_pose.pos,path->pos)),advance_distance/grid_metadata.resolution);
 
       /* check if we are within the distance to a node that we can advance on
        * the path. If so, compute the new linear and angular velocity needed to
@@ -477,57 +535,10 @@ public:
 
       }
 
-      point p1 = { curr_pose.pos.x * grid_metadata.resolution,
-                   curr_pose.pos.y * grid_metadata.resolution };
-      point p2 = { path->pos.x * grid_metadata.resolution,
-                   path->pos.y * grid_metadata.resolution };
-      point p3;
+      velocity_2d vel_update = compute_velocity_output(curr_pose,path);
 
-      if ( !path->next ) {
-         p3.x = (cos(curr_pose.theta) + path->pos.x) * grid_metadata.resolution;
-         p3.y = (sin(curr_pose.theta) + path->pos.y) * grid_metadata.resolution;
-      }
-      else
-         p3 = { path->next->pos.x * grid_metadata.resolution,
-                path->next->pos.y * grid_metadata.resolution };
-
-      printf("p1: %f %f %f\n",p1.x,p1.y,curr_pose.theta);
-      printf("p2: %f %f\n",p2.x,p2.y);
-      printf("p3: %f %f\n",p3.x,p3.y);
-
-      point curr_vector = { -sin(curr_pose.theta), cos(curr_pose.theta) };
-      point goal_vector = { p3.x - p2.x, p3.y - p2.y };
-
-      printf("H1: %f %f\n",curr_vector.x,curr_vector.y);
-      printf("H2: %f %f\n",goal_vector.x,goal_vector.y);
-
-      double between = sqrt(point_dist2(p1,p2));
-
-      printf("L: %f\n",between);
-      
-      double theta = acos(((curr_vector.x * goal_vector.x) + (curr_vector.y * goal_vector.y)) /
-                          sqrt(goal_vector.x * goal_vector.x + goal_vector.y * goal_vector.y));
-
-      printf("theta: %f\n",theta);
-
-      double rad = between / (2.0 * cos( theta / 2.0));
-
-      printf("rad: %f\n",rad);
-
-      double arc_length = theta * rad;
-
-      double time = arc_length / desired_speed;
-
-      printf("arc_length: %f\n",arc_length);
-      printf("time: %f\n",time);
-
-      double w = theta / time;
-      w = (std::isnan(w) || std::isinf(w) || w > 1000 ? 0 : w);
-
-      printf("w: %f\n",w);
-
-      current_vel.linear.x = desired_speed;
-      current_vel.angular.z = w;
+      current_vel.linear.x = vel_update.linear;
+      current_vel.angular.z = vel_update.angular;
 
    }
 
@@ -537,6 +548,74 @@ public:
          return current_vel;
 
       return geometry_msgs::msg::Twist();
+   }
+
+   void simulate_path(pose_2d curr_pose, geometry_msgs::msg::PoseArray & ret) override {
+
+      /* convert from global coords to map reference frame */
+      curr_pose = {{ (curr_pose.pos.x - grid_metadata.origin.position.x) / grid_metadata.resolution,
+                     (curr_pose.pos.y - grid_metadata.origin.position.y) / grid_metadata.resolution},
+                     curr_pose.theta                                                                };
+
+      int sim_path_position = 0;
+      
+      if ( !valid_path || !path || !path->next)
+         return;
+
+      mut.lock();
+
+      node * curr = path;
+      velocity_2d update;
+      double initial_dist = DBL_MAX;
+
+      point in_frame = { curr->next->pos.x*cos(curr_pose.theta) - curr->next->pos.y*sin(curr_pose.theta),
+                         curr->next->pos.y*sin(curr_pose.theta) + curr->next->pos.y*cos(curr_pose.theta) };
+
+      double theta = atan2(in_frame.y - curr->next->pos.y, in_frame.x - curr->next->pos.x);
+
+      /*
+      curr_pose.theta = curr_pose.theta + theta;
+      curr_pose.theta = atan2(sin(curr_pose.theta),cos(curr_pose.theta));
+      */
+
+      while (true) {
+
+         printf("sim_path_position: %d\n",sim_path_position);
+
+         if (sqrt(point_dist2(curr_pose.pos,curr->pos)) < advance_distance / grid_metadata.resolution) {
+
+            curr = curr->next;
+            sim_path_position += 1;
+            initial_dist = sqrt(point_dist2(curr_pose.pos,curr->pos));
+
+            if (!curr)
+               break;
+         }
+
+         update = compute_velocity_output(curr_pose,curr);
+
+update_step:
+
+         printf("vel update: %f %f\n",update.linear,update.angular);
+
+         printf("before: %f %f %f\n",curr_pose.pos.x,curr_pose.pos.y,curr_pose.theta);
+         curr_pose = estimate_movement(curr_pose,update,0.5);
+         printf("after: %f %f %f\n",curr_pose.pos.x,curr_pose.pos.y,curr_pose.theta);
+
+         pose_2d transformed = {{(curr_pose.pos.x * grid_metadata.resolution) + grid_metadata.origin.position.x,
+                                 (curr_pose.pos.y * grid_metadata.resolution) + grid_metadata.origin.position.y},
+                                 curr_pose.theta };
+         ret.poses.push_back(pose_2d_to_ros2_pose(transformed));
+
+         /* If we have moved massively away from our initial distance estimate,
+          * abort the simulation, as something has gone very wrong.           */
+         if (sqrt(point_dist2(curr_pose.pos,curr->pos)) > initial_dist * 2.0 || !curr)
+            break;
+
+      }
+
+      mut.unlock();
+
    }
 
    void load_map(const nav_msgs::msg::OccupancyGrid & map, int occupant_cutoff) override {

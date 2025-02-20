@@ -37,8 +37,10 @@ public:
    virtual void get_map(nav_msgs::msg::OccupancyGrid * ret_msg) = 0;
 
    /* return the best estimate of the current pose of the robot
-    * from the slam system.                                    */
-   virtual pose_2d get_pose(const velocity_2d & vel) = 0;
+    * from the slam system, along with the associated odometry value
+    * at that timestep. Used for computation of the map -> odom
+    * transform.                                               */
+   virtual std::pair<pose_2d,pose_2d> get_last_pose() = 0;
 
 
 
