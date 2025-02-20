@@ -1,13 +1,13 @@
 
-#ifndef __LIDAR_SCAN_MATCHER
+#ifndef __LIDAR_MATCHER
 
-#define __LIDAR_SCAN_MATCHER
+#define __LIDAR_MATCHER
 #include "kurome.h"
 #include "lidar_data.hpp"
 #include "observation.hpp"
 #include "occupancy_grid.hpp"
 
-class LidarScanMatcher {
+class LidarMatcher {
 public:
 
    virtual double match_scan(const LidarData & scan, const OccupancyGrid & map,

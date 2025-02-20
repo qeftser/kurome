@@ -1,13 +1,13 @@
 
-#ifndef __POINT_CLOUD_SCAN_MATCHER
+#ifndef __POINT_CLOUD_MATCHER
 
-#define __POINT_CLOUD_SCAN_MATCHER
+#define __POINT_CLOUD_MATCHER
 #include "kurome.h"
 #include "lidar_data.hpp"
 #include "observation.hpp"
 #include "occupancy_grid.hpp"
 
-class PointCloudScanMatcher {
+class PointCloudMatcher {
 public:
 
    virtual double match_point_cloud(const PointCloudData & current, 
