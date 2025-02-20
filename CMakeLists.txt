@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
-project(kurome)
+project(kurome C CXX)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -std=c++17 -g)
+  add_compile_options(-Wall -Wextra -Wpedantic -std=c++17)
+  add_link_options(-v)
 endif()
 
 # install dependencies
@@ -20,6 +21,8 @@ find_package(tf2_sensor_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(Ceres REQUIRED)
 
+#find_package(GraphSlamBackend REQUIRED)
+
 find_package(SFML COMPONENTS window graphics system)
 
 add_library(kurome_base STATIC src/kurome.cpp)
@@ -36,7 +39,7 @@ ament_target_dependencies(wall_filter rclcpp sensor_msgs geometry_msgs visualiza
 
 # pino node
 add_executable(pino src/pino.cpp)
-target_link_libraries(pino Ceres::ceres kurome_base)
+target_link_libraries(pino graph_slam_backend Ceres::ceres kurome_base)
 ament_target_dependencies(pino rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs
                           tf2 tf2_ros tf2_geometry_msgs tf2_sensor_msgs)
 

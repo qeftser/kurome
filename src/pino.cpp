@@ -154,6 +154,8 @@ public:
 
       if (this->get_parameter("algorithm").as_string() == "qeftser") {
          slam_system = new QeftserGraphSlam(this->get_clock(),
+               new DummyLidarMatcher(),
+               new DummyPointCloudMatcher(),
                this->get_parameter("bin_size").as_double());
       }
 
@@ -288,15 +290,14 @@ private:
 
    void publish_map() {
 
-      nav_msgs::msg::OccupancyGrid * msg = NULL;
+      nav_msgs::msg::OccupancyGrid msg;
 
        slam_system->get_map(msg);
 
-      (*msg).header.stamp = this->get_clock()->now();
-      (*msg).header.frame_id = "map";
+      msg.header.stamp = this->get_clock()->now();
+      msg.header.frame_id = "map";
 
-      grid_out->publish(*msg);
-      delete msg;
+      grid_out->publish(msg);
    }
 
    void publish_visual() {

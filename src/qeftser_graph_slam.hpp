@@ -9,7 +9,9 @@
 #include "spatial_bin.hpp"
 #include "locked_queue.hpp"
 
+extern "C" {
 #include <graph_slam_backend/graph_slam.h>
+}
 
 /* A port of my graph slam backend into this system. It does
  * a good amount of stuff besides that, but this is the best
@@ -60,6 +62,7 @@ private:
 
    /* The pose graph constructed by our system */
    pose_graph * graph;
+   std::thread graph_lock; /* use with care! */
 
    /* A spatially indexed collection of nodes in the
     * pose graph. Used for loop closure and edge detection */
@@ -72,14 +75,35 @@ private:
    /* current best representation of the map the robot is navigating
     * through/in. We need a lock here because this value will be accessed
     * by multiple threads asyncronously.                                */
-   OccupancyGrid * best_map;
+   OccupancyGrid * best_map = NULL;
    std::mutex map_lock;
 
+   /* thread that the actual slam system is ran in. We do all the work
+    * on the pose graph (scan matching, loop closure, etc. ) in this thread */
+   std::thread graph_manager;
+
+   /* perform all updates and maintenance on the pose graph */
+   void manage_graph() {
+
+      while (true) {
+
+
+
+      }
+   }
 
 public:
 
-   QeftserGraphSlam(rclcpp::Clock::SharedPtr clock, double bin_size)
-      : SlamSystem(clock), nodes(bin_size) {}
+   QeftserGraphSlam(rclcpp::Clock::SharedPtr clock,
+                    LidarMatcher * lidar_matcher, PointCloudMatcher * point_cloud_matcher,
+                    double bin_size)
+      : SlamSystem(clock,lidar_matcher,point_cloud_matcher), nodes(bin_size) {
+
+         optimize(graph,NULL);
+
+      graph_manager = std::thread(&QeftserGraphSlam::manage_graph, this);
+
+   }
 
    void insert_observation(Observation * observation, bool fixed = NOFIX_NODE) override {
       incoming_observations.enqueue(std::make_pair(observation,fixed));
@@ -88,12 +112,11 @@ public:
    void construct_visualization(visualization_msgs::msg::MarkerArray & msg) override {
    }
 
-   void get_map(nav_msgs::msg::OccupancyGrid * ret_msg) override {
+   void get_map(nav_msgs::msg::OccupancyGrid & ret_msg) override {
       map_lock.lock();
 
-      ret_msg = new nav_msgs::msg::OccupancyGrid();
-
-      best_map->to_msg(*ret_msg);
+      if (best_map)
+         best_map->to_msg(ret_msg);
 
       map_lock.unlock();
    }
