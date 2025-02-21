@@ -3,6 +3,7 @@
 
 #define __MI_A_STAR
 #include "pathfinder.hpp"
+#include "kurome.h"
 #include <cmath>
 #include <queue>
 #include <vector>
@@ -68,11 +69,6 @@ private:
       return ((x<<48)|(y<<42)|(theta));
    }
 
-   /* distance squared between two points */
-   inline double point_dist2(const point & p1, const point & p2) const {
-      return (p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y);
-   }
-
    /* return the position in the grid array that
     * this point falls in.                      */
    inline int point_pos(const point & p) {
@@ -88,6 +84,11 @@ private:
          return false;
       }
    };
+
+   /* squared distance between two points */
+   inline double point_dist2(const point & p1, const point & p2) {
+      return (p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y);
+   }
 
    /* construct a small line at the given point
     * for use in the visualizaton function.

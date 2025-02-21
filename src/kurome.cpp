@@ -81,3 +81,12 @@ pose_2d estimate_movement(pose_2d pose, velocity_2d vel, double timestep) {
    };
 }
 
+double point_dist2(const point & p1, const point & p2) {
+   return (p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y);
+}
+
+pose_2d a_from_b(const pose_2d & a, const pose_2d & b) {
+   pose_2d diff = { { b.pos.x - a.pos.x, b.pos.y - a.pos.y },
+                       b.theta - a.theta };
+   diff.theta += (diff.theta > M_PI) ? -(2.0*M_PI) : (diff.theta < -M_PI) ? (2.0*M_PI) : 0.0;
+}

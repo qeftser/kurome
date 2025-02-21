@@ -128,11 +128,6 @@ private:
       return false;
    }
 
-   /* provide the distance squared between two points */
-   inline double point_dist2(const point & p1, const point & p2) const {
-      return (p1.x-p2.x)*(p1.x-p2.x) + (p1.y-p2.y)*(p1.y-p2.y);
-   }
-
    inline int block_pos(int x_pos, int y_pos) {
       return x_pos + (y_pos * grid_metadata.width);
    }

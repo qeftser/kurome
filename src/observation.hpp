@@ -62,13 +62,9 @@ public:
 
    /* usually collected from something like a lidar */
    LidarData laser_scan;
-   pose_2d laser_scan_pose_estimate;
-   Covariance3 laser_scan_covariance;
 
    /* usually collected from some kind of depth camera or lidar */
    PointCloudData point_cloud;
-   pose_2d point_cloud_pose_estimate;
-   Covariance3 point_cloud_covariance;
 
    Observation() {};
 

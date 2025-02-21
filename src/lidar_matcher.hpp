@@ -11,21 +11,25 @@ class LidarMatcher {
 public:
 
    /* matches a lidar scan to a map, filling the ret_pose and ret_covariance
-    * values and returning the certainty of the best match on the range [0.0 - 1.0] */
-   virtual double match_scan(const LidarData & scan, const OccupancyGrid & map,
-                             pose_2d & ret_pose, Covariance3 & ret_covariance) = 0;
+    * values and returning the certainty of the best match on the range [0.0 - 1.0] 
+    * scan - the scan we want to match
+    * other - the scan to match to
+    * guess_ret_pose - the initial guess of the offset as well as the returned
+    *                  estimate for the offset
+    * ret_covariance - the returned covariance of the measurement */
+   virtual double match_scan(const LidarData & scan, const LidarData & other,
+                             pose_2d & guess_ret_pose, Covariance3 & ret_covariance) = 0;
 
 };
 
 /* useless implimentation to get the files to compile */
 class DummyLidarMatcher : public LidarMatcher {
 
-   double match_scan(const LidarData & scan, const OccupancyGrid & map,
-                     pose_2d & ret_pose, Covariance3 & ret_covariance) override {
+   double match_scan(const LidarData & scan, const LidarData & other,
+                     pose_2d & guess_ret_pose, Covariance3 & ret_covariance) override {
 
-      (void)map;
-
-      ret_pose = scan.center;
+      (void)other;
+      (void)guess_ret_pose;
 
       ret_covariance.xx = 1e10;
       ret_covariance.yy = 1e10;

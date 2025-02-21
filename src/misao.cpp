@@ -179,6 +179,8 @@ private:
     * reference frame, as that is the frame we are pathfinding in. */
    std::unique_ptr<tf2_ros::TransformListener> tf_listener;
    std::unique_ptr<tf2_ros::Buffer> tf_buffer;
+   /* Last transformation collected */
+   geometry_msgs::msg::TransformStamped transformation;
 
    /* Handle to the smoothing algorithm being used */
    SmootherBase * smoother;
@@ -231,26 +233,32 @@ private:
 
    void collect_odom(const nav_msgs::msg::Odometry & msg) {
       static int fail_count = 0;
+
+      /* transform to map frame */
+      geometry_msgs::msg::PoseStamped pose_out;
+      geometry_msgs::msg::PoseStamped pose_in;
+      pose_in.pose = msg.pose.pose;
+      pose_in.header = msg.header;
+
       try {
 
-         /* transform to map frame */
-         geometry_msgs::msg::PoseStamped pose_out;
-         geometry_msgs::msg::PoseStamped pose_in;
-         pose_in.pose = msg.pose.pose;
-         pose_in.header = msg.header;
-         tf_buffer->transform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,"map",
-               tf2::Duration(std::chrono::milliseconds(100)));
+         /* get the last avaliable transform */
+         transformation = tf_buffer->lookupTransform("map","odom",
+                                                     tf2::TimePointZero,
+                                                     tf2::Duration(std::chrono::milliseconds(100)));
 
-         /* update internal vars */
-         pose = pose_out;
 
-         smoother->advance_path(pose_out);
 
       } 
       catch (const tf2::TransformException & ex) {
          RCLCPP_WARN(this->get_logger(),"transformation of odometry failed for the %dth time",fail_count++);
-         return;
       }
+
+      /* update current odometry vars */
+      tf2::doTransform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,transformation);
+      pose = pose_out;
+
+      smoother->advance_path(pose_out);
    }
 
    void collect_goal(const geometry_msgs::msg::PoseStamped & msg) {

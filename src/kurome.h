@@ -90,6 +90,9 @@ std::vector<std::string> split(std::string & str, const std::string & delimiter)
 double time_dist(const builtin_interfaces::msg::Time & t1, const rclcpp::Time & t2);
 double time_dist(const builtin_interfaces::msg::Time & t1, const builtin_interfaces::msg::Time & t2);
 
+/* distance squared between two points */
+double point_dist2(const point & p1, const point & p2);
+
 /* Produce a z rotation in radians given a
  * quaternion ros2 message. Note that this
  * assumes the 3-2-1 rotation application order */
@@ -114,5 +117,9 @@ point inv_transform(const point & target, const pose_2d & transformation);
 /* Estimate the position of the robot given an initial position, velocity
  * and timestep.                                                         */
 pose_2d estimate_movement(pose_2d pose, velocity_2d vel, double timestep);
+
+/* Return the pose that represents the movement to arrive at a
+ * from b                                                     */
+pose_2d a_from_b(const pose_2d & a, const pose_2d & b);
 
 #endif

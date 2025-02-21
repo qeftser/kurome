@@ -102,6 +102,11 @@ public:
 
       /* parameters specific to the qeftser slam algorithm */
       this->declare_parameter("bin_size",1.0); /* meters */
+      this->declare_parameter("linear_update_dist",0.1); /* meters */
+      this->declare_parameter("angular_update_dist",0.2); /* radians */
+      this->declare_parameter("lidar_acceptance_threshold",0.7); /* probability */
+      this->declare_parameter("point_cloud_acceptance_threshold",0.7); /* probability */
+      this->declare_parameter("node_association_dist",0.5); /* meters */
 
       grid_out = this->create_publisher<nav_msgs::msg::OccupancyGrid>(
             this->get_parameter("map_out").as_string(), 10);
@@ -156,7 +161,12 @@ public:
          slam_system = new QeftserGraphSlam(this->get_clock(),
                new DummyLidarMatcher(),
                new DummyPointCloudMatcher(),
-               this->get_parameter("bin_size").as_double());
+               this->get_parameter("bin_size").as_double(),
+               this->get_parameter("linear_update_dist").as_double(), 
+               this->get_parameter("angular_update_dist").as_double(),
+               this->get_parameter("lidar_acceptance_threshold").as_double(), 
+               this->get_parameter("point_cloud_acceptance_threshold").as_double(),
+               this->get_parameter("node_association_dist").as_double());
       }
 
       if (this->get_parameter("aggregate_sensor_data").as_bool()) {
