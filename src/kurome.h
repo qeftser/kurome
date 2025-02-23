@@ -8,6 +8,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include "sensor_msgs/msg/laser_scan.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include "sensor_msgs/msg/point_field.hpp"
 #include "geometry_msgs/msg/transform.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/pose_array.hpp"

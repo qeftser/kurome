@@ -31,7 +31,9 @@ class DummyPointCloudMatcher : public PointCloudMatcher {
                             const PointCloudData & reference,
                             pose_2d & guess_ret_pose, Covariance3 & ret_covariance) {
 
+      (void)current;
       (void)reference;
+      (void)guess_ret_pose;
 
       ret_covariance.xx = 1e10;
       ret_covariance.yy = 1e10;

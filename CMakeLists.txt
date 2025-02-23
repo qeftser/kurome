@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(kurome C CXX)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -std=c++20)
+  add_compile_options(-Wall -Wextra -Wpedantic -std=c++20 -v)
   add_link_options(-v)
 endif()
 
@@ -64,8 +64,13 @@ ament_target_dependencies(the_iron_rod rclcpp geometry_msgs nav_msgs sensor_msgs
 add_executable(hardcoded_path_publisher src/hardcoded_path_publisher.cpp)
 ament_target_dependencies(hardcoded_path_publisher rclcpp nav_msgs geometry_msgs)
 
+# the matcher test
+add_executable(matcher_test src/matcher_test.cpp)
+target_link_libraries(matcher_test kurome_base)
+ament_target_dependencies(matcher_test rclcpp sensor_msgs)
 
-install(TARGETS brain wall_filter pino yoriko misao the_iron_rod hardcoded_path_publisher
+
+install(TARGETS brain wall_filter pino yoriko misao the_iron_rod hardcoded_path_publisher matcher_test
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch config
         DESTINATION share/${PROJECT_NAME})

@@ -61,22 +61,6 @@ private:
 
    };
 
-   /* The linear and angular movement needed for
-    * a node to be added to the pose graph.     */
-   double linear_update_dist;
-   double angular_update_dist;
-
-   /* certainty of the lidar matcher needed for the
-    * computed observation to be added to the pose graph */
-   double lidar_acceptance_threshold;
-
-   /* certainty of the point cloud matcher needed for the
-    * computed observation to be added to the pose graph */
-   double point_cloud_acceptance_threshold;
-
-   /* range to look for node association */
-   double node_association_dist;
-
    /* The pose graph constructed by our system */
    pose_graph * graph;
    std::mutex graph_lock; /* use with care! */
@@ -107,6 +91,22 @@ private:
     * will get swapped out a decent amount.                             */
    std::atomic<node *> last_node = NULL;
 
+   /* The linear and angular movement needed for
+    * a node to be added to the pose graph.     */
+   double linear_update_dist;
+   double angular_update_dist;
+
+   /* certainty of the lidar matcher needed for the
+    * computed observation to be added to the pose graph */
+   double lidar_acceptance_threshold;
+
+   /* certainty of the point cloud matcher needed for the
+    * computed observation to be added to the pose graph */
+   double point_cloud_acceptance_threshold;
+
+   /* range to look for node association */
+   double node_association_dist;
+
 
    /* perform all updates and maintenance on the pose graph */
    void manage_graph() {
@@ -132,7 +132,7 @@ private:
          double angle_dist = observation->global_pose_estimate.theta - previous_node->best_pose.theta;
          angle_dist += (angle_dist > M_PI) ? -(2.0*M_PI) : (angle_dist < -M_PI) ? (2.0*M_PI) : 0.0;
 
-         /* ensure enough movement has been achived to add an observation */
+         /* ensure enough movement has been acheived to add an observation */
          if (!previous_node ||
              sqrt(point_dist2(observation->global_pose_estimate.pos,previous_node->best_pose.pos)) >
                linear_update_dist ||
@@ -232,15 +232,60 @@ private:
                   add_edge(new_node->handle,n->handle,&converted_pose,&converted_information,graph);
 
                }
-
             }
 
+            last_node.store(new_node);
+            node_list.push_back(new_node);
+
+            /* see if a loop closure has occured */
+            for (node * n : nearby) {
+               if (abs((int)new_node->handle - (int)n->handle) > 10) {
+                  perform_loop_closure();
+                  return; /* other steps will be done implicitly if this is the case */
+               }
+            }
+
+            /* add this node to the graph and the map */
+            nodes.add(new_node);
+            best_map->add_scan(observation->laser_scan,new_node->best_pose);
+            best_map->add_point_cloud(observation->point_cloud,new_node->best_pose);
 
 
          }
          else /* simply destroy the observation */
             delete observation;
       }
+   }
+
+   void perform_loop_closure() {
+
+      graph_slam_optimization_data info;
+      bzero(&info,sizeof(graph_slam_optimization_data));
+
+      optimize(graph,&info);
+      print_graph_slam_optimization_data(&info);
+
+      OccupancyGrid * new_map = new OccupancyGrid(0.1,20,-20);
+      nodes.clear();
+
+      for (size_t i = 0; i < node_list.size(); ++i) {
+
+        position_vector updated_pose = graph->node[node_list[i]->handle].pos;
+        node_list[i]->best_pose = { {updated_pose.x, updated_pose.y}, updated_pose.t };
+
+        new_map->add_scan(node_list[i]->observation->laser_scan,node_list[i]->best_pose);
+        new_map->add_point_cloud(node_list[i]->observation->point_cloud,node_list[i]->best_pose);
+        nodes.add(node_list[i]);
+      }
+
+      map_lock.lock();
+
+      delete best_map;
+      best_map = new_map;
+
+      map_lock.unlock();
+
+
    }
 
 public:
@@ -259,6 +304,8 @@ public:
       graph = construct_pose_graph();
 
       graph_manager = std::thread(&QeftserGraphSlam::manage_graph, this);
+
+      best_map = new OccupancyGrid(0.1,20,-20);
 
    }
 
