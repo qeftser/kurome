@@ -169,10 +169,6 @@ public:
          y_len = new_y_len;
          x_min = new_x_min;
          y_min = new_y_min;
-
-         printf("new grid is : [ (%d,%d)  -  (%d,%d) ]\n",x_min,y_min,x_min+x_len,y_min);
-         printf("              [    |           |    ]\n");
-         printf("              [ (%d,%d)  -  (%d,%d) ]\n",x_min,y_min+y_len,x_min+x_len,y_min+y_len);
       }
 
       for (std::pair<int,int> & p : locations) {

@@ -61,7 +61,7 @@ private:
 
    struct {
       bool operator()(const coarse_result & l, const coarse_result & r) {
-         return l.certainty > r.certainty;
+         return l.certainty < r.certainty;
       }
    } cmp_coarse_result;
 
@@ -83,18 +83,20 @@ public:
       /* vars for covariance computation */
       Covariance3 & K = ret_covariance;
       K.xx = K.xy = K.xz = K.yy = K.yz = K.zz = 0.0;
+      pose_2d u;
+      u.pos.x = u.pos.y = u.theta = 0.0;
       double s = 0.0;
 
       /* get the coarse scan matching results */
-      double rot_max = (M_PI / 8.0);
+      double rot_max = radian*30;
       for (double theta = -rot_max; theta <= rot_max; theta += radian) {
          rotated.clear();
          for (const point & p : scan.points)
             rotated.push_back(point{ p.x * cos(theta) - p.y * sin(theta),
                                      p.x * sin(theta) + p.y * cos(theta) });
 
-         for (double x = -2.1; x <= 2.1; x += 0.3) {
-            for (double y = -2.1; y <= 2.1; y += 0.3) {
+         for (double x = -2.4; x <= 2.4; x += 0.3) {
+            for (double y = -2.4; y <= 2.4; y += 0.3) {
 
                double local_certainty = 0.0;
 
@@ -110,7 +112,7 @@ public:
 
       pose_2d best_pose = {{0,0},0};
 
-      /* find the best result and compute it at a high resolution */
+      /* find the best result and compute it at a high resolution. */
       while (!sorted_results.empty()) {
          coarse_result best = sorted_results.top();
 
@@ -147,6 +149,54 @@ public:
 
          sorted_results.pop();
       }
+
+      /* compute covariance given the best value */
+      rot_max = 6*radian;
+      for (double theta = -rot_max; theta <= rot_max; theta += radian) {
+
+         double r_theta = theta + best_pose.theta;
+
+         rotated.clear();
+         for (const point & p : scan.points)
+            rotated.push_back(
+                  point{ p.x * cos(r_theta) - p.y * sin(r_theta),
+                         p.x * sin(r_theta) + p.y * cos(r_theta) });
+
+         for (double x = -0.1; x <= 0.1; x += 0.01) {
+            for (double y = -0.1; y <= 0.1; y += 0.01) {
+
+               point pos = { x + best_pose.pos.x, y + best_pose.pos.y };
+
+               double prob = 0.0;
+
+               for (point & p : rotated)
+                  prob += high_res(pos.x,pos.y);
+
+               K.xx += pos.x*pos.x*prob;
+               K.xy += pos.x*pos.y*prob;
+               K.xz += pos.x*r_theta*prob;
+               K.yy += pos.y*pos.y*prob;
+               K.yz += pos.y*r_theta*prob;
+               K.zz += r_theta*r_theta*prob;
+
+               u.pos.x += pos.x*prob;
+               u.pos.y += pos.y*prob;
+               u.theta += r_theta*prob;
+
+               s += prob;
+
+            }
+         }
+
+      }
+
+      double s_2 = s*s;
+      ret_covariance.xx = (K.xx / s) - ((u.pos.x*u.pos.x) / s_2);
+      ret_covariance.xy = (K.xy / s) - ((u.pos.x*u.pos.y) / s_2);
+      ret_covariance.xz = (K.xz / s) - ((u.pos.x*u.theta) / s_2);
+      ret_covariance.yy = (K.yy / s) - ((u.pos.y*u.pos.y) / s_2);
+      ret_covariance.yz = (K.yz / s) - ((u.pos.y*u.theta) / s_2);
+      ret_covariance.zz = (K.zz / s) - ((u.theta*u.theta) / s_2);
 
       /* update the guess with the best computed value */
       guess_ret_pose.pos.x += best_pose.pos.x;

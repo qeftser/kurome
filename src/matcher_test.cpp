@@ -74,7 +74,6 @@ private:
       printf("            %7e %7e %7e\n",covariance.xy,covariance.yy,covariance.yz);
       printf("            %7e %7e %7e\n",covariance.xz,covariance.yz,covariance.zz);
 
-      /*
       RCLCPP_INFO(this->get_logger(),"matching with movement %f %f %f",rand_move.pos.x,rand_move.pos.y,rand_move.theta);
       tStart = clock();
 
@@ -100,7 +99,6 @@ private:
       printf("covariance: %7e %7e %7e\n",covariance.xx,covariance.xy,covariance.xz);
       printf("            %7e %7e %7e\n",covariance.xy,covariance.yy,covariance.yz);
       printf("            %7e %7e %7e\n",covariance.xz,covariance.yz,covariance.zz);
-      */
 
       last_scan = data;
    }
