@@ -3,6 +3,7 @@
 
 #define __OBSERVATION
 #include "kurome.h"
+#include <Eigen/Dense>
 #include "lidar_data.hpp"
 #include "point_cloud_data.hpp"
 
@@ -40,15 +41,18 @@ public:
 
       double det = xx*A + xy*B + xy*C;
 
-      Information3 result = Information3{A/det,B/det,C/det,E/det,F/det,I/det};
-      result.xx = (std::isnan(result.xx) || std::isinf(result.xx) ? 1 : result.xx);
-      result.yy = (std::isnan(result.yy) || std::isinf(result.yy) ? 1 : result.yy);
-      result.zz = (std::isnan(result.zz) || std::isinf(result.zz) ? 1 : result.zz);
-      result.xy = (std::isnan(result.xy) || std::isinf(result.xy) ? 0 : result.xy);
-      result.xz = (std::isnan(result.xz) || std::isinf(result.xz) ? 0 : result.xz);
-      result.yz = (std::isnan(result.yz) || std::isinf(result.yz) ? 0 : result.yz);
+      A /= det; B /= det; C /= det; 
+      E /= det; F /= det; I /= det;
 
-      return result;
+      Eigen::Matrix3d inverse;
+      inverse << A, B, C,
+                 B, E, F,
+                 C, F, I;
+
+      Eigen::Matrix3d sqrt_inverse = inverse.llt().matrixU();
+
+      return Information3{sqrt_inverse(0,0),sqrt_inverse(1,0),sqrt_inverse(2,0),
+                          sqrt_inverse(1,1),sqrt_inverse(2,1),sqrt_inverse(2,2)};
    }
 
 };

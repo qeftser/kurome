@@ -18,13 +18,16 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_sensor_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+
 find_package(Ceres REQUIRED)
+find_package(Eigen3 3.3 REQUIRED)
 
 #find_package(GraphSlamBackend REQUIRED)
 
 find_package(SFML COMPONENTS window graphics system)
 
 add_library(kurome_base STATIC src/kurome.cpp)
+target_link_libraries(kurome_base Eigen3::Eigen)
 ament_target_dependencies(kurome_base rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
 
 # brain node
@@ -38,7 +41,7 @@ ament_target_dependencies(wall_filter rclcpp sensor_msgs geometry_msgs visualiza
 
 # pino node
 add_executable(pino src/pino.cpp)
-target_link_libraries(pino graph_slam_backend Ceres::ceres kurome_base)
+target_link_libraries(pino graph_slam_backend Ceres::ceres Eigen3::Eigen kurome_base)
 ament_target_dependencies(pino rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs
                           tf2 tf2_ros tf2_geometry_msgs tf2_sensor_msgs)
 

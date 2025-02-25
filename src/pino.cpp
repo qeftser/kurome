@@ -30,6 +30,7 @@
 #include "occupancy_grid.hpp"
 #include "slam_system.hpp"
 #include "qeftser_graph_slam.hpp"
+#include "builtin_graph_slam.hpp"
 
 /* The SLAM system for Kurome. This is an implimentation of the GraphSLAM
  * algorithm using odometry, LiDAR, Point Cloud, and IMU data. Fixing nodes
@@ -98,13 +99,13 @@ public:
       this->declare_parameter("aggregation_interval",0.1);
 
       /* the slam algorithm to use */
-      this->declare_parameter("algorithm","qeftser");
+      this->declare_parameter("algorithm","builtin");
 
-      /* parameters specific to the qeftser slam algorithm */
+      /* parameters for the slam algorithm */
       this->declare_parameter("bin_size",1.0); /* meters */
       this->declare_parameter("linear_update_dist",0.3); /* meters */
       this->declare_parameter("angular_update_dist",0.3); /* radians */
-      this->declare_parameter("lidar_acceptance_threshold",0.0); /* probability */
+      this->declare_parameter("lidar_acceptance_threshold",1.1); /* probability */
       this->declare_parameter("point_cloud_acceptance_threshold",0.5); /* probability */
       this->declare_parameter("node_association_dist",0.5); /* meters */
 
@@ -159,6 +160,17 @@ public:
 
       if (this->get_parameter("algorithm").as_string() == "qeftser") {
          slam_system = new QeftserGraphSlam(this->get_clock(),
+               new CorrelativeLidarMatcher(),
+               new DummyPointCloudMatcher(),
+               this->get_parameter("bin_size").as_double(),
+               this->get_parameter("linear_update_dist").as_double(), 
+               this->get_parameter("angular_update_dist").as_double(),
+               this->get_parameter("lidar_acceptance_threshold").as_double(), 
+               this->get_parameter("point_cloud_acceptance_threshold").as_double(),
+               this->get_parameter("node_association_dist").as_double());
+      }
+      else if (this->get_parameter("algorithm").as_string() == "builtin") {
+         slam_system = new BuiltinGraphSlam(this->get_clock(),
                new CorrelativeLidarMatcher(),
                new DummyPointCloudMatcher(),
                this->get_parameter("bin_size").as_double(),

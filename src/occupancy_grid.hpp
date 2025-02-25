@@ -102,10 +102,7 @@ public:
    /* insert a lidar scan into this occupancy grid */
    void add_scan(const LidarData & scan, const pose_2d & pose){
 
-      printf("position: %f %f %f\n",pose.pos.x,pose.pos.y,pose.theta);
-
       std::unordered_set<int> seen;
-
 
       int x1 = (pose.pos.x / resolution) - x_min;
       int y1 = (pose.pos.y / resolution) - y_min;
@@ -170,23 +167,10 @@ public:
          int8_t * new_grid = (int8_t *)calloc(sizeof(int8_t),new_x_len*new_y_len);
 
          for (int x = 0; x < x_len; ++x) {
-            for (int y = 0; y < y_len; ++y) {
-               new_grid[ x + x_change + ((y + y_change) * new_x_len)] = grid[x + y * x_len];
+            for (int y = 0, y2 = y_change*new_x_len; y < y_len*x_len; y += x_len, y2 += new_x_len) {
+               new_grid[ x + x_change + y2] = grid[x + y];
             }
          }
-         /*
-         int new_pos = (x_min - new_x_min) + (new_x_len * (y_min - new_y_min));
-         for (int old_pos = 0; old_pos < x_len*y_len; ++old_pos) {
-
-            new_grid[new_pos] = grid[old_pos];
-
-            if (old_pos % x_len == x_len - 1)
-               new_pos += (new_x_len - x_len);
-            else 
-               new_pos += 1;
-
-         }
-         */
 
          free(grid);
          grid = new_grid;
