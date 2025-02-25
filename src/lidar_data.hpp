@@ -11,6 +11,26 @@
  * don't get when dealing with the ros2 lidar 
  * message type.                          */
 class LidarData {
+private:
+
+   inline void load_msg(const sensor_msgs::msg::LaserScan & msg) {
+      int entries = (msg.angle_max - msg.angle_min) / msg.angle_increment;
+      double angle = msg.angle_min;
+
+      points = std::vector<point>(entries);
+
+      for (int i = 0; i < entries; ++i) {
+
+         angle = msg.angle_min + msg.angle_increment*i;
+
+         if (msg.ranges[i] < msg.range_min || msg.ranges[i] > msg.range_max)
+            continue;
+
+         points.push_back(point{ msg.ranges[i] * cos(angle), msg.ranges[i] * sin(angle) });
+
+      }
+   }
+
 public:
 
    /* Origin of the points in
@@ -25,32 +45,18 @@ public:
    /* Construct an instance of LidarData from a ros2
     * LaserScan message type. Assume center of 0,0 */
    LidarData(const sensor_msgs::msg::LaserScan & msg) {
-
-
-      int entries = (msg.angle_max - msg.angle_min) / msg.angle_increment;
-      double angle = msg.angle_min;
-
-      points = std::vector<point>(entries);
-
-      for (int i = 0; i < entries; ++i) {
-
-         if (msg.ranges[i] < msg.range_min || msg.ranges[i] > msg.range_max)
-            continue;
-
-         points.push_back(point{ msg.ranges[i] * cos(angle), msg.ranges[i] * sin(angle) });
-
-         angle += msg.angle_increment;
-      }
+      load_msg(msg);
    }
 
    /* Construct an instance of LidarData using the provided offset. */
-   LidarData(const sensor_msgs::msg::LaserScan & msg, const pose_2d & offset) 
-      : LidarData(msg) {
+   LidarData(const sensor_msgs::msg::LaserScan & msg, const pose_2d & offset) {
+      load_msg(msg);
       apply_offset(offset);
    }
    LidarData(const sensor_msgs::msg::LaserScan & msg, const geometry_msgs::msg::Pose & offset) {
       pose_2d as_pose_2d = ros2_pose_to_pose_2d(offset);
-      LidarData(msg,as_pose_2d);
+      load_msg(msg);
+      apply_offset(as_pose_2d);
    }
 
    /* Offset the scan data by the given amount. Center does not change.

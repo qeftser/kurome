@@ -11,6 +11,8 @@ template <typename T>
 class LockedQueue {
 private:
 
+   size_t num_elements;
+
    struct queue_node {
       T val;
       queue_node * nextptr;
@@ -36,6 +38,7 @@ public:
       struct queue_node * node = new_node();
       node->nextptr = NULL;
       head = tail = node;
+      num_elements = 0;
    }
 
    ~LockedQueue() {
@@ -58,6 +61,7 @@ public:
       tmutex.lock();
       tail->nextptr = node;
       tail = node;
+      num_elements += 1;
       tmutex.unlock();
    }
 
@@ -75,6 +79,7 @@ public:
       *ret_val = new_head->val;
       head = new_head;
 
+      num_elements -= 1;
       hmutex.unlock();
 
       free(node);
@@ -93,6 +98,10 @@ public:
 
       hmutex.unlock();
       return ret;
+   }
+
+   size_t size() {
+      return num_elements;
    }
 };
 

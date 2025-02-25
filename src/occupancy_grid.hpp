@@ -6,6 +6,7 @@
 #include "lidar_data.hpp"
 #include "point_cloud_data.hpp"
 #include <unordered_set>
+#include <cstring>
 
 /* A class that will hopefully be useful for me. Allows creation
  * of a pose graph using multiple preregistered scans as well as
@@ -16,11 +17,13 @@
 class OccupancyGrid {
 private:
 
-   uint8_t unallocated_point;
+   static constexpr point zero_ref = {0,0};
+
+   int8_t unallocated_point;
 
    double resolution;
-   uint16_t positive_update;
-   uint16_t negative_update;
+   int16_t positive_update;
+   int16_t negative_update;
 
    int x_min = 0;
    int y_min = 0;
@@ -28,7 +31,7 @@ private:
    int x_len = 0;
    int y_len = 0;
 
-   uint8_t * grid = NULL;
+   int8_t * grid = NULL;
 
    inline int deref_location(const int x, const int y) const {
       return x + (y * x_len);
@@ -36,7 +39,7 @@ private:
 
 public:
 
-   OccupancyGrid(double resolution, uint8_t positive_update, uint8_t negative_update) 
+   OccupancyGrid(double resolution, int8_t positive_update, int8_t negative_update) 
       : resolution(resolution), positive_update(positive_update), negative_update(negative_update) {};
 
    /* convert the occupancy grid to a ros2 message, filling
@@ -61,7 +64,7 @@ public:
    }
 
    /* get the value of one of the points on the grid using indicies in meters */
-   uint8_t & operator()(const double x_index, const double y_index) {
+   int8_t & operator()(const double x_index, const double y_index) {
       int canonical_x_index = (x_index / resolution) - x_min;
       int canonical_y_index = (y_index / resolution) - y_min;
 
@@ -77,7 +80,7 @@ public:
 
    /* get the value of one of the points on the grid using integer indicies
     * based on the resolution of the grid                                  */
-   uint8_t & operator()(int x_index, int y_index) {
+   int8_t & operator()(int x_index, int y_index) {
       x_index -= x_min;
       y_index -= y_min;
 
@@ -101,24 +104,34 @@ public:
 
       std::unordered_set<int> seen;
 
+
       int x1 = (pose.pos.x / resolution) - x_min;
       int y1 = (pose.pos.y / resolution) - y_min;
 
+
       std::vector<std::pair<int,int>> locations;
 
-      int new_x_min = x_min;
-      int new_y_min = y_min;
+      int new_x_min = 0;
+      int new_y_min = 0;
       int new_x_len = x_len;
       int new_y_len = y_len;
+
 
       bool size_change = false;
 
       for (const point & p : scan.points) {
 
-         int x = (p.x / resolution) - x_min;
+         point moved;
+         if (memcmp(&zero_ref,&p,sizeof(point)) != 0) 
+            moved = point{ p.x * cos(pose.theta) - p.y * sin(pose.theta) + pose.pos.x,
+                           p.x * sin(pose.theta) + p.y * cos(pose.theta) + pose.pos.y };
+         else
+            moved = p;
 
-         if (x < 0) {
-            new_x_min = x_min + x;
+         int x = (moved.x / resolution) - x_min;
+
+         if (x < new_x_min) {
+            new_x_min = x;
             size_change = true;
          }
          else if (x >= new_x_len) {
@@ -126,10 +139,10 @@ public:
             size_change = true;
          }
 
-         int y = (p.y / resolution) - y_min;
+         int y = (moved.y / resolution) - y_min;
 
-         if (y < 0) {
-            new_y_min = y_min + y;
+         if (y < new_y_min) {
+            new_y_min = y;
             size_change = true;
          }
          else if (y >= new_y_len) {
@@ -142,12 +155,18 @@ public:
 
       if (size_change) {
 
-         int x_change = x_min - new_x_min;
+
+         int x_change =  - new_x_min;
 
          new_x_len += x_change;
-         new_y_len += (y_min - new_y_min);
+         new_y_len -= new_y_min;
 
-         uint8_t * new_grid = (uint8_t *)calloc(sizeof(uint8_t),new_x_len*new_y_len);
+         new_x_min = x_min + new_x_min;
+         new_y_min = y_min + new_y_min;
+
+         int8_t * new_grid = (int8_t *)calloc(sizeof(int8_t),new_x_len*new_y_len);
+
+
 
          int new_pos = (x_min - new_x_min) + (new_x_len * (y_min - new_y_min));
          for (int old_pos = 0; old_pos < x_len*y_len; ++old_pos) {
@@ -155,7 +174,7 @@ public:
             new_grid[new_pos] = grid[old_pos];
 
             if (old_pos % x_len == x_len - 1)
-               new_pos += (new_x_len - x_change);
+               new_pos += (new_x_len - x_len);
             else 
                new_pos += 1;
 
@@ -176,11 +195,13 @@ public:
          int x0 = std::get<0>(p);
          int y0 = std::get<1>(p);
 
+
          int dx = abs(x1 - x0);
          int sx = x0 < x1 ? 1 : -1;
          int dy = -abs(y1 - y0);
          int sy = y0 < y1 ? 1 : -1;
          int error = dx + dy;
+
 
          /* update the obstacle position as occupied */
          {

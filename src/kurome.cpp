@@ -89,4 +89,5 @@ pose_2d a_from_b(const pose_2d & a, const pose_2d & b) {
    pose_2d diff = { { b.pos.x - a.pos.x, b.pos.y - a.pos.y },
                        b.theta - a.theta };
    diff.theta += (diff.theta > M_PI) ? -(2.0*M_PI) : (diff.theta < -M_PI) ? (2.0*M_PI) : 0.0;
+   return diff;
 }

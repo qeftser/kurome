@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include <rclcpp/rclcpp.hpp>
+#include "std_msgs/msg/color_rgba.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/msg/point_field.hpp"
