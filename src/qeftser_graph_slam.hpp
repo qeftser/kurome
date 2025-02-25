@@ -182,12 +182,8 @@ repeat:
             if (previous_node) {
                pose_2d prev_from_curr = a_from_b(previous_node->observation->current_odometry,
                                                  observation->current_odometry);
-               //printf("prev_from_curr     : %f %f %f\n",
-                     //prev_from_curr.pos.x,prev_from_curr.pos.y,prev_from_curr.theta);
                pose_2d prev_from_curr_safe = safe_a_from_b(previous_node->observation->current_odometry,
                                                            observation->current_odometry);
-               //printf("prev_from_curr_safe: %f %f %f\n",
-                     //prev_from_curr_safe.pos.x,prev_from_curr_safe.pos.y,prev_from_curr_safe.theta);
                prev_from_curr = prev_from_curr_safe;
 
                converted_pose = { prev_from_curr.pos.x,
@@ -234,7 +230,6 @@ repeat:
                                             .a20 = information.xz,
                                             .a21 = information.yz,
                                             .a22 = information.zz };
-                  //printf("Adding lidar edge: %f %f %f\n",converted_pose.x,converted_pose.y,converted_pose.t);
                   add_edge(new_node->handle,n->handle,&converted_pose,&converted_information,graph);
                }
             }
@@ -271,7 +266,7 @@ repeat:
 
             /* see if a loop closure has occured */
             for (node * n : nearby) {
-               if (abs((int)new_node->handle - (int)n->handle) > 0) {
+               if (abs((int)new_node->handle - (int)n->handle) > 20) {
                   perform_loop_closure();
                   goto repeat; /* other steps will be done implicitly if this is the case */
                }
@@ -294,63 +289,10 @@ repeat:
       graph_slam_optimization_data info;
       bzero(&info,sizeof(graph_slam_optimization_data));
 
-      //info.cutoff = 1e-7;
-      info.step_limit = 20;
-
       graph_lock.lock();
 
-      //printf("\033[32m !!! OPTIMIZING POSE GRAPH !!!\033[0m\n");
-      /*
-      printf("last edge: %f %f %f\n",graph->edge[graph->edge_count-1].observation.x,
-                                     graph->edge[graph->edge_count-1].observation.y,
-                                     graph->edge[graph->edge_count-1].observation.t);
-      printf("last before: %f %f %f\n",graph->node[graph->node_count-1].pos.x,
-                                       graph->node[graph->node_count-1].pos.y,
-                                       graph->node[graph->node_count-1].pos.t);
-                                       */
-
-      //printf("// nodes: \n");
-
-      for (int i = 0; i < graph->node_count; ++i) {
-
-         /*
-         printf(" pv pv%d = { %f, %f, %f };\n",i,graph->node[i].pos.x,graph->node[i].pos.y,graph->node[i].pos.t);
-         printf(" add_node(pv%d,graph); \n",i);
-         */
-      }
-
-      //printf("// edges: \n");
-
-      for (int i = 0; i < graph->edge_count; ++i) {
-
-         pose_graph_edge * edge = graph->edge+i;
-
-         /*
-         printf("// %u -> %u\t",edge->xi,edge->xj);
-         printf("// xi: (%f %f), %f'\txj: (%f %f), %f'\n",graph->node[edge->xi].pos.x,
-                                                          graph->node[edge->xi].pos.y,
-                                                          graph->node[edge->xi].pos.t,
-                                                          graph->node[edge->xj].pos.x,
-                                                          graph->node[edge->xj].pos.y,
-                                                          graph->node[edge->xj].pos.t);
-         printf(" pv   obs%d =  { %f, %f, %f };\n",i,edge->observation.x,edge->observation.y,edge->observation.t);
-         printf(" sm33 information%d = { %8e,        \n",i,edge->information.a00);
-         printf("                        %8e, %8e,     \n",edge->information.a10,edge->information.a11);
-         printf("                        %8e, %8e, %8e };\n",edge->information.a20,edge->information.a21,edge->information.a22);
-         printf(" add_edge(%d,%d,&obs%d,&information%d,graph);\n",edge->xi,edge->xj,i,i);
-         */
-
-      }
-
       optimize(graph,&info);
-      //print_graph_slam_optimization_data(&info);
-
-      /*
-      printf("last after : %f %f %f\n",graph->node[graph->node_count-1].pos.x,
-                                       graph->node[graph->node_count-1].pos.y,
-                                       graph->node[graph->node_count-1].pos.t);
-                                       */
-
+      print_graph_slam_optimization_data(&info);
       OccupancyGrid * new_map = new OccupancyGrid(0.1,20,-20);
       nodes.clear();
 
@@ -372,8 +314,6 @@ repeat:
       best_map = new_map;
 
       map_lock.unlock();
-
-
    }
 
 public:
@@ -445,7 +385,6 @@ public:
 
       int edge_count = graph->edge_count;
 
-      //printf("edge_count: %d\n",edge_count);
       for (int i = 0; i < edge_count; ++i) {
 
          if (abs((int)graph->edge[i].xi - (int)graph->edge[i].xj) == 1) {
