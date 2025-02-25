@@ -40,7 +40,7 @@ private:
 
    /* Mapping of x and y coordinates for bins to
     * a given bin.                              */
-   std::unordered_map<long,bin *> bins;
+   std::unordered_map<long,bin *> bins = std::unordered_map<long,bin *>();
    /* What value should we divide our x and y
     * by to place then in a bin?             */
    double divisor;

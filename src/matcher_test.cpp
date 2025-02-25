@@ -53,7 +53,9 @@ private:
 
       pose_2d pose;
       Covariance3 covariance;
+      Information3 information;
       double certainty;
+      clock_t tStart;
       LidarData data(msg);
 
       pose_2d rand_move = {{((((double)rand())/RAND_MAX) * 2.0) - 1.0,
@@ -62,7 +64,7 @@ private:
       LidarData move(msg,rand_move);
 
       RCLCPP_INFO(this->get_logger(),"matching with self");
-      clock_t tStart = clock();
+      tStart = clock();
 
       pose = {{0,0},0};
       certainty = lidar_matcher->match_scan(data,data,pose,covariance);
@@ -73,6 +75,10 @@ private:
       printf("covariance: %7e %7e %7e\n",covariance.xx,covariance.xy,covariance.xz);
       printf("            %7e %7e %7e\n",covariance.xy,covariance.yy,covariance.yz);
       printf("            %7e %7e %7e\n",covariance.xz,covariance.yz,covariance.zz);
+      information = covariance.to_information();
+      printf("information %7e %7e %7e\n",information.xx,information.xy,information.xz);
+      printf("            %7e %7e %7e\n",information.xy,information.yy,information.yz);
+      printf("            %7e %7e %7e\n",information.xz,information.yz,information.zz);
 
       RCLCPP_INFO(this->get_logger(),"matching with movement %f %f %f",rand_move.pos.x,rand_move.pos.y,rand_move.theta);
       tStart = clock();
@@ -86,6 +92,10 @@ private:
       printf("covariance: %7e %7e %7e\n",covariance.xx,covariance.xy,covariance.xz);
       printf("            %7e %7e %7e\n",covariance.xy,covariance.yy,covariance.yz);
       printf("            %7e %7e %7e\n",covariance.xz,covariance.yz,covariance.zz);
+      information = covariance.to_information();
+      printf("information %7e %7e %7e\n",information.xx,information.xy,information.xz);
+      printf("            %7e %7e %7e\n",information.xy,information.yy,information.yz);
+      printf("            %7e %7e %7e\n",information.xz,information.yz,information.zz);
 
       RCLCPP_INFO(this->get_logger(),"matching with previous scan");
       tStart = clock();
@@ -99,6 +109,10 @@ private:
       printf("covariance: %7e %7e %7e\n",covariance.xx,covariance.xy,covariance.xz);
       printf("            %7e %7e %7e\n",covariance.xy,covariance.yy,covariance.yz);
       printf("            %7e %7e %7e\n",covariance.xz,covariance.yz,covariance.zz);
+      information = covariance.to_information();
+      printf("information %7e %7e %7e\n",information.xx,information.xy,information.xz);
+      printf("            %7e %7e %7e\n",information.xy,information.yy,information.yz);
+      printf("            %7e %7e %7e\n",information.xz,information.yz,information.zz);
 
       last_scan = data;
    }

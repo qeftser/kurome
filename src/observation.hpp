@@ -40,7 +40,15 @@ public:
 
       double det = xx*A + xy*B + xy*C;
 
-      return Information3{A/det,B/det,C/det,E/det,F/det,I/det};
+      Information3 result = Information3{A/det,B/det,C/det,E/det,F/det,I/det};
+      result.xx = (std::isnan(result.xx) || std::isinf(result.xx) ? 1 : result.xx);
+      result.yy = (std::isnan(result.yy) || std::isinf(result.yy) ? 1 : result.yy);
+      result.zz = (std::isnan(result.zz) || std::isinf(result.zz) ? 1 : result.zz);
+      result.xy = (std::isnan(result.xy) || std::isinf(result.xy) ? 0 : result.xy);
+      result.xz = (std::isnan(result.xz) || std::isinf(result.xz) ? 0 : result.xz);
+      result.yz = (std::isnan(result.yz) || std::isinf(result.yz) ? 0 : result.yz);
+
+      return result;
    }
 
 };
@@ -54,10 +62,10 @@ public:
 
    /* used for computing the map -> odom transform
     * later on. Usually not touched much.         */
-   pose_2d current_odometry;
+   pose_2d current_odometry = {{0,0},0};
 
    /* best estimate of the pose of the robot */
-   pose_2d global_pose_estimate;
+   pose_2d global_pose_estimate = {{0,0},0};
    Covariance3 global_pose_covariance;
 
    /* usually collected from something like a lidar */

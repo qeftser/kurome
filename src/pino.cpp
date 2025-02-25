@@ -54,7 +54,7 @@ public:
       /* topic to listen for beacon odometry on */
       this->declare_parameter("beacon_in","beacon");
       /* topic to listen for odometry on */
-      this->declare_parameter("odom_in","odom");
+      this->declare_parameter("odom_in","demo/odom");
       /* topic to listen for incoming laser scans on */
       this->declare_parameter("scan_in","scan");
       /* topic to listen for incoming point cloud data on */
@@ -102,10 +102,10 @@ public:
 
       /* parameters specific to the qeftser slam algorithm */
       this->declare_parameter("bin_size",1.0); /* meters */
-      this->declare_parameter("linear_update_dist",0.1); /* meters */
-      this->declare_parameter("angular_update_dist",0.2); /* radians */
-      this->declare_parameter("lidar_acceptance_threshold",0.7); /* probability */
-      this->declare_parameter("point_cloud_acceptance_threshold",0.7); /* probability */
+      this->declare_parameter("linear_update_dist",0.3); /* meters */
+      this->declare_parameter("angular_update_dist",0.3); /* radians */
+      this->declare_parameter("lidar_acceptance_threshold",0.0); /* probability */
+      this->declare_parameter("point_cloud_acceptance_threshold",0.5); /* probability */
       this->declare_parameter("node_association_dist",0.5); /* meters */
 
       grid_out = this->create_publisher<nav_msgs::msg::OccupancyGrid>(
@@ -159,7 +159,7 @@ public:
 
       if (this->get_parameter("algorithm").as_string() == "qeftser") {
          slam_system = new QeftserGraphSlam(this->get_clock(),
-               new DummyLidarMatcher(),
+               new CorrelativeLidarMatcher(),
                new DummyPointCloudMatcher(),
                this->get_parameter("bin_size").as_double(),
                this->get_parameter("linear_update_dist").as_double(), 
@@ -281,9 +281,18 @@ private:
        * the next best estimate avaliable - i.e. the transform is good. */
       else {
 
+         /*
+         printf("odom_pose: %f %f %f\n",odom_pose.pos.x,odom_pose.pos.y,odom_pose.theta);
+         printf("last_tran: %f %f %f\n",last_map_odom_transform.pos.x,last_map_odom_transform.pos.y,last_map_odom_transform.theta);
+         */
+
          best_pose.pos = transform(odom_pose.pos, last_map_odom_transform);
-         best_pose.theta += last_map_odom_transform.theta;
+         best_pose.theta = odom_pose.theta + last_map_odom_transform.theta;
          best_pose.theta = atan2(sin(best_pose.theta),cos(best_pose.theta));
+
+         /*
+         printf("best_pose: %f %f %f\n",best_pose.pos.x,best_pose.pos.y,best_pose.theta);
+         */
 
          covariance = odom_pose_covariance;
          is_beacon = false;
@@ -302,8 +311,9 @@ private:
 
       nav_msgs::msg::OccupancyGrid msg;
 
-       slam_system->get_map(msg);
+      slam_system->get_map(msg);
 
+      msg.info.map_load_time = this->get_clock()->now();
       msg.header.stamp = this->get_clock()->now();
       msg.header.frame_id = "map";
 
@@ -329,6 +339,7 @@ private:
 
    void broadcast_map_frame() {
 
+
       /* this is the map -> odom transform */
       geometry_msgs::msg::TransformStamped msg;
       msg.header.frame_id = "map";
@@ -339,9 +350,10 @@ private:
       pose_2d diff = { {std::get<0>(poses).pos.x - std::get<1>(poses).pos.x,
                         std::get<0>(poses).pos.y - std::get<1>(poses).pos.y},
                        std::get<0>(poses).theta - std::get<1>(poses).theta  };
-      diff.theta = atan2(sin(diff.theta),cos(diff.theta));
+      //diff.theta = atan2(sin(diff.theta),cos(diff.theta));
 
       last_map_odom_transform = diff;
+      printf("transform: %f %f %f\n",diff.pos.x,diff.pos.y,diff.theta);
 
       msg.transform.translation.x = diff.pos.x;
       msg.transform.translation.y = diff.pos.y;
@@ -358,6 +370,7 @@ private:
 
    void collect_beacon(const nav_msgs::msg::Odometry & msg) {
 
+
       /* hard set the pose of the robot. Assume that
        * the beacon is a perfect input source.      */
       beacon_pose = ros2_pose_to_pose_2d(msg.pose.pose);
@@ -366,6 +379,8 @@ private:
    }
 
    void collect_odom(const nav_msgs::msg::Odometry & msg) {
+
+
 
       odom_pose = ros2_pose_to_pose_2d(msg.pose.pose);
       odom_pose_covariance = Covariance3{msg.pose.covariance[0],   /* xx */
@@ -386,16 +401,20 @@ private:
       static int fail_count = 0;
       Observation * observation = NULL;
 
+
       /* convert the lidar data into the frame of
        * reference for base_link.               */
       try {
          geometry_msgs::msg::PoseStamped pose_in;
          geometry_msgs::msg::PoseStamped pose_out;
+         /*
          tf_buffer->transform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,"base_link",
                tf2::Duration(std::chrono::milliseconds(200)));
+               */
 
          observation = new Observation();
 
+         observation->current_odometry = odom_pose;
          bool is_beacon = get_best_pose_estimate(observation->global_pose_estimate,
                                                  observation->global_pose_covariance);
 
@@ -430,6 +449,7 @@ private:
       static int fail_count = 0;
       Observation * observation = NULL;
 
+
       /* convert the point cloud into the
        * frame of reference for base_link */
       try {
@@ -439,6 +459,7 @@ private:
 
          observation = new Observation();
 
+         observation->current_odometry = odom_pose;
          bool is_beacon = get_best_pose_estimate(observation->global_pose_estimate,
                                                  observation->global_pose_covariance);
 
@@ -473,6 +494,7 @@ private:
    }
 
    void flush_observation() {
+
 
       if (std::get<0>(current_observation) == NULL)
          return;

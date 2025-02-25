@@ -107,11 +107,26 @@ private:
    /* range to look for node association */
    double node_association_dist;
 
+   pose_2d safe_a_from_b(pose_2d a, pose_2d b) {
+      pv A = pv{a.pos.x,a.pos.y,a.theta};
+      pv B = pv{b.pos.x,b.pos.y,b.theta};
+
+      ht hta = as_homogeneous_transformation(A);
+      ht htb = as_homogeneous_transformation(B);
+      ht htb_inv = invert_homogeneous_transformation(&htb);
+      ht a_f_b = merge_homogeneous_transformation(&htb_inv,&hta);
+      pv res = destruct_homogeneous_transformation(&a_f_b);
+      double angle_from = a.theta - b.theta;
+      angle_from += (angle_from > M_PI) ? -(2.0*M_PI) : (angle_from < -M_PI) ? (2.0*M_PI) : 0.0;
+      return pose_2d{{res.x,res.y},angle_from};
+   }
+
 
    /* perform all updates and maintenance on the pose graph */
    void manage_graph() {
 
       while (true) {
+repeat:
 
          /* perform a small wait if there are no elements in the queue */
          if (incoming_observations.empty()) {
@@ -129,14 +144,20 @@ private:
 
          node * previous_node = last_node.load();
 
-         double angle_dist = observation->global_pose_estimate.theta - previous_node->best_pose.theta;
-         angle_dist += (angle_dist > M_PI) ? -(2.0*M_PI) : (angle_dist < -M_PI) ? (2.0*M_PI) : 0.0;
+         double angle_dist = 0.0;
+
+         if (previous_node) {
+            angle_dist = 
+               observation->current_odometry.theta - previous_node->observation->current_odometry.theta;
+            angle_dist += (angle_dist > M_PI) ? -(2.0*M_PI) : (angle_dist < -M_PI) ? (2.0*M_PI) : 0.0;
+         }
 
          /* ensure enough movement has been acheived to add an observation */
          if (!previous_node ||
-             sqrt(point_dist2(observation->global_pose_estimate.pos,previous_node->best_pose.pos)) >
+             sqrt(point_dist2(observation->current_odometry.pos,
+                              previous_node->observation->current_odometry.pos)) >
                linear_update_dist ||
-             angle_dist > angular_update_dist) {
+             fabs(angle_dist) > angular_update_dist) {
 
             /* needed for use with graph_slam_backend */
             position_vector converted_pose;
@@ -145,9 +166,9 @@ private:
 
             /* add this node to the graph */
             node * new_node = new node;
-            position_vector pos = { (float)observation->global_pose_estimate.pos.x,
-                                    (float)observation->global_pose_estimate.pos.y,
-                                    (float)observation->global_pose_estimate.theta };
+            position_vector pos = { observation->global_pose_estimate.pos.x,
+                                    observation->global_pose_estimate.pos.y,
+                                    observation->global_pose_estimate.theta };
             new_node->handle = add_node(pos,graph);
             new_node->observation = observation;
             new_node->best_pose = observation->global_pose_estimate;
@@ -159,18 +180,26 @@ private:
             /* add the nessesary odometry edge to keep
              * the graph well constrained.            */
             if (previous_node) {
-               pose_2d prev_from_curr = a_from_b(previous_node->observation->global_pose_estimate,
-                                                 observation->global_pose_estimate);
-               converted_pose = { (float)prev_from_curr.pos.x,
-                                  (float)prev_from_curr.pos.y,
-                                  (float)prev_from_curr.theta };
+               pose_2d prev_from_curr = a_from_b(previous_node->observation->current_odometry,
+                                                 observation->current_odometry);
+               //printf("prev_from_curr     : %f %f %f\n",
+                     //prev_from_curr.pos.x,prev_from_curr.pos.y,prev_from_curr.theta);
+               pose_2d prev_from_curr_safe = safe_a_from_b(previous_node->observation->current_odometry,
+                                                           observation->current_odometry);
+               //printf("prev_from_curr_safe: %f %f %f\n",
+                     //prev_from_curr_safe.pos.x,prev_from_curr_safe.pos.y,prev_from_curr_safe.theta);
+               prev_from_curr = prev_from_curr_safe;
+
+               converted_pose = { prev_from_curr.pos.x,
+                                  prev_from_curr.pos.y,
+                                  prev_from_curr.theta };
                information = observation->global_pose_covariance.to_information();
-               converted_information = { .a00 = (float)information.xx,
-                                         .a10 = (float)information.xy,
-                                         .a11 = (float)information.yy,
-                                         .a20 = (float)information.xz,
-                                         .a21 = (float)information.yz,
-                                         .a22 = (float)information.zz };
+               converted_information = { .a00 = information.xx,
+                                         .a10 = information.xy,
+                                         .a11 = information.yy,
+                                         .a20 = information.xz,
+                                         .a21 = information.yz,
+                                         .a22 = information.zz };
                add_edge(new_node->handle,previous_node->handle,&converted_pose,&converted_information,graph);
             }
 
@@ -182,8 +211,12 @@ private:
             double lidar_certainty;
             for (node * n : nearby) {
 
+               if ((int)n->handle - (int)new_node->handle == -1)
+                  continue;
+
                Covariance3 measurement_covariance;
-               pose_2d measurement = a_from_b(n->best_pose,observation->global_pose_estimate);
+               pose_2d measurement = safe_a_from_b(n->observation->global_pose_estimate,
+                                                   observation->global_pose_estimate);
 
                lidar_certainty = lidar_matcher->match_scan(observation->laser_scan,n->observation->laser_scan,
                                                            measurement, measurement_covariance);
@@ -191,18 +224,18 @@ private:
                if (lidar_certainty > lidar_acceptance_threshold) {
 
                   /* add an edge to the graph */
-                  converted_pose = { (float)measurement.pos.x,
-                                     (float)measurement.pos.y,
-                                     (float)measurement.theta };
+                  converted_pose = { measurement.pos.x,
+                                     measurement.pos.y,
+                                     measurement.theta };
                   information = measurement_covariance.to_information();
-                  converted_information = { .a00 = (float)information.xx,
-                                            .a10 = (float)information.xy,
-                                            .a11 = (float)information.yy,
-                                            .a20 = (float)information.xz,
-                                            .a21 = (float)information.yz,
-                                            .a22 = (float)information.zz };
+                  converted_information = { .a00 = information.xx,
+                                            .a10 = information.xy,
+                                            .a11 = information.yy,
+                                            .a20 = information.xz,
+                                            .a21 = information.yz,
+                                            .a22 = information.zz };
+                  //printf("Adding lidar edge: %f %f %f\n",converted_pose.x,converted_pose.y,converted_pose.t);
                   add_edge(new_node->handle,n->handle,&converted_pose,&converted_information,graph);
-
                }
             }
 
@@ -219,18 +252,17 @@ private:
                if (cloud_certainty > point_cloud_acceptance_threshold) {
 
                   /* add an edge to the graph */
-                  converted_pose = { (float)measurement.pos.x,
-                                     (float)measurement.pos.y,
-                                     (float)measurement.theta };
+                  converted_pose = { measurement.pos.x,
+                                     measurement.pos.y,
+                                     measurement.theta };
                   information = measurement_covariance.to_information();
-                  converted_information = { .a00 = (float)information.xx,
-                                            .a10 = (float)information.xy,
-                                            .a11 = (float)information.yy,
-                                            .a20 = (float)information.xz,
-                                            .a21 = (float)information.yz,
-                                            .a22 = (float)information.zz };
+                  converted_information = { .a00 = information.xx,
+                                            .a10 = information.xy,
+                                            .a11 = information.yy,
+                                            .a20 = information.xz,
+                                            .a21 = information.yz,
+                                            .a22 = information.zz };
                   add_edge(new_node->handle,n->handle,&converted_pose,&converted_information,graph);
-
                }
             }
 
@@ -239,9 +271,9 @@ private:
 
             /* see if a loop closure has occured */
             for (node * n : nearby) {
-               if (abs((int)new_node->handle - (int)n->handle) > 10) {
+               if (abs((int)new_node->handle - (int)n->handle) > 0) {
                   perform_loop_closure();
-                  return; /* other steps will be done implicitly if this is the case */
+                  goto repeat; /* other steps will be done implicitly if this is the case */
                }
             }
 
@@ -262,8 +294,62 @@ private:
       graph_slam_optimization_data info;
       bzero(&info,sizeof(graph_slam_optimization_data));
 
+      //info.cutoff = 1e-7;
+      info.step_limit = 20;
+
+      graph_lock.lock();
+
+      //printf("\033[32m !!! OPTIMIZING POSE GRAPH !!!\033[0m\n");
+      /*
+      printf("last edge: %f %f %f\n",graph->edge[graph->edge_count-1].observation.x,
+                                     graph->edge[graph->edge_count-1].observation.y,
+                                     graph->edge[graph->edge_count-1].observation.t);
+      printf("last before: %f %f %f\n",graph->node[graph->node_count-1].pos.x,
+                                       graph->node[graph->node_count-1].pos.y,
+                                       graph->node[graph->node_count-1].pos.t);
+                                       */
+
+      //printf("// nodes: \n");
+
+      for (int i = 0; i < graph->node_count; ++i) {
+
+         /*
+         printf(" pv pv%d = { %f, %f, %f };\n",i,graph->node[i].pos.x,graph->node[i].pos.y,graph->node[i].pos.t);
+         printf(" add_node(pv%d,graph); \n",i);
+         */
+      }
+
+      //printf("// edges: \n");
+
+      for (int i = 0; i < graph->edge_count; ++i) {
+
+         pose_graph_edge * edge = graph->edge+i;
+
+         /*
+         printf("// %u -> %u\t",edge->xi,edge->xj);
+         printf("// xi: (%f %f), %f'\txj: (%f %f), %f'\n",graph->node[edge->xi].pos.x,
+                                                          graph->node[edge->xi].pos.y,
+                                                          graph->node[edge->xi].pos.t,
+                                                          graph->node[edge->xj].pos.x,
+                                                          graph->node[edge->xj].pos.y,
+                                                          graph->node[edge->xj].pos.t);
+         printf(" pv   obs%d =  { %f, %f, %f };\n",i,edge->observation.x,edge->observation.y,edge->observation.t);
+         printf(" sm33 information%d = { %8e,        \n",i,edge->information.a00);
+         printf("                        %8e, %8e,     \n",edge->information.a10,edge->information.a11);
+         printf("                        %8e, %8e, %8e };\n",edge->information.a20,edge->information.a21,edge->information.a22);
+         printf(" add_edge(%d,%d,&obs%d,&information%d,graph);\n",edge->xi,edge->xj,i,i);
+         */
+
+      }
+
       optimize(graph,&info);
-      print_graph_slam_optimization_data(&info);
+      //print_graph_slam_optimization_data(&info);
+
+      /*
+      printf("last after : %f %f %f\n",graph->node[graph->node_count-1].pos.x,
+                                       graph->node[graph->node_count-1].pos.y,
+                                       graph->node[graph->node_count-1].pos.t);
+                                       */
 
       OccupancyGrid * new_map = new OccupancyGrid(0.1,20,-20);
       nodes.clear();
@@ -277,6 +363,8 @@ private:
         new_map->add_point_cloud(node_list[i]->observation->point_cloud,node_list[i]->best_pose);
         nodes.add(node_list[i]);
       }
+
+      graph_lock.unlock();
 
       map_lock.lock();
 
@@ -303,9 +391,9 @@ public:
 
       graph = construct_pose_graph();
 
-      graph_manager = std::thread(&QeftserGraphSlam::manage_graph, this);
-
       best_map = new OccupancyGrid(0.1,20,-20);
+
+      graph_manager = std::thread(&QeftserGraphSlam::manage_graph, this);
 
    }
 
@@ -324,20 +412,22 @@ public:
       nodes.color.b = 0.0;
       nodes.color.a = 1.0;
       nodes.ns = "qeftser_graph_slam";
-      nodes.scale.x = 0.1;
-      nodes.scale.y = 0.1;
-      nodes.scale.z = 0.1;
+      nodes.scale.x = 0.05;
+      nodes.scale.y = 0.05;
+      nodes.scale.z = 0.05;
 
       visualization_msgs::msg::Marker edges;
       edges.action = 0;
       edges.type = visualization_msgs::msg::Marker::LINE_STRIP;
       edges.lifetime.sec = 2;
-      edges.color.r = 0.0;
-      edges.color.g = 1.0;
-      edges.color.b = 1.0;
-      edges.color.a = 1.0;
       edges.ns = "qeftser_graph_slam";
-      edges.scale.z = 0.05;
+      edges.scale.x = 0.03;
+
+      std_msgs::msg::ColorRGBA red;
+      red.r = red.a = 1.0; red.b = red.g = 0.0;
+
+      std_msgs::msg::ColorRGBA cyan;
+      cyan.b = cyan.g = cyan.a = 1.0; cyan.r = 0.0;
 
       geometry_msgs::msg::Point pos;
       pos.z = 0.0;
@@ -355,7 +445,17 @@ public:
 
       int edge_count = graph->edge_count;
 
+      //printf("edge_count: %d\n",edge_count);
       for (int i = 0; i < edge_count; ++i) {
+
+         if (abs((int)graph->edge[i].xi - (int)graph->edge[i].xj) == 1) {
+            edges.colors.push_back(cyan);
+            edges.colors.push_back(cyan);
+         }
+         else {
+            edges.colors.push_back(red);
+            edges.colors.push_back(red);
+         }
 
          pos.x = graph->node[graph->edge[i].xi].pos.x;
          pos.y = graph->node[graph->edge[i].xi].pos.y;
