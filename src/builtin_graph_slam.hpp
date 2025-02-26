@@ -76,15 +76,25 @@ public:
                    T * residuals) const {
 
       T sin_i = sin(*t_i); T cos_i = cos(*t_i);
+      /*
+      T sin_ij = (T)sin(a_from_b.theta); T cos_ij = (T)cos(a_from_b.theta);
+      T sin_iij = sin(*t_i + a_from_b.theta);
+      T cos_iij = cos(*t_i + a_from_b.theta);
+      */
       T dist_x = *x_j - *x_i;
       T dist_y = *y_j - *y_i;
 
       T interm[3];
+      /*
+      interm[0] = dist_x*cos_iij + dist_y*sin_iij - (T)(a_from_b.pos.y*sin_ij + a_from_b.pos.x*cos_ij);
+      interm[1] = dist_x*sin_iij + dist_y*cos_iij + (T)a_from_b.pos.x*sin_ij - (T)a_from_b.pos.y*cos_ij;
+      */
       interm[0] = (dist_x * cos_i + dist_y * sin_i) - (T)(a_from_b.pos.x);
       interm[1] = (dist_y * cos_i - dist_x * sin_i) - (T)(a_from_b.pos.y);
       interm[2] = ((*t_j - *t_i) - (T)(a_from_b.theta));
       interm[2] = atan2(sin(interm[2]),cos(interm[2]));
 
+      /*
       residuals[0] = interm[0] * information.xx +
                      interm[1] * information.xy +
                      interm[2] * information.xz;
@@ -94,6 +104,10 @@ public:
       residuals[2] = interm[0] * information.xz +
                      interm[1] * information.yz +
                      interm[2] * information.zz;
+                     */
+      residuals[0] = interm[0];
+      residuals[1] = interm[1];
+      residuals[2] = interm[2];
 
       return true;
    }
@@ -227,8 +241,8 @@ private:
       angle_from += (angle_from > M_PI) ? -(2.0*M_PI) : (angle_from < -M_PI) ? (2.0*M_PI) : 0.0;
 
       point dist = { a.pos.x - b.pos.x, a.pos.y - b.pos.y };
-      point res = { dist.x * cos(angle_from) + dist.y * sin(angle_from),
-                    dist.y * cos(angle_from) - dist.x * sin(angle_from) };
+      point res = { dist.x * cos(b.theta) + dist.y * sin(b.theta),
+                    dist.y * cos(b.theta) - dist.x * sin(b.theta) };
 
       return pose_2d{{res.x,res.y},angle_from};
    }
@@ -313,11 +327,17 @@ repeat:
             for (node * n : nearby) {
 
                Covariance3 measurement_covariance;
-               pose_2d measurement = a_from_b(n->observation->global_pose_estimate,
-                                              observation->global_pose_estimate);
+               pose_2d measurement = a_from_b(n->observation->current_odometry,
+                                              observation->current_odometry);
+               measurement = {{0,0},0};
 
+               printf("seed       : %f %f %f\n",measurement.pos.x,measurement.pos.y,measurement.theta);
                lidar_certainty = lidar_matcher->match_scan(observation->laser_scan,n->observation->laser_scan,
                                                            measurement, measurement_covariance);
+               printf("lidar match: %f %f %f %f\n",measurement.pos.x,measurement.pos.y,measurement.theta,lidar_certainty);
+               pose_2d odom_ver = a_from_b(n->observation->current_odometry,
+                                           observation->current_odometry);
+               printf("odom version %f %f %f\n",odom_ver.pos.x,odom_ver.pos.y,odom_ver.theta);
 
                if (lidar_certainty > lidar_acceptance_threshold) {
 
@@ -325,9 +345,9 @@ repeat:
                   ceres::CostFunction * cost_function = ErrorTerm::create(measurement,measurement_covariance);
                   ceres::ResidualBlockId id = 
                      graph.AddResidualBlock(cost_function, loss_function, 
-                                            &n->o_pose.pos.x, &n->o_pose.pos.y,&n->o_pose.theta, 
                                             &new_node->o_pose.pos.x, &new_node->o_pose.pos.y,
-                                            &new_node->o_pose.theta);
+                                            &new_node->o_pose.theta,
+                                            &n->o_pose.pos.x, &n->o_pose.pos.y,&n->o_pose.theta);
                   graph.SetManifold(&new_node->o_pose.theta,manifold);
                   graph.SetManifold(&n->o_pose.theta,manifold);
                   edge_list.push_back({id,n->id,new_node->id});
@@ -366,8 +386,8 @@ repeat:
             /* see if a loop closure has occured */
             for (node * n : nearby) {
                if (abs((int)new_node->id - (int)n->id) > 0) {
-                  perform_loop_closure();
-                  goto repeat; /* other steps will be done implicitly if this is the case */
+                  if (perform_loop_closure())
+                     goto repeat; /* other steps will be done implicitly if this is the case */
                }
             }
 
@@ -382,8 +402,8 @@ repeat:
       }
    }
 
-   void perform_loop_closure() {
-
+   bool perform_loop_closure() {
+      bool ret = false;
 
       graph_lock.lock();
 
@@ -395,9 +415,10 @@ repeat:
 
       ceres::Solve(options,&graph,&summary);
 
-      std::cout << summary.FullReport() << std::endl;
+      //std::cout << summary.FullReport() << std::endl;
 
       if (summary.IsSolutionUsable()) {
+         ret = true;
 
          nodes.clear();
 
@@ -421,6 +442,7 @@ repeat:
 
       graph_lock.unlock();
 
+      return ret;
    }
 
 public:

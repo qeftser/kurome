@@ -45,6 +45,9 @@ private:
 
    /* the previous scan collected */
    LidarData last_scan;
+   
+   /* the previous random movement */
+   LidarData last_rand;
 
    /* the lidar matcher we are using */
    LidarMatcher * lidar_matcher;
@@ -72,13 +75,11 @@ private:
       RCLCPP_INFO(this->get_logger(),"finished in %.5f sec",((double)(clock() - tStart) / CLOCKS_PER_SEC));
       printf("certainty: %f\n",certainty);
       printf("best pose: %f %f %f\n",pose.pos.x,pose.pos.y,pose.theta);
+      /*
       printf("covariance: %7e %7e %7e\n",covariance.xx,covariance.xy,covariance.xz);
       printf("            %7e %7e %7e\n",covariance.xy,covariance.yy,covariance.yz);
       printf("            %7e %7e %7e\n",covariance.xz,covariance.yz,covariance.zz);
-      information = covariance.to_information();
-      printf("information %7e %7e %7e\n",information.xx,information.xy,information.xz);
-      printf("            %7e %7e %7e\n",information.xy,information.yy,information.yz);
-      printf("            %7e %7e %7e\n",information.xz,information.yz,information.zz);
+      */
 
       RCLCPP_INFO(this->get_logger(),"matching with movement %f %f %f",rand_move.pos.x,rand_move.pos.y,rand_move.theta);
       tStart = clock();
@@ -89,13 +90,11 @@ private:
       RCLCPP_INFO(this->get_logger(),"finished in %.5f sec",((double)(clock() - tStart) / CLOCKS_PER_SEC));
       printf("certainty: %f\n",certainty);
       printf("best pose: %f %f %f\n",pose.pos.x,pose.pos.y,pose.theta);
+      /*
       printf("covariance: %7e %7e %7e\n",covariance.xx,covariance.xy,covariance.xz);
       printf("            %7e %7e %7e\n",covariance.xy,covariance.yy,covariance.yz);
       printf("            %7e %7e %7e\n",covariance.xz,covariance.yz,covariance.zz);
-      information = covariance.to_information();
-      printf("information %7e %7e %7e\n",information.xx,information.xy,information.xz);
-      printf("            %7e %7e %7e\n",information.xy,information.yy,information.yz);
-      printf("            %7e %7e %7e\n",information.xz,information.yz,information.zz);
+      */
 
       RCLCPP_INFO(this->get_logger(),"matching with previous scan");
       tStart = clock();
@@ -106,15 +105,24 @@ private:
       RCLCPP_INFO(this->get_logger(),"finished in %.5f sec",((double)(clock() - tStart) / CLOCKS_PER_SEC));
       printf("certainty: %f\n",certainty);
       printf("best pose: %f %f %f\n",pose.pos.x,pose.pos.y,pose.theta);
+      /*
       printf("covariance: %7e %7e %7e\n",covariance.xx,covariance.xy,covariance.xz);
       printf("            %7e %7e %7e\n",covariance.xy,covariance.yy,covariance.yz);
       printf("            %7e %7e %7e\n",covariance.xz,covariance.yz,covariance.zz);
-      information = covariance.to_information();
-      printf("information %7e %7e %7e\n",information.xx,information.xy,information.xz);
-      printf("            %7e %7e %7e\n",information.xy,information.yy,information.yz);
-      printf("            %7e %7e %7e\n",information.xz,information.yz,information.zz);
+      */
+
+      RCLCPP_INFO(this->get_logger(),"matching with previous movement");
+      tStart = clock();
+
+      pose = {{0,0},0};
+      certainty = lidar_matcher->match_scan(data,last_rand,pose,covariance);
+
+      RCLCPP_INFO(this->get_logger(),"finished in %.5f sec",((double)(clock() - tStart) / CLOCKS_PER_SEC));
+      printf("certainty: %f\n",certainty);
+      printf("best pose: %f %f %f\n",pose.pos.x,pose.pos.y,pose.theta);
 
       last_scan = data;
+      last_rand = move;
    }
 
 };
