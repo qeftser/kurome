@@ -56,6 +56,13 @@ point transform(const point & target, const pose_2d & trans) {
                  target.x * sin(trans.theta) + target.y * cos(trans.theta) + trans.pos.y };
 }
 
+pose_2d transform(const pose_2d target, const pose_2d & trans) {
+   double angle_dist = target.theta + trans.theta;
+   return pose_2d{{ target.pos.x * cos(trans.theta) - target.pos.y * sin(trans.theta) + trans.pos.x,
+                    target.pos.x * sin(trans.theta) + target.pos.y * cos(trans.theta) + trans.pos.y},
+                    atan2(sin(angle_dist),cos(angle_dist))                                          };
+}
+
 point inv_transform(const point & target, const pose_2d & trans) {
    point translated = { target.x - trans.pos.x, target.y - trans.pos.y };
    return point{ translated.x * cos(trans.theta) + translated.y * sin(trans.theta),

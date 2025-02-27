@@ -109,7 +109,7 @@ public:
       double x_y_range;
    };
 
-   static constexpr matcher_params default_params = { 0.55, 2.1 };
+   static constexpr matcher_params default_params = { 0.30, 2.1 };
 
    double match_scan(const LidarData & scan, const LidarData & other,
                      pose_2d & guess_ret_pose, Covariance3 & ret_covariance) override {
@@ -120,13 +120,17 @@ public:
 
    double match_scan(const LidarData & scan, const std::vector<std::pair<const LidarData *,pose_2d>> & other,
                      pose_2d & guess_ret_pose, Covariance3 & ret_covariance) override {
-      printf("matching with +0.3, -0.6\n");
-      pose_2d shift  = {{0.3,-0.6},0};
+      /*
+      pose_2d shift  = {{((double)rand()/RAND_MAX)*2.0 - 1.0,
+                         ((double)rand()/RAND_MAX)*2.0 - 1.0},0};
+      printf("matching with %+f, %+f\n",shift.pos.x,shift.pos.y);
       LidarData shifted = LidarData(scan);
       shifted.apply_offset(shift);
       pose_2d result_dup = guess_ret_pose;
+      result_dup.pos.x += shift.pos.x; result_dup.pos.y += shift.pos.y;
       match_scan(shifted,other,result_dup,ret_covariance,default_params);
-      printf("result: %f %f %f\n",0.3+result_dup.pos.x,-0.6+result_dup.pos.y,result_dup.theta);
+      printf("result: %f %f %f\n",result_dup.pos.x,result_dup.pos.y,result_dup.theta);
+      */
       return match_scan(scan,other,guess_ret_pose,ret_covariance,default_params);
    }
 

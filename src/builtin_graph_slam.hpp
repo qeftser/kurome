@@ -241,6 +241,10 @@ private:
 
    /* range to look for node association */
    double node_association_dist;
+   
+   /* the number of nodes apart an association must be
+    * to trigger an optimization of the pose graph */
+   int loop_closure_dist;
 
    /* compute the pose a as seen from the pose b */
    pose_2d a_from_b(pose_2d a, pose_2d b) {
@@ -330,6 +334,7 @@ repeat:
             nodes.in_range(observation->global_pose_estimate.pos,node_association_dist,&nearby);
 
             /* collect lidar scan matching results */
+            /*
             double lidar_certainty;
             for (node * n : nearby) {
 
@@ -355,7 +360,7 @@ repeat:
 
                if (lidar_certainty > lidar_acceptance_threshold) {
 
-                  /* add an edge to the graph */
+                  / add an edge to the graph /
                   ceres::CostFunction * cost_function = ErrorTerm::create(measurement,measurement_covariance);
                   ceres::ResidualBlockId id = 
                      graph.AddResidualBlock(cost_function, loss_function, 
@@ -367,6 +372,43 @@ repeat:
                   edge_list.push_back({id,n->id,new_node->id});
                }
             }
+         */
+            {
+               double lidar_certainty;
+               std::vector<std::pair<const LidarData *,pose_2d>> input;
+               for (Observation * o : recent_observations) {
+                  input.push_back(std::make_pair(&o->laser_scan,
+                           a_from_b(o->current_odometry,observation->current_odometry)));
+               }
+               for (node * n : nearby) {
+                  input.push_back(std::make_pair(&n->observation->laser_scan,
+                           a_from_b(n->pose,observation->current_odometry)));
+               }
+
+               pose_2d measurement = {{0,0},0};
+               Covariance3 measurement_covariance;
+               lidar_certainty = lidar_matcher->match_scan(observation->laser_scan,input,
+                                                           measurement,measurement_covariance);
+
+               if (lidar_certainty > lidar_acceptance_threshold) {
+
+                  for (node * n : nearby) {
+
+                     pose_2d edge = transform(a_from_b(n->pose,observation->current_odometry),measurement);
+
+                     ceres::CostFunction * cost_function = ErrorTerm::create(edge,measurement_covariance);
+                     ceres::ResidualBlockId id = 
+                        graph.AddResidualBlock(cost_function, loss_function,
+                                               &new_node->o_pose.pos.x, &new_node->o_pose.pos.y,
+                                               &new_node->o_pose.theta,
+                                               &n->o_pose.pos.x, &n->o_pose.pos.y,&n->o_pose.theta);
+                     graph.SetManifold(&new_node->o_pose.theta,manifold);
+                     graph.SetManifold(&n->o_pose.theta,manifold);
+                     edge_list.push_back({id,n->id,new_node->id});
+                  }
+               }
+            }
+
 
             /* collect icp results */
             double cloud_certainty;
@@ -404,7 +446,7 @@ repeat:
 
             /* see if a loop closure has occured */
             for (node * n : nearby) {
-               if (abs((int)new_node->id - (int)n->id) > 0) {
+               if (abs((int)new_node->id - (int)n->id) >= loop_closure_dist) {
                   if (perform_loop_closure())
                      goto repeat; /* other steps will be done implicitly if this is the case */
                }
@@ -470,12 +512,13 @@ public:
                     LidarMatcher * lidar_matcher, PointCloudMatcher * point_cloud_matcher,
                     double bin_size, double linear_update_dist, double angular_update_dist,
                     double lidar_acceptance_threshold, double point_cloud_acceptance_threshold,
-                    double node_association_dist, int recent_length)
+                    double node_association_dist, int recent_length, int loop_closure_dist)
       : SlamSystem(clock,lidar_matcher,point_cloud_matcher), nodes(bin_size),
         linear_update_dist(linear_update_dist), angular_update_dist(angular_update_dist),
         lidar_acceptance_threshold(lidar_acceptance_threshold), 
         point_cloud_acceptance_threshold(point_cloud_acceptance_threshold),
-        node_association_dist(node_association_dist), recent_length(recent_length) {
+        node_association_dist(node_association_dist), recent_length(recent_length),
+        loop_closure_dist(loop_closure_dist) {
 
       /* initialize the graph */
 

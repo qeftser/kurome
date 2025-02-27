@@ -111,6 +111,7 @@ geometry_msgs::msg::Pose pose_2d_to_ros2_pose(const pose_2d & p);
 
 /* Simple transformation in the order rotation -> translation */
 point transform(const point & target, const pose_2d & transformation);
+pose_2d transform(const pose_2d target, const pose_2d & transformation);
 
 /* Simple inverse transformation in the order inv_translation -> inv_rotation
  * This is such that A = inv_transform(transform(A,X),X) when A is a point and
