@@ -22,12 +22,34 @@ public:
    virtual double match_scan(const LidarData & scan, const LidarData & other,
                              pose_2d & guess_ret_pose, Covariance3 & ret_covariance) = 0;
 
+   /* Same as previous, but constructs a more detailed map from a list of previous scans */
+   virtual double match_scan(const LidarData & scan, const std::vector<std::pair<const LidarData *,pose_2d>> & other,
+                             pose_2d & guess_ret_pose, Covariance3 & ret_covariance) = 0;
+
 };
 
 /* useless implimentation to get the files to compile */
 class DummyLidarMatcher : public LidarMatcher {
 
    double match_scan(const LidarData & scan, const LidarData & other,
+                     pose_2d & guess_ret_pose, Covariance3 & ret_covariance) override {
+
+      (void)scan;
+      (void)other;
+      (void)guess_ret_pose;
+
+      ret_covariance.xx = 1e10;
+      ret_covariance.yy = 1e10;
+      ret_covariance.zz = 1e10;
+
+      ret_covariance.xy = 1e12;
+      ret_covariance.xz = 1e12;
+      ret_covariance.yz = 1e12;
+
+      return 0.0;
+   }
+
+   double match_scan(const LidarData & scan, const std::vector<std::pair<const LidarData *,pose_2d>> & other,
                      pose_2d & guess_ret_pose, Covariance3 & ret_covariance) override {
 
       (void)scan;
@@ -77,8 +99,40 @@ private:
 
 public:
 
+   /* Parameters for the scan matcher */
+   struct matcher_params {
+      /* resolution to search at in the first step */
+      double resolution;
+      /* resolution at the second step will be 1/10 the first step */
+      /* the range in x,y coordinates to search. Actual
+       * area will be 4*x_y_range*x_y_range            */
+      double x_y_range;
+   };
+
+   static constexpr matcher_params default_params = { 0.55, 2.1 };
+
    double match_scan(const LidarData & scan, const LidarData & other,
                      pose_2d & guess_ret_pose, Covariance3 & ret_covariance) override {
+      std::vector<std::pair<const LidarData *,pose_2d>> other_agg;
+      other_agg.push_back(std::make_pair(&other,guess_ret_pose));
+      return match_scan(scan,other_agg,guess_ret_pose,ret_covariance);
+   }
+
+   double match_scan(const LidarData & scan, const std::vector<std::pair<const LidarData *,pose_2d>> & other,
+                     pose_2d & guess_ret_pose, Covariance3 & ret_covariance) override {
+      printf("matching with +0.3, -0.6\n");
+      pose_2d shift  = {{0.3,-0.6},0};
+      LidarData shifted = LidarData(scan);
+      shifted.apply_offset(shift);
+      pose_2d result_dup = guess_ret_pose;
+      match_scan(shifted,other,result_dup,ret_covariance,default_params);
+      printf("result: %f %f %f\n",0.3+result_dup.pos.x,-0.6+result_dup.pos.y,result_dup.theta);
+      return match_scan(scan,other,guess_ret_pose,ret_covariance,default_params);
+   }
+
+   double match_scan(const LidarData & scan, const std::vector<std::pair<const LidarData *,pose_2d>> & other,
+                     pose_2d & guess_ret_pose, Covariance3 & ret_covariance,
+                     const matcher_params & params) {
       static const double radian = 0.01745329;
       const point * const last = &scan.points.back();
       point_int * rotated = (point_int *)malloc(sizeof(point_int)*scan.points.size());
@@ -86,11 +140,14 @@ public:
       std::vector<coarse_result> results;
 
       double certainty = 0.0;
+      double h_resolution = params.resolution / 10.0;
 
-      OccupancyGrid high_res = OccupancyGrid(0.03,100,0);
-      OccupancyGrid low_res  = OccupancyGrid(0.30,100,0);
-      high_res.add_scan(other,guess_ret_pose);
-      low_res.add_scan(other,guess_ret_pose);
+      OccupancyGrid high_res = OccupancyGrid(h_resolution,100,0);
+      OccupancyGrid low_res  = OccupancyGrid(params.resolution,100,0);
+      for (const std::pair<const LidarData *,pose_2d> & input : other) {
+         high_res.add_scan(*std::get<0>(input),std::get<1>(input));
+         low_res.add_scan(*std::get<0>(input),std::get<1>(input));
+      }
 
       /* vars for covariance computation */
       Covariance3 & K = ret_covariance;
@@ -109,14 +166,15 @@ public:
             point_int * result = rotated;
             point const * target = &scan.points.front();
             while (target <= last) {
-               *result = (point_int{ (int)((target->x * cos_t - target->y * sin_t) / 0.3),
-                                     (int)((target->x * sin_t + target->y * cos_t) / 0.3) });
+               *result = (point_int{ (int)((target->x * cos_t - target->y * sin_t) / params.resolution),
+                                     (int)((target->x * sin_t + target->y * cos_t) / params.resolution) });
                ++target; ++result;
             }
          }
 
-         for (int x = -7; x <= 7; x += 1) {
-            for (int y = -7; y <= 7; y += 1) {
+         int range = std::ceil(params.x_y_range / params.resolution);
+         for (int x = -range; x <= range; x += 1) {
+            for (int y = -range; y <= range; y += 1) {
 
                double local_certainty = 0.0;
 
@@ -149,8 +207,8 @@ public:
             point_int * result = rotated;
             point const * target = &scan.points.front();
             while (target <= last) {
-               *result = (point_int{ (int)((target->x * cos_t - target->y * sin_t) / 0.03),
-                                     (int)((target->x * sin_t + target->y * cos_t) / 0.03) });
+               *result = (point_int{ (int)((target->x * cos_t - target->y * sin_t) / h_resolution),
+                                     (int)((target->x * sin_t + target->y * cos_t) / h_resolution) });
                ++target; ++result;
             }
          }
@@ -180,7 +238,7 @@ public:
 
          if (best_certainty > certainty) {
             certainty = best_certainty;
-            best_pose = pose_2d_int{{ best.x + best_move.x, best.y + best_move.y}, best.theta};
+            best_pose = pose_2d_int{{best.x + best_move.x, best.y + best_move.y}, best.theta};
          }
 
          sorted_results.pop();
@@ -189,7 +247,6 @@ public:
       /* compute covariance given the best value */
       rot_max = 6*radian;
       for (double theta = -rot_max; theta <= rot_max; theta += radian) {
-
          double r_theta = theta + best_pose.theta;
 
          cos_t = cos(r_theta); sin_t = sin(r_theta);
@@ -197,8 +254,8 @@ public:
             point_int * result = rotated;
             point const * target = &scan.points.front();
             while (target <= last) {
-               *result = (point_int{ (int)((target->x * cos_t - target->y * sin_t) / 0.03),
-                                     (int)((target->x * sin_t + target->y * cos_t) / 0.03) });
+               *result = (point_int{ (int)((target->x * cos_t - target->y * sin_t) / h_resolution),
+                                     (int)((target->x * sin_t + target->y * cos_t) / h_resolution) });
                ++target; ++result;
             }
          }
@@ -246,8 +303,8 @@ public:
       K.zz = 1e-8;
 
       /* update the guess with the best computed value */
-      guess_ret_pose.pos.x += best_pose.pos.x * 0.03;
-      guess_ret_pose.pos.y += best_pose.pos.y * 0.03;
+      guess_ret_pose.pos.x += best_pose.pos.x * h_resolution;
+      guess_ret_pose.pos.y += best_pose.pos.y * h_resolution;
       guess_ret_pose.theta += best_pose.theta;
       guess_ret_pose.theta = atan2(sin(guess_ret_pose.theta),
                                    cos(guess_ret_pose.theta));

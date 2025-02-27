@@ -5,6 +5,7 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <list>
 #include <iostream>
 #include "kurome.h"
 #include "slam_system.hpp"
@@ -201,6 +202,12 @@ private:
    /* Used for construction of the visualization */
    std::vector<edge> edge_list;
 
+   /* Used for constructing a map to match against. 
+    * Will kind of function like a circular queue */
+   std::list<Observation *> recent_observations;
+   /* number of recent observations to keep in the buffer */
+   int recent_length;
+
    /* queue of observations that need to be processed */
    LockedQueue<std::pair<Observation *,bool>> incoming_observations;
 
@@ -329,10 +336,17 @@ repeat:
                Covariance3 measurement_covariance;
                pose_2d measurement = a_from_b(n->observation->current_odometry,
                                               observation->current_odometry);
-               measurement = {{0,0},0};
+//               measurement = {{0,0},0};
+               std::vector<std::pair<const LidarData *,pose_2d>> input;
+
+               for (Observation * o : recent_observations) {
+                  input.push_back(std::make_pair(&o->laser_scan,
+                                        a_from_b(o->current_odometry,observation->current_odometry)));
+               }
+               input.push_back(std::make_pair(&n->observation->laser_scan,measurement));
 
                printf("seed       : %f %f %f\n",measurement.pos.x,measurement.pos.y,measurement.theta);
-               lidar_certainty = lidar_matcher->match_scan(observation->laser_scan,n->observation->laser_scan,
+               lidar_certainty = lidar_matcher->match_scan(observation->laser_scan,input,
                                                            measurement, measurement_covariance);
                printf("lidar match: %f %f %f %f\n",measurement.pos.x,measurement.pos.y,measurement.theta,lidar_certainty);
                pose_2d odom_ver = a_from_b(n->observation->current_odometry,
@@ -382,6 +396,11 @@ repeat:
             }
 
             last_node.store(new_node);
+
+            /* insert into recents */
+            recent_observations.push_back(new_node->observation);
+            if (recent_observations.size() > recent_length)
+               recent_observations.pop_front();
 
             /* see if a loop closure has occured */
             for (node * n : nearby) {
@@ -451,12 +470,12 @@ public:
                     LidarMatcher * lidar_matcher, PointCloudMatcher * point_cloud_matcher,
                     double bin_size, double linear_update_dist, double angular_update_dist,
                     double lidar_acceptance_threshold, double point_cloud_acceptance_threshold,
-                    double node_association_dist)
+                    double node_association_dist, int recent_length)
       : SlamSystem(clock,lidar_matcher,point_cloud_matcher), nodes(bin_size),
         linear_update_dist(linear_update_dist), angular_update_dist(angular_update_dist),
         lidar_acceptance_threshold(lidar_acceptance_threshold), 
         point_cloud_acceptance_threshold(point_cloud_acceptance_threshold),
-        node_association_dist(node_association_dist) {
+        node_association_dist(node_association_dist), recent_length(recent_length) {
 
       /* initialize the graph */
 
