@@ -345,6 +345,16 @@ private:
     * position of the robot relative to the next node on the path */
    velocity_2d compute_velocity_output(pose_2d curr_pose, node * curr_node) {
 
+      double off_angle = 
+            atan2(curr_node->pos.y - curr_pose.pos.y, curr_node->pos.x - curr_pose.pos.x)-curr_pose.theta;
+
+      if (fabs(off_angle)>0.2) {
+         return velocity_2d{0,desired_speed * (off_angle < 0 ? -1 : 1)};
+      }
+
+      return velocity_2d{desired_speed,0};
+
+      /*
       point p1 = { curr_pose.pos.x * grid_metadata.resolution,
                    curr_pose.pos.y * grid_metadata.resolution };
       point p2 = { curr_node->pos.x * grid_metadata.resolution,
@@ -395,6 +405,7 @@ private:
       printf("w: %f\n",w);
 
       return velocity_2d{desired_speed,w};
+      */
 
    }
 
@@ -490,6 +501,7 @@ public:
       //printf("path_pose: %f %f\n",path->pos.x,path->pos.y);
 
       /* if we have not started on the path yet, turn to face it */
+      /*
       if ( path_position == 0) {
 
          point in_frame = { path->next->pos.x*cos(curr_pose.theta) - path->next->pos.y*sin(curr_pose.theta),
@@ -505,6 +517,7 @@ public:
             return;
          }
       }
+      */
 
       //printf("dist: %f %f\n",
       //      sqrt(point_dist2(curr_pose.pos,path->pos)),advance_distance/grid_metadata.resolution);

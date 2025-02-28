@@ -194,7 +194,6 @@ public:
          int sy = y0 < y1 ? 1 : -1;
          int error = dx + dy;
 
-
          /* update the obstacle position as occupied */
          {
             int target = (*this)(x0,y0);

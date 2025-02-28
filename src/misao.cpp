@@ -40,7 +40,7 @@ public:
       this->declare_parameter("goal_in","goal");
 
       /* The topic to send out the velocity on */
-      this->declare_parameter("vel_out","cmd_vel");
+      this->declare_parameter("vel_out","demo/cmd_vel");
 
       /* The topic to receive the environment map on */
       this->declare_parameter("map_in","map");
@@ -61,7 +61,7 @@ public:
 
       /* whether to request and publish simulated trajectories
        * from the smoother.                                 */
-      this->declare_parameter("simulate_trajectory",true);
+      this->declare_parameter("simulate_trajectory",false);
       this->declare_parameter("trajectory_topic","misao/trajectory");
 
       /* the algorithm to use on the smoother. Right now
@@ -206,7 +206,7 @@ private:
              fabs(msg.poses.back().pose.position.y - goal.pose.position.y) > grid_metadata.resolution)
             return;
 
-         if (smoother->propose_path(msg) || this->get_parameter("simulate_trajectory").as_bool()) {
+         if (smoother->propose_path(msg) && this->get_parameter("simulate_trajectory").as_bool()) {
 
             geometry_msgs::msg::PoseArray trajectory;
 

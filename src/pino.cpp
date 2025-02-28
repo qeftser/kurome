@@ -370,6 +370,7 @@ private:
                        std::get<0>(poses).theta - std::get<1>(poses).theta  };
       diff.theta = atan2(sin(diff.theta),cos(diff.theta));
 
+      // TODO: sort this out!
       diff = {{0,0},0};
 
       last_map_odom_transform = diff;

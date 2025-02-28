@@ -35,7 +35,6 @@ public:
 
    Yoriko() : Node("yoriko") {
 
-
       /* == setable parameters. It is hard as some of these
        * will only correspond to certain pathfinding algorithms == */
 
