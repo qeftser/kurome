@@ -57,6 +57,10 @@ protected:
     * keep all times from the nearest obstacle */
    double collision_radius;
 
+   /* Whether goals that lie out of bounds should 
+    * be accepted by the system.                 */
+   int accept_out_of_bounds_goal;
+
 private:
 
    /* mutex for ensuring that we don't draw the
@@ -117,8 +121,9 @@ private:
 
 public:
 
-   PathfinderBase(double collision_radius) 
-      : collision_radius(collision_radius) {
+   PathfinderBase(double collision_radius, int accept_out_of_bounds_goal) 
+      : collision_radius(collision_radius), 
+        accept_out_of_bounds_goal(accept_out_of_bounds_goal) {
 
    }
 
@@ -338,8 +343,9 @@ public:
 
       /* if we are out of bounds or in a colliding area, do not
        * set it as a valid goal for the system.                */
-      if (goal.x < 0 || goal.x >= grid_metadata.width  ||
-          goal.y < 0 || goal.y >= grid_metadata.height ||
+      if ((!accept_out_of_bounds_goal && 
+           (goal.x < 0 || goal.x >= grid_metadata.width  ||
+           goal.y < 0 || goal.y >= grid_metadata.height)) ||
          (grid && grid[(int)(goal.x + (goal.y * grid_metadata.width))])) {
          no_goal = true;
       }

@@ -59,7 +59,14 @@ struct point3 {
  * We basically or v1 with v2 shifted
  * to the upper 32 bits.             */
 #define long_from_ints(v1,v2) \
-   (((long)(v1))|(((long)(v2))<<32))
+   (((((long)(v1))&0xffffffff))|((((long)(v2))&0xffffffff)<<32))
+
+/* set two ints given a long value */
+#define ints_from_long(l,i1,i2)        \
+   do {                                \
+      ((i1) = ((l)&0xffffffff));       \
+      ((i2) = (((l)>>32)&0xffffffff)); \
+   } while (false)
 
 /* a nice abstraction over the very verbose method
  * of removing an element completely from a vector */

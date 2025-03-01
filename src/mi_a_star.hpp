@@ -75,6 +75,16 @@ private:
       return ((int)floor(p.x) + ((int)floor(p.y) * grid_metadata.width));
    }
 
+   /* returns 1 if the given index is
+    * in the bounds of the map, 0 otherwise */
+   int in_bounds(const point & p) {
+      if ((int)p.x < 0 || (int)p.y < 0 ||
+          (int)p.x >= grid_metadata.width ||
+          (int)p.y >= grid_metadata.height)
+         return 0;
+      return 1;
+   }
+
    /* compare two nodes based on their weights. Used as 
     * the priority queue comparison operator.          */
    struct cmp_node {
@@ -125,9 +135,10 @@ private:
 
 public:
 
-   MI_AStar(double collision_radius, int backtrack_count, int node_limit,
+   MI_AStar(double collision_radius, int accept_oob_goal, 
+            int backtrack_count, int node_limit,
             double turning_radius, double angle_slice, double position_slice, 
-            double forward_step) : PathfinderBase(collision_radius),
+            double forward_step) : PathfinderBase(collision_radius,accept_oob_goal),
       backtrack_count(backtrack_count), node_limit(node_limit), turning_radius(turning_radius),
       angle_slice(angle_slice), position_slice(position_slice), forward_step(forward_step) {}
 
@@ -181,7 +192,7 @@ public:
       if (updates_since == MIAS_update_none)
          goto transform_path;
 
-      if (grid[point_pos(goal_point)])
+      if (in_bounds(goal_point) && grid[point_pos(goal_point)])
          goto no_path;
 
       /* check if the goal has changed. If so, we are
@@ -224,7 +235,7 @@ public:
 
             /* if curr is colliding with an obstacle, remove
              * all nodes in front of it in addition to itself */
-            if (grid[point_pos(curr->pos)]) {
+            if (in_bounds(curr->pos) && grid[point_pos(curr->pos)]) {
 
                while (last_safe != curr) {
                   to_delete = last_safe;
@@ -394,9 +405,11 @@ from_start:
          for (ulong i = 0; i < motions.size(); ++i) {
 
             /* ignore out of bounds possibilities */
+            /*
             if (motions[i].x < 0 || motions[i].x >= (int)grid_metadata.width ||
                 motions[i].y < 0 || motions[i].y >= (int)grid_metadata.height)
                continue;
+               */
 
             /* if we are better than the previous value
              * at this position, replace it, otherwise
@@ -404,10 +417,10 @@ from_start:
              * here and no obstacle, add the new_pos     */
             if (best_at.count(as_long(motions[i]))) {
                node * old = best_at.at(as_long(motions[i]));
-               if (curr->weight + point_dist2(motions[i],goal_point) < old->weight) {
+               if (point_dist2(motions[i],goal_point) < old->weight) {
 
                   old->next = curr;
-                  old->weight = curr->weight + point_dist2(motions[i],goal_point);
+                  old->weight = point_dist2(motions[i],goal_point);
 
                   /* add this value to the queue if it is not already in it */
                   if (!seen_nodes.count(ptr_to_long(old))) {
@@ -416,11 +429,11 @@ from_start:
                   }
                }
             }
-            else if (!grid[point_pos(motions[i])]) {
+            else if (!in_bounds(motions[i]) || !grid[point_pos(motions[i])]) {
                node * new_node = new node{};
                new_node->next = curr;
                new_node->pos = motions[i];
-               new_node->weight = point_dist2(motions[i],goal_point) + curr->weight;
+               new_node->weight = point_dist2(motions[i],goal_point);
 
                /* add this option to the algorithm */
                seen_nodes.insert(ptr_to_long(new_node));

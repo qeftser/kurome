@@ -12,6 +12,7 @@
 #include <mutex>
 #include <queue>
 #include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 class AStar : public PathfinderBase {
@@ -32,6 +33,16 @@ private:
     * the grid or best_at vectors.    */
    int block_pos(const block & b) {
       return b.x + (b.y * grid_metadata.width);
+   }
+
+   /* returns 1 if the given index is
+    * in the bounds of the map, 0 otherwise */
+   int in_bounds(const block & b) {
+      if (b.x < 0 || b.y < 0 ||
+          b.x >= grid_metadata.width ||
+          b.y >= grid_metadata.height)
+         return 0;
+      return 1;
    }
 
    /* compare two nodes based on their weights. Used as 
@@ -73,12 +84,12 @@ private:
    int node_limit;
 
    /* Record of the best values at each map position */
-   node ** best_at = NULL;
+   std::unordered_map<long,node *> best_at;
 
 public:
 
-   AStar(double collision_radius, int backtrack_count, int node_limit)
-      : PathfinderBase(collision_radius), 
+   AStar(double collision_radius, int accept_oob_goal, int backtrack_count, int node_limit)
+      : PathfinderBase(collision_radius,accept_oob_goal), 
         backtrack_count(backtrack_count), node_limit(node_limit) {}
 
 
@@ -97,12 +108,14 @@ public:
          mut.lock();
 
          /* free old vector */
-         free(best_at);
+         //free(best_at);
 
          /* allocate the new vector. We already have
           * grid_length so we don't need to keep
           * track of it's size.                     */
-         best_at = (node **)malloc(sizeof(node *)*map.info.width*map.info.height);
+         //best_at = (node **)malloc(sizeof(node *)*map.info.width*map.info.height);
+         // TODO: sort this out;
+         best_at.clear();
 
          /* release control over memory */
          mut.unlock();
@@ -141,7 +154,7 @@ public:
        * goal to the origin here.             */
       block goal_block = { (int)floor(origin.x), (int)floor(origin.y) };
       node * curr,* head = NULL;
-
+      int idx;
 
       /* prepare the storage structures */
       struct cmp_node cmp;
@@ -153,7 +166,7 @@ public:
       if (updates_since == AS_update_none)
          goto transform_path;
 
-      if (grid[block_pos(goal_block)])
+      if (in_bounds(goal_block) && grid[block_pos(goal_block)])
          goto no_path;
 
       /* check if the goal has changed. If so, we are
@@ -196,7 +209,7 @@ public:
 
             /* if curr is colliding with an obstacle, remove
              * all nodes in front of it in addition to itself */
-            if (grid[curr->pos.x + curr->pos.y*grid_metadata.width]) {
+            if (in_bounds(curr->pos) && grid[block_pos(curr->pos)]) {
 
                while (last_safe != curr) {
                   to_delete = last_safe;
@@ -271,7 +284,7 @@ from_start:
       }
 
       /* clear out old values from the best_at vector */
-      bzero(best_at,sizeof(node *)*grid_length);
+      best_at.clear();
 
       /* clear the update flags now */
       updates_since = 0;
@@ -280,7 +293,7 @@ from_start:
       head->weight = block_dist2(head->pos,goal_block);
 
       /* seed the algorithm */
-      best_at[block_pos(head->pos)] = head;
+      best_at[long_from_ints(head->pos.x,head->pos.y)] = head;
       node_queue.push(head);
 
       /* perform the A* search 
@@ -329,20 +342,24 @@ from_start:
                                      curr->pos.y + y};
 
                /* ignore out-of-bounds possibilites */
+               /*
                if (new_pos.x < 0 || new_pos.x >= (int)grid_metadata.width ||
                    new_pos.y < 0 || new_pos.y >= (int)grid_metadata.height)
                   continue;
+                  */
 
                /* if we are better than the previous value
                 * at this position, replace it, otherwise
                 * do not add this value. If there is no value
                 * here and no obstacle, add the new_pos     */
-               node * old = best_at[block_pos(new_pos)];
+               node * old;
+               old = best_at.count(long_from_ints(new_pos.x,new_pos.y)) ? 
+                     best_at[long_from_ints(new_pos.x,new_pos.y)] : NULL;
                if (old) {
-                   if (curr->weight + block_dist2(new_pos,goal_block) < old->weight) {
+                   if (block_dist2(new_pos,goal_block) < old->weight) {
 
                      old->next = curr;
-                     old->weight = curr->weight + block_dist2(new_pos,goal_block);
+                     old->weight = block_dist2(new_pos,goal_block);
 
                      /* add this value to the queue if it is not already in it */
                      if (!seen_nodes.count(ptr_to_long(old))) {
@@ -351,17 +368,17 @@ from_start:
                      }
                   }
                }
-               else if (!grid[block_pos(new_pos)]) {
+               else if (!in_bounds(new_pos) || !grid[block_pos(new_pos)]) {
                   node * new_node = new node{};
                   new_node->next = curr;
                   new_node->pos = new_pos;
-                  new_node->weight = block_dist2(new_pos,goal_block) + curr->weight;
+                  new_node->weight = block_dist2(new_pos,goal_block);
 
                   /* add this option to the algorithm */
                   seen_nodes.insert(ptr_to_long(new_node));
                   node_queue.push(new_node);
                   allocated_nodes.push_back(new_node);
-                  best_at[block_pos(new_pos)] = new_node;
+                  best_at[long_from_ints(new_pos.x,new_pos.y)] = new_node;
                }
             }
          }
@@ -425,11 +442,11 @@ transform_path:
       rect.setOutlineColor(sf::Color(255,255,0,255));
       rect.setFillColor(sf::Color(0,0,0,0));
       rect.setOutlineThickness(2);
-      for (int i = 0; i < grid_length; ++i) {
-         if (best_at[i]) {
-            rect.setPosition((i%grid_metadata.width)*10,(i/grid_metadata.width)*10);
-            window->draw(rect);
-         }
+      int x, y;
+      for (auto & val : best_at) {
+         ints_from_long(std::get<0>(val),x,y);
+         rect.setPosition(x*10,y*10);
+         window->draw(rect);
       }
 
       /* draw last path */

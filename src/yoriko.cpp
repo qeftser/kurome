@@ -42,7 +42,7 @@ public:
       this->declare_parameter("path_topic","path");
 
       /* topic to accept goal poses on */
-      this->declare_parameter("goal_topic","goal");
+      this->declare_parameter("goal_topic","goal_pose");
 
       /* topic to accept the position estimate on */
       this->declare_parameter("position_topic","demo/odom");
@@ -67,6 +67,10 @@ public:
       /* The threshold (0 - 100) at which to consider
        * a position on the occupancy grid an obstacle */
       this->declare_parameter("obstacle_threshold",60);
+
+      /* Whether setting the goal outside of the current
+       * map bounds is allowed.                       */
+      this->declare_parameter("allow_out_of_bounds_goal",true);
 
       /* values for the rrt_x_fn algorithm only. See
        * the comments in it's file for info on what
@@ -102,6 +106,7 @@ public:
        * parameters we have been given.         */
       if (this->get_parameter("algorithm").as_string() == "rrt_x_fn") {
          pathfinder = new RRTX_FN(this->get_parameter("collision_radius").as_double(),
+                                  this->get_parameter("allow_out_of_bounds_goal").as_bool(),
                                   this->get_parameter("dominance_region").as_double(),
                                   this->get_parameter("cull_range").as_double(),
                                   this->get_parameter("bin_size").as_double(),
@@ -111,12 +116,14 @@ public:
       }
       else if (this->get_parameter("algorithm").as_string() == "a_star") {
          pathfinder = new AStar(this->get_parameter("collision_radius").as_double(),
+                                this->get_parameter("allow_out_of_bounds_goal").as_bool(),
                                 this->get_parameter("backtrack_count").as_int(),
                                 this->get_parameter("queue_limit").as_int());
 
       }
       else if (this->get_parameter("algorithm").as_string() == "mi_rrt_x_fn") {
          pathfinder = new MI_RRTX_FN(this->get_parameter("collision_radius").as_double(),
+                                     this->get_parameter("allow_out_of_bounds_goal").as_bool(),
                                      this->get_parameter("dominance_region").as_double(),
                                      this->get_parameter("cull_range").as_double(),
                                      this->get_parameter("bin_size").as_double(),
@@ -127,6 +134,7 @@ public:
       }
       else if (this->get_parameter("algorithm").as_string() == "mi_a_star") {
          pathfinder = new MI_AStar(this->get_parameter("collision_radius").as_double(),
+                                   this->get_parameter("allow_out_of_bounds_goal").as_bool(),
                                    this->get_parameter("backtrack_count").as_int(),
                                    this->get_parameter("node_limit").as_int(),
                                    this->get_parameter("turning_radius").as_double(),

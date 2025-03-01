@@ -552,10 +552,12 @@ protected:
 
 public:
 
-   RRTX_FN(double collision_radius, double dominance_region, double cull_range,
+   RRTX_FN(double collision_radius, int accept_oob_goal,
+           double dominance_region, double cull_range,
            double point_set_divisors, double expansion_length, int node_limit,
            int generation_tick_speed) 
-      : PathfinderBase(collision_radius), dominance_region(dominance_region), cull_range(cull_range),
+      : PathfinderBase(collision_radius,accept_oob_goal),
+        dominance_region(dominance_region), cull_range(cull_range),
         expansion_length(expansion_length), node_limit(node_limit), 
         node_count(0), generation_tick_speed(generation_tick_speed),
         nodes(SpatialBin<point,node,decltype(dist2),decltype(coord_collector)>(point_set_divisors)),
@@ -564,8 +566,8 @@ public:
       tree_handler = std::thread(&RRTX_FN::grow_tree,this);
    }
 
-   RRTX_FN(double collision_radius)
-      : PathfinderBase(collision_radius),
+   RRTX_FN(double collision_radius, int accept_oob_goal)
+      : PathfinderBase(collision_radius,accept_oob_goal),
         nodes(SpatialBin<point,node,decltype(dist2),decltype(coord_collector)>(0)),
         orphanage(SpatialBin<point,node,decltype(dist2),decltype(coord_collector)>(0)) {};
 

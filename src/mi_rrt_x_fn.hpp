@@ -45,10 +45,11 @@ private:
 
 public:
 
-   MI_RRTX_FN(double collision_radius, double dominance_region, double cull_range,
+   MI_RRTX_FN(double collision_radius, int accept_oob_goal,
+              double dominance_region, double cull_range,
               double point_set_divisors, double expansion_length, int node_limit,
               int generation_tick_speed, double turning_radius)
-      : RRTX_FN(collision_radius,dominance_region,cull_range,point_set_divisors,
+      : RRTX_FN(collision_radius,accept_oob_goal,dominance_region,cull_range,point_set_divisors,
                 expansion_length,node_limit,generation_tick_speed), turning_radius(turning_radius) {}
 };
 

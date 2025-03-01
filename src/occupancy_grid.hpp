@@ -237,6 +237,7 @@ public:
             }
          }
       }
+      (*this)(0,0) = 0; /* kludge solution */
    }
 
    /* insert a point cloud into this occupancy grid, cutting out any values 
