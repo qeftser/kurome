@@ -8,11 +8,14 @@
     collision_radius: 0.5
     publish_rate: 0.1
     launch_gui: true
+    obstacle_threshold: 60
+    allow_out_of_bounds_goal: true
 #
 # Following parameters are specifically for
 # the rrt_x_fn and mi_rrt_x_fn algorithms
     dominance_region: 2.0
     cull_range: 1.5
+    expansion_length: 1.25
     node_limit: 30000
     generation_tick_speed: 10
     bin_size: 2.0
@@ -25,4 +28,10 @@
 # Following parameter is for the motion
 # informed algorithm variants.
     turning_radius: 1.0
+#
+# Following parameters are specifically for
+# the mi_a_star algorithm only
+    angle_slice: 15.0
+    position_slice: 0.25
+    forward_step: 1.0
 

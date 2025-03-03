@@ -1,0 +1,27 @@
+/kurome/misao:
+  ros__parameters:
+    path_in: "path"
+    odom_in: "odom"
+    goal_in: "goal_pose"
+    vel_out: "cmd_vel"
+    map_in: "map"
+    publish_rate: 0.1
+    obstacle_threshold: 60
+    launch_gui: true
+    run_visualization: true
+    visualization_topic: "misao/visual"
+    simulate_trajectory: false
+    trajectory_topic: "misao/trajectory"
+    algorithm: "elastic_band"
+#
+# Following parameters are specifically for
+# the elastic_band algorithm
+    band_length: -1
+    influence_range: 0.75
+    max_bubble: 1.0
+    contraction_gain: 1.0
+    repulsion_gain: 1.0
+    damping_gain: 0.75
+    cycle_count: 128
+    desired_speed: 0.1
+    advance_distance: 0.3

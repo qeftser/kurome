@@ -1,0 +1,27 @@
+/kurome/pino:
+  ros__parameters:
+    map_out: "map"
+    map_publish_interval: 1.0
+    publish_visualization: true
+    visualization_topic: "pino/visual"
+    beacon_in: "beacon"
+    odom_in: "odom"
+    scan_in: "scan"
+    cloud_in: "points"
+    use_odom_vel: true
+    vel_in: "cmd_vel"
+    time_error: 0.01
+    beacon_lost_time: 0.25
+    fix_beacon_nodes: true
+    estimate_movement_updates: false
+    aggregate_sensor_data: true
+    aggregation_interval: 0.1
+    algorithm: "builtin"
+    bin_size: 1.0
+    linear_update_dist: 0.3
+    angular_update_dist: 0.3
+    lidar_acceptance_threshold: 0.7
+    point_cloud_acceptance_threshold: 0.7
+    node_association_dist: 0.5
+    recent_length: 7
+    loop_closure_dist: 1
