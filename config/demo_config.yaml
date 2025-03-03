@@ -55,6 +55,7 @@
     visualization_topic: "misao/visual"
     simulate_trajectory: false
     trajectory_topic: "misao/trajectory"
+    collision_radius: 0.3
     algorithm: "elastic_band"
     band_length: -1
     influence_range: 0.75
@@ -65,3 +66,11 @@
     cycle_count: 128
     desired_speed: 0.2
     advance_distance: 0.3
+
+/kurome/pose_publisher:
+  ros__parameters:
+    odom_in: "odom"
+    produce_map_frame: true
+    odom_pose_out: "odom_pose"
+    map_pose_out: "map_pose"
+

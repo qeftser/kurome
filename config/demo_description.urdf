@@ -139,7 +139,7 @@
     </geometry>
   </collision>
 
-  <xacro:box_inertia m="0.1" w="0.1" d="0.1" h="0.1"/>
+  <xacro:box_inertia m="0.05" w="0.1" d="0.1" h="0.1"/>
   </link>
 
   <joint name="imu_joint" type="fixed">

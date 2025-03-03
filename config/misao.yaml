@@ -13,6 +13,7 @@
     simulate_trajectory: false
     trajectory_topic: "misao/trajectory"
     algorithm: "elastic_band"
+    collision_radius: 0.3
 #
 # Following parameters are specifically for
 # the elastic_band algorithm

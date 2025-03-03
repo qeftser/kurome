@@ -71,8 +71,14 @@ add_executable(matcher_test src/matcher_test.cpp)
 target_link_libraries(matcher_test kurome_base)
 ament_target_dependencies(matcher_test rclcpp sensor_msgs)
 
+# the pose publisher
+add_executable(pose_publisher src/pose_publisher.cpp)
+target_link_libraries(pose_publisher kurome_base)
+ament_target_dependencies(pose_publisher rclcpp geometry_msgs tf2 tf2_ros tf2_geometry_msgs)
 
-install(TARGETS brain wall_filter pino yoriko misao the_iron_rod hardcoded_path_publisher matcher_test
+
+install(TARGETS brain wall_filter pino yoriko misao
+                the_iron_rod hardcoded_path_publisher matcher_test pose_publisher
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch config
         DESTINATION share/${PROJECT_NAME})

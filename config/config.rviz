@@ -10,6 +10,8 @@ Panels:
         - /MarkerArray1
         - /Path1
         - /MarkerArray2
+        - /Pose1
+        - /Pose2
       Splitter Ratio: 0.5
     Tree Height: 870
   - Class: rviz_common/Selection
@@ -78,7 +80,7 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        qeftser_graph_slam: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -125,6 +127,46 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /kurome/misao/visual
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz_default_plugins/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /kurome/map_pose
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz_default_plugins/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /kurome/odom_pose
       Value: true
   Enabled: true
   Global Options:
