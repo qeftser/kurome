@@ -22,34 +22,14 @@ private:
       block pos;
       node * next;
       long weight;
+      long dist;
    };
-
-   /* return the distance sqaured between two blocks */
-   int block_dist2(const block & b1, const block &  b2) {
-      return (b1.x-b2.x)*(b1.x-b2.x) + (b1.y-b2.y)*(b1.y-b2.y);
-   }
-
-   /* return the position of a block in
-    * the grid or best_at vectors.    */
-   int block_pos(const block & b) {
-      return b.x + (b.y * grid_metadata.width);
-   }
-
-   /* returns 1 if the given index is
-    * in the bounds of the map, 0 otherwise */
-   int in_bounds(const block & b) {
-      if (b.x < 0 || b.y < 0 ||
-          b.x >= grid_metadata.width ||
-          b.y >= grid_metadata.height)
-         return 0;
-      return 1;
-   }
 
    /* compare two nodes based on their weights. Used as 
     * the priority queue comparison operator.          */
    struct cmp_node {
       bool operator()(const node * n1, const node * n2) const {
-         if (n1->weight > n2->weight)
+         if (n1->dist > n2->dist)
             return true;
          return false;
       }
@@ -286,7 +266,7 @@ from_start:
       updates_since = 0;
 
       /* set the head's weight */
-      head->weight = block_dist2(head->pos,goal_block);
+      head->weight = head->dist = block_dist2(head->pos,goal_block);
 
       /* seed the algorithm */
       best_at[long_from_ints(head->pos.x,head->pos.y)] = head;
@@ -345,10 +325,11 @@ from_start:
                old = best_at.count(long_from_ints(new_pos.x,new_pos.y)) ? 
                      best_at[long_from_ints(new_pos.x,new_pos.y)] : NULL;
                if (old) {
-                   if (block_dist2(new_pos,goal_block) < old->weight) {
+                   if (curr->weight + block_dist2(new_pos,goal_block) < old->weight) {
 
                      old->next = curr;
-                     old->weight = block_dist2(new_pos,goal_block);
+                     old->weight = old->dist = block_dist2(new_pos,goal_block);
+                     old->weight += curr->weight;
 
                      /* add this value to the queue if it is not already in it */
                      if (!seen_nodes.count(ptr_to_long(old))) {
@@ -361,7 +342,8 @@ from_start:
                   node * new_node = new node{};
                   new_node->next = curr;
                   new_node->pos = new_pos;
-                  new_node->weight = block_dist2(new_pos,goal_block);
+                  new_node->weight = new_node->dist = block_dist2(new_pos,goal_block);
+                  new_node->weight += curr->weight;
 
                   /* add this option to the algorithm */
                   seen_nodes.insert(ptr_to_long(new_node));
@@ -403,10 +385,8 @@ transform_path:
       while (curr) {
          geometry_msgs::msg::PoseStamped pose;
 
-         pose.pose.position.x = ((double)curr->pos.x * grid_metadata.resolution) +
-                                 grid_metadata.origin.position.x;
-         pose.pose.position.y = ((double)curr->pos.y * grid_metadata.resolution) +
-                                 grid_metadata.origin.position.y;
+         pose.pose.position.x = ((double)curr->pos.x * grid_metadata.resolution);
+         pose.pose.position.y = ((double)curr->pos.y * grid_metadata.resolution);
 
          ret.poses.push_back(pose);
 

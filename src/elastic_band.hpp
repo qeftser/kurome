@@ -129,17 +129,6 @@ private:
       return false;
    }
 
-   inline int block_pos(int x_pos, int y_pos) {
-      return x_pos + (y_pos * grid_metadata.width);
-   }
-
-   inline int in_bounds(int x_pos, int y_pos) {
-      if (x_pos < 0 || x_pos >= (int)grid_metadata.width ||
-          y_pos < 0 || y_pos >= (int)grid_metadata.height)
-         return 0;
-      return 1;
-   }
-
    /* return the closest obstacle to a given point */
    inline point closest_obstacle(const point & p) {
       /* the range around us to search in */
@@ -420,10 +409,12 @@ private:
 
 public:
 
-   ElasticBand(int band_length, double influence_range, double max_bubble,
+   ElasticBand(double collision_radius,
+         int band_length, double influence_range, double max_bubble,
          double contraction_gain, double repulsion_gain, double damping_gain,
          int cycle_count, double desired_speed, double advance_distance) 
-      : band_length(band_length), influence_range(influence_range),
+      : SmootherBase(collision_radius),
+        band_length(band_length), influence_range(influence_range),
         max_bubble(max_bubble), contraction_gain(contraction_gain), 
         repulsion_gain(repulsion_gain), damping_gain(damping_gain),
         cycle_count(cycle_count), desired_speed(desired_speed), 
@@ -458,8 +449,8 @@ public:
 
       /* please be gentle... */
       point converted_coords = 
-         { (msg.poses[0].pose.position.x - grid_metadata.origin.position.x) / grid_metadata.resolution,
-           (msg.poses[0].pose.position.y - grid_metadata.origin.position.y) / grid_metadata.resolution };
+         { (msg.poses[0].pose.position.x) / grid_metadata.resolution,
+           (msg.poses[0].pose.position.y) / grid_metadata.resolution };
       node * prev_node = path = new node{converted_coords,{INFINITY,INFINITY}, 0.0, NULL, NULL };
       prev_node->bubble_rad = compute_bubble(*prev_node);
                                          
@@ -468,8 +459,8 @@ public:
 
          /* convert the poses to our coordinate system */
          converted_coords = 
-            { (msg.poses[i].pose.position.x - grid_metadata.origin.position.x) / grid_metadata.resolution,
-              (msg.poses[i].pose.position.y - grid_metadata.origin.position.y) / grid_metadata.resolution };
+            { (msg.poses[i].pose.position.x) / grid_metadata.resolution,
+              (msg.poses[i].pose.position.y) / grid_metadata.resolution };
 
          node * next_node = new node{converted_coords,{INFINITY,INFINITY},0.0,NULL,prev_node};
          next_node->bubble_rad = compute_bubble(*next_node);
@@ -497,14 +488,14 @@ public:
 
    void advance_path(const geometry_msgs::msg::PoseStamped & msg) override {
 
-      if ( !valid_path || !path || !path->next)
+      if ( !valid_path || !path)
          return;
 
       //printf("current_node: %d\n",path_position);
 
       pose_2d curr_pose = ros2_pose_to_pose_2d(msg.pose);
-      curr_pose.pos.x = (curr_pose.pos.x - grid_metadata.origin.position.x) / grid_metadata.resolution;
-      curr_pose.pos.y = (curr_pose.pos.y - grid_metadata.origin.position.y) / grid_metadata.resolution;
+      curr_pose.pos.x = (curr_pose.pos.x) / grid_metadata.resolution;
+      curr_pose.pos.y = (curr_pose.pos.y) / grid_metadata.resolution;
       //printf("curr_pose: %f %f %f\n",curr_pose.pos.x,curr_pose.pos.y,curr_pose.theta);
       //printf("path_pose: %f %f\n",path->pos.x,path->pos.y);
 
@@ -741,8 +732,8 @@ update_step:
          next.scale.y = advance_distance;
          next.scale.z = advance_distance;
 
-         next.pose.position.x = (curr->pos.x * grid_metadata.resolution) + grid_metadata.origin.position.x;
-         next.pose.position.y = (curr->pos.y * grid_metadata.resolution) + grid_metadata.origin.position.y;
+         next.pose.position.x = (curr->pos.x * grid_metadata.resolution);
+         next.pose.position.y = (curr->pos.y * grid_metadata.resolution);
 
          curr = curr->next;
 

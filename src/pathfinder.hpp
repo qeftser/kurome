@@ -41,6 +41,14 @@ protected:
     * useful to have.                   */
    nav_msgs::msg::MapMetaData grid_metadata;
 
+   /* info for indexing into the local map */
+   struct {
+      int x_off;
+      int y_off;
+      int x_len;
+      int y_len;
+   } grid_bound;
+
    /* where the root node is located */
    point origin = { 0.0, 0.0 };
    /* where we are trying to go */
@@ -60,6 +68,40 @@ protected:
    /* Whether goals that lie out of bounds should 
     * be accepted by the system.                 */
    int accept_out_of_bounds_goal;
+
+   /* return the distance sqaured between two blocks */
+   int block_dist2(const block & b1, const block &  b2) {
+      return (b1.x-b2.x)*(b1.x-b2.x) + (b1.y-b2.y)*(b1.y-b2.y);
+   }
+
+   /* return the position of a block in
+    * the grid or best_at vectors.    */
+   int block_pos(const block & b) {
+      int off_x = b.x - grid_bound.x_off;
+      int off_y = b.y - grid_bound.y_off;
+      return off_x + (off_y * grid_bound.x_len);
+   }
+
+   /* returns 1 if the given index is
+    * in the bounds of the map, 0 otherwise */
+   int in_bounds(const block & b) {
+      int x = b.x - grid_bound.x_off;
+      int y = b.y - grid_bound.y_off;
+      if (x < 0 || y < 0 ||
+          x >= grid_bound.x_len ||
+          y >= grid_bound.y_len)
+         return 0;
+      return 1;
+   }
+   int in_bounds(const point & b) {
+      int x = (int)b.x - grid_bound.x_off;
+      int y = (int)b.y - grid_bound.y_off;
+      if (x < 0 || y < 0 ||
+          x >= grid_bound.x_len ||
+          y >= grid_bound.y_len)
+         return 0;
+      return 1;
+   }
 
 private:
 
@@ -154,6 +196,10 @@ public:
 
          /* reset the nessesary values */
          grid_metadata = map.info;
+         grid_bound.x_len = grid_metadata.width;
+         grid_bound.y_len = grid_metadata.height;
+         grid_bound.x_off = grid_metadata.origin.position.x / grid_metadata.resolution;
+         grid_bound.y_off = grid_metadata.origin.position.y / grid_metadata.resolution;
          compute_circle(collision_radius / grid_metadata.resolution);
 
 
@@ -261,6 +307,10 @@ public:
          free(grid_flag);
 
          grid_metadata = map.info;
+         grid_bound.x_len = grid_metadata.width;
+         grid_bound.y_len = grid_metadata.height;
+         grid_bound.x_off = grid_metadata.origin.position.x / grid_metadata.resolution;
+         grid_bound.y_off = grid_metadata.origin.position.y / grid_metadata.resolution;
          compute_circle(collision_radius / grid_metadata.resolution);
 
          grid_length = grid_metadata.width * grid_metadata.height;
@@ -332,20 +382,19 @@ public:
 
    /* Set the new origin for our pathfinder */
    virtual void set_origin(const geometry_msgs::msg::Pose & pose) {
-      origin.x = (pose.position.x - grid_metadata.origin.position.x) / grid_metadata.resolution;
-      origin.y = (pose.position.y - grid_metadata.origin.position.y) / grid_metadata.resolution;
+      origin.x = (pose.position.x) / grid_metadata.resolution;
+      origin.y = (pose.position.y) / grid_metadata.resolution;
    }
 
    /* Set the new goal for our pathfinder */
    virtual void set_goal(const geometry_msgs::msg::Pose & pose) {
-      goal.x = (pose.position.x - grid_metadata.origin.position.x) / grid_metadata.resolution;
-      goal.y = (pose.position.y - grid_metadata.origin.position.y) / grid_metadata.resolution;
+      goal.x = (pose.position.x) / grid_metadata.resolution;
+      goal.y = (pose.position.y) / grid_metadata.resolution;
 
       /* if we are out of bounds or in a colliding area, do not
        * set it as a valid goal for the system.                */
       if ((!accept_out_of_bounds_goal && 
-           (goal.x < 0 || goal.x >= grid_metadata.width  ||
-           goal.y < 0 || goal.y >= grid_metadata.height)) ||
+           in_bounds(goal)) ||
          (grid && grid[(int)(goal.x + (goal.y * grid_metadata.width))])) {
          no_goal = true;
       }
@@ -367,10 +416,13 @@ public:
       /* grab full control of the grid */
       mut.lock();
 
+      double x = grid_bound.x_off * 10.0;
+      double y = grid_bound.y_off * 10.0;
+
       /* draw border */
       rect.setSize(sf::Vector2f(10*grid_metadata.width,10*grid_metadata.height));
-      rect.setPosition((0.0),
-                       (0.0));
+      rect.setPosition((x),
+                       (y));
       rect.setFillColor(sf::Color(0,0,0,0));
       rect.setOutlineColor(sf::Color(255,255,255,255));
       rect.setOutlineThickness(3);
@@ -381,7 +433,7 @@ public:
       rect.setFillColor(sf::Color(255,255,255,255));
       for (int i = 0; i < grid_length; ++i) {
          if (grid[i]) {
-            rect.setPosition((i%grid_metadata.width)*10,(i/grid_metadata.width)*10);
+            rect.setPosition(x+((i%grid_metadata.width)*10),y+((i/grid_metadata.width)*10));
             window->draw(rect);
          }
       }

@@ -387,8 +387,8 @@ private:
                      scale *= 1.1;
                      break;
                   case sf::Keyboard::G:
-                     goal_pose.position.x = ((grid_metadata.resolution * mouse.x / 10)+grid_metadata.origin.position.x);
-                     goal_pose.position.y = ((grid_metadata.resolution * mouse.y / 10)+grid_metadata.origin.position.y);
+                     goal_pose.position.x = (grid_metadata.resolution * mouse.x / 10);
+                     goal_pose.position.y = (grid_metadata.resolution * mouse.y / 10);
                      pathfinder->set_goal(goal_pose);
                      break;
               }

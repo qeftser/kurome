@@ -419,10 +419,9 @@ private:
       try {
          geometry_msgs::msg::PoseStamped pose_in;
          geometry_msgs::msg::PoseStamped pose_out;
-         /*
+         pose_in.header = msg.header;
          tf_buffer->transform<geometry_msgs::msg::PoseStamped>(pose_in,pose_out,"base_link",
                tf2::Duration(std::chrono::milliseconds(200)));
-               */
 
          observation = new Observation();
 

@@ -64,6 +64,10 @@ public:
       this->declare_parameter("simulate_trajectory",false);
       this->declare_parameter("trajectory_topic","misao/trajectory");
 
+      /* the minimum distance that must be kept from all obstacles 
+       * Meters                                                   */
+      this->declare_parameter("collision_radius",0.3);
+
       /* the algorithm to use on the smoother. Right now
        * the only option avaliable is elastic_band.     */
       this->declare_parameter("algorithm","elastic_band");
@@ -84,7 +88,8 @@ public:
 
       /* construct the smoother with the provided algorithm */
       if (this->get_parameter("algorithm").as_string() == "elastic_band") {
-         smoother = new ElasticBand(this->get_parameter("band_length").as_int(),
+         smoother = new ElasticBand(this->get_parameter("collision_radius").as_double(),
+                                    this->get_parameter("band_length").as_int(),
                                     this->get_parameter("influence_range").as_double(),
                                     this->get_parameter("max_bubble").as_double(),
                                     this->get_parameter("contraction_gain").as_double(),
@@ -356,9 +361,9 @@ private:
                      break;
                   case sf::Keyboard::G:
                      goal_pose.pose.position.x = 
-                        ((grid_metadata.resolution * (mouse.x / 10.0))+grid_metadata.origin.position.x);
+                        ((grid_metadata.resolution * (mouse.x / 10.0)));
                      goal_pose.pose.position.y =
-                        ((grid_metadata.resolution * (mouse.y / 10.0))+grid_metadata.origin.position.y);
+                        ((grid_metadata.resolution * (mouse.y / 10.0)));
                      goal_out->publish(goal_pose);
                      break;
               }
