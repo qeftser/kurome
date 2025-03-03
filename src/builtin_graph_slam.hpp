@@ -389,7 +389,6 @@ repeat:
                Covariance3 measurement_covariance;
                lidar_certainty = lidar_matcher->match_scan(observation->laser_scan,input,
                                                            measurement,measurement_covariance);
-
                if (lidar_certainty > lidar_acceptance_threshold) {
 
                   for (node * n : nearby) {

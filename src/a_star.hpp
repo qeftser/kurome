@@ -98,28 +98,22 @@ public:
       /* notify of update */
       updates_since |= AS_update_map;
 
+      /*
       /* There is a new map. Recompute the nessesary
-       * size for the vector best_at.               */
+       * size for the vector best_at.               /
       if (map.info.resolution != grid_metadata.resolution ||
           map.info.width != grid_metadata.width           ||
           map.info.height != grid_metadata.height           ) {
 
-         /* ensure control over the memory */
+         /* ensure control over the memory /
          mut.lock();
 
-         /* free old vector */
-         //free(best_at);
-
-         /* allocate the new vector. We already have
-          * grid_length so we don't need to keep
-          * track of it's size.                     */
-         //best_at = (node **)malloc(sizeof(node *)*map.info.width*map.info.height);
-         // TODO: sort this out;
          best_at.clear();
 
-         /* release control over memory */
+         /* release control over memory /
          mut.unlock();
       }
+      */
 
       /* load the map in using default behavior */
       PathfinderBase::load_map(map,occupant_cutoff);
@@ -284,7 +278,9 @@ from_start:
       }
 
       /* clear out old values from the best_at vector */
+      mut.lock();
       best_at.clear();
+      mut.unlock();
 
       /* clear the update flags now */
       updates_since = 0;
@@ -340,13 +336,6 @@ from_start:
 
                block new_pos = block{curr->pos.x + x,
                                      curr->pos.y + y};
-
-               /* ignore out-of-bounds possibilites */
-               /*
-               if (new_pos.x < 0 || new_pos.x >= (int)grid_metadata.width ||
-                   new_pos.y < 0 || new_pos.y >= (int)grid_metadata.height)
-                  continue;
-                  */
 
                /* if we are better than the previous value
                 * at this position, replace it, otherwise

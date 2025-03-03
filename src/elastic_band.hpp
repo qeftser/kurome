@@ -37,11 +37,13 @@ private:
    /* what is the range that obstacles have 
     * influence on the elastic band?       */
    double influence_range;
+   double l_influence_range;
 
    /* maximum radius a bubble can have on the
     * elastic band. This influences the maximum
     * distance between two nodes on the band.  */
    double max_bubble;
+   double l_max_bubble;
 
    /* The gain on the contractive force in the
     * elastic band update step. Higher values of 
@@ -104,8 +106,7 @@ private:
 
          pos = x0 + (y0 * grid_metadata.width);
 
-         if (x0 <= 0 || x0 > (int)grid_metadata.width ||
-             pos < 0 || pos >= grid_length || grid[pos]) {
+         if (in_bounds(x0,y0) && grid[pos]) {
             return true;
          }
 
@@ -132,10 +133,17 @@ private:
       return x_pos + (y_pos * grid_metadata.width);
    }
 
+   inline int in_bounds(int x_pos, int y_pos) {
+      if (x_pos < 0 || x_pos >= (int)grid_metadata.width ||
+          y_pos < 0 || y_pos >= (int)grid_metadata.height)
+         return 0;
+      return 1;
+   }
+
    /* return the closest obstacle to a given point */
    inline point closest_obstacle(const point & p) {
       /* the range around us to search in */
-      int range_max = ceil(max_bubble / grid_metadata.resolution);
+      int range_max = ceil(l_max_bubble / grid_metadata.resolution);
       int range = 0;
       point closest = point{INFINITY,INFINITY};
       int seen = 0;
@@ -151,7 +159,7 @@ private:
          for (int x_pos = x_low; x_pos <= x_high; ++x_pos) {
 
             /* bottom */
-            if (y_low >= 0 && x_pos >= 0 && x_pos < (int)grid_metadata.width && 
+            if (in_bounds(x_pos,y_low) &&
                 grid[block_pos(x_pos,y_low)]) {
 
                point grid_point = point{ x_pos + 0.5, y_low + 0.5 };
@@ -163,7 +171,7 @@ private:
 
             }
             /* top */
-            if (y_high < (int)grid_metadata.height && x_pos >= 0 && x_pos < (int)grid_metadata.width && 
+            if (in_bounds(x_pos,y_high) &&
                 grid[block_pos(x_pos,y_high)]) {
 
                point grid_point = point{ x_pos + 0.5, y_high + 0.5 };
@@ -181,7 +189,7 @@ private:
          for (int y_pos = y_low + 1; y_pos <= y_high - 1; ++y_pos) {
 
             /* left */
-            if (x_low >= 0 && y_pos >= 0 && y_pos < (int)grid_metadata.height && 
+            if (in_bounds(x_low,y_pos) &&
                 grid[block_pos(x_low,y_pos)]) {
 
                point grid_point = point{ x_low + 0.5, y_pos + 0.5 };
@@ -193,7 +201,7 @@ private:
 
             }
             /* right */
-            if (x_high < (int)grid_metadata.width && y_pos >= 0 && y_pos < (int)grid_metadata.height && 
+            if (in_bounds(x_high,y_pos) && 
                 grid[block_pos(x_high,y_pos)]) {
 
                point grid_point = point{ x_high + 0.5, y_pos + 0.5 };
@@ -216,8 +224,8 @@ private:
 
       n.obs = closest;
 
-      if (dist > max_bubble)
-         return max_bubble;
+      if (dist > l_max_bubble)
+         return l_max_bubble;
       return dist;
    }
 
@@ -247,8 +255,8 @@ private:
           * related to the distance. This pushes the node away from the obstacle
           * by a decreasing amount as the node gets farther away.               */
          point repulsion_force = { 0.0, 0.0 };
-         if (influence_range >= curr->bubble_rad) {
-            double repulsive_multiplier = repulsion_gain * (influence_range - curr->bubble_rad) * 
+         if (l_influence_range >= curr->bubble_rad) {
+            double repulsive_multiplier = repulsion_gain * (l_influence_range - curr->bubble_rad) * 
                (1.0 / curr->bubble_rad);
             repulsion_force = point{ (curr->pos.x - curr->obs.x) * repulsive_multiplier,
                                      (curr->pos.y - curr->obs.y) * repulsive_multiplier };
@@ -348,7 +356,7 @@ private:
       double off_angle = 
             atan2(curr_node->pos.y - curr_pose.pos.y, curr_node->pos.x - curr_pose.pos.x)-curr_pose.theta;
 
-      if (fabs(off_angle)>0.2) {
+      if (fabs(off_angle)>0.1) {
          return velocity_2d{0,desired_speed * (off_angle < 0 ? -1 : 1)};
       }
 
@@ -627,6 +635,14 @@ update_step:
    }
 
    void load_map(const nav_msgs::msg::OccupancyGrid & map, int occupant_cutoff) override {
+      /* reset the parameters if the resolution has changed */
+      if (grid_metadata.resolution != map.info.resolution) {
+
+         l_influence_range = influence_range / map.info.resolution;
+         l_max_bubble = max_bubble / map.info.resolution;
+
+      }
+
       SmootherBase::load_map(map,occupant_cutoff);
 
       /* ensure that the path is still valid, and if so perform some 

@@ -313,7 +313,7 @@ public:
       guess_ret_pose.theta = atan2(sin(guess_ret_pose.theta),
                                    cos(guess_ret_pose.theta));
 
-      return certainty / (scan.points.size() * 100.0);
+      return pow(certainty,1.5) / pow(scan.points.size() * 100.0,1.5);
    }
 
 };

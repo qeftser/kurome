@@ -85,7 +85,7 @@ public:
       /* values for the a_star algorithm only. See
        * the comments in the a_star file for info
        * on these parameters.                     */
-      this->declare_parameter("queue_limit",20000);
+      this->declare_parameter("queue_limit",4000);
       this->declare_parameter("backtrack_count",10);
 
       /* Additional parameter for the motion informed

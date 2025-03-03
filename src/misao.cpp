@@ -37,7 +37,7 @@ public:
       this->declare_parameter("odom_in","demo/odom");
 
       /* The topic to recieve the goal position on */
-      this->declare_parameter("goal_in","goal");
+      this->declare_parameter("goal_in","goal_pose");
 
       /* The topic to send out the velocity on */
       this->declare_parameter("vel_out","demo/cmd_vel");
@@ -72,11 +72,11 @@ public:
        * elastic_band.hpp file for more information on what
        * these variables do in that algorithm.             */
       this->declare_parameter("band_length",-1);
-      this->declare_parameter("influence_range", 5.0);
-      this->declare_parameter("max_bubble",10.0);
+      this->declare_parameter("influence_range", 0.75);
+      this->declare_parameter("max_bubble",1.0);
       this->declare_parameter("contraction_gain",1.0);
       this->declare_parameter("repulsion_gain",1.0);
-      this->declare_parameter("damping_gain",0.50);
+      this->declare_parameter("damping_gain",0.75);
       this->declare_parameter("cycle_count",128);
       this->declare_parameter("desired_speed",0.1);
       this->declare_parameter("advance_distance",0.3);
