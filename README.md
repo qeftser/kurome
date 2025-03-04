@@ -348,17 +348,26 @@ and which ones lie outside of or on the walls of the competition arena.
 
 The project is named after Kurome, a character from the manga and television show Akame Ga Kill!
 
+![kurome_akame](https://github.com/user-attachments/assets/2ea04f49-0c40-4ccb-82ed-5fef77d3b855)
+
 ### Pino
 
 The SLAM system is named after Pino, the robot girl from the television show Ergo Proxy
+
+![pino_jumping](https://github.com/user-attachments/assets/b26e6b7c-072b-4316-a60b-0d9ffa39d0e8)
 
 ### Yoriko
 
 The pathfinder is named after Yoriko Yunoki, a character from the television show Battle Programmer Shirase
 
+![yoriko_yunoki](https://github.com/user-attachments/assets/35a1616d-8e7f-414d-b456-49b1370a61ec)
+
 ### Misao
 
 The smoother and path follower is named after Misao Amano, a character from the television show Battle Programmer Shirase
+
+![misao_amano](https://github.com/user-attachments/assets/01a4d374-1428-475e-ba5f-896102d1ce28)
+![misao_amano](https://github.com/user-attachments/assets/6226be0a-c202-4ee5-82c7-9fb81b2b977c)
 
 ## References
 
