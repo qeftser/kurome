@@ -34,13 +34,13 @@ public:
       this->declare_parameter("path_in","path");
 
       /* The topic to recieve odometry on */
-      this->declare_parameter("odom_in","demo/odom");
+      this->declare_parameter("odom_in","odom");
 
       /* The topic to recieve the goal position on */
       this->declare_parameter("goal_in","goal_pose");
 
       /* The topic to send out the velocity on */
-      this->declare_parameter("vel_out","demo/cmd_vel");
+      this->declare_parameter("vel_out","cmd_vel");
 
       /* The topic to receive the environment map on */
       this->declare_parameter("map_in","map");
@@ -53,10 +53,10 @@ public:
       this->declare_parameter("obstacle_threshold",60);
 
       /* whether to launch the accompanying gui for the node */
-      this->declare_parameter("launch_gui",true);
+      this->declare_parameter("launch_gui",false);
 
       /* whether to also publish a visualization of the path */
-      this->declare_parameter("run_visualization",true);
+      this->declare_parameter("run_visualization",false);
       this->declare_parameter("visualization_topic","misao/visual");
 
       /* whether to request and publish simulated trajectories
@@ -161,7 +161,7 @@ private:
    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_in;
    /* The map the path resides in */
    rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_in;
-   /* The odometry output from the robot */
+   /* The odometry input from the robot */
    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_in;
    /* The current goal the robot is trying to reach */
    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_in;
@@ -205,7 +205,7 @@ private:
 
    void collect_path(const nav_msgs::msg::Path & msg) {
 
-      if ( !smoother->is_path_valid() ) {
+      if ( msg.poses.size() && !smoother->is_path_valid() ) {
 
          if (fabs(msg.poses.back().pose.position.x - goal.pose.position.x) > grid_metadata.resolution ||
              fabs(msg.poses.back().pose.position.y - goal.pose.position.y) > grid_metadata.resolution)

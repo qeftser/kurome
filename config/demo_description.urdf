@@ -86,7 +86,7 @@
         </geometry>
       </collision>
 
-      <xacro:cylinder_inertia m="0.5" r="${wheel_radius}" h="${wheel_width}"/>
+      <xacro:cylinder_inertia m="2.0" r="${wheel_radius}" h="${wheel_width}"/>
     </link>
 
     <joint name="${prefix}_joint" type="continuous">
@@ -117,7 +117,7 @@
       </geometry>
     </collision>
 
-    <xacro:sphere_inertia m="0.5" r="${(wheel_radius+wheel_zoff-(base_height/2))}"/>
+    <xacro:sphere_inertia m="2.0" r="${(wheel_radius+wheel_zoff-(base_height/2))}"/>
   </link>
 
   <joint name="caster_joint" type="fixed">
@@ -139,7 +139,7 @@
     </geometry>
   </collision>
 
-  <xacro:box_inertia m="0.05" w="0.1" d="0.1" h="0.1"/>
+  <xacro:box_inertia m="2.0" w="0.1" d="0.1" h="0.1"/>
   </link>
 
   <joint name="imu_joint" type="fixed">
@@ -270,7 +270,7 @@
 <joint name="lidar_joint" type="fixed">
   <parent link="base_link"/>
   <child link="lidar_link"/>
-  <origin xyz="0 0 0.12" rpy="0 0 0"/>
+  <origin xyz="0 0 0.36" rpy="0 0 0"/>
 </joint>
 
 <gazebo reference="lidar_link">

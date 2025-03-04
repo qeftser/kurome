@@ -45,7 +45,7 @@ public:
       this->declare_parameter("goal_topic","goal_pose");
 
       /* topic to accept the position estimate on */
-      this->declare_parameter("position_topic","demo/odom");
+      this->declare_parameter("position_topic","odom");
 
       /* topic to accept the occupancy grid on */
       this->declare_parameter("grid_topic","map");
@@ -62,7 +62,7 @@ public:
       this->declare_parameter("publish_rate",0.1);
 
       /* whether or not to use the gui interface */
-      this->declare_parameter("launch_gui",true);
+      this->declare_parameter("launch_gui",false);
 
       /* The threshold (0 - 100) at which to consider
        * a position on the occupancy grid an obstacle */
@@ -85,8 +85,8 @@ public:
       /* values for the a_star algorithm only. See
        * the comments in the a_star file for info
        * on these parameters.                     */
-      this->declare_parameter("queue_limit",4000);
-      this->declare_parameter("backtrack_count",10);
+      this->declare_parameter("queue_limit",40000);
+      this->declare_parameter("backtrack_count",-1);
 
       /* Additional parameter for the motion informed
        * varients of the pathfinders. The turning radius
@@ -238,13 +238,13 @@ private:
 
       /* if the pathfinder could not generate a
        * path we will compute a placeholder one */
-      if (msg.poses.size() == 0) {
-         /* add one node that corresponds to our
-          * current position estimate.          */
-         geometry_msgs::msg::PoseStamped pose;
-         pose.pose = transformed.pose;
-         msg.poses.push_back(pose);
-      }
+//      if (msg.poses.size() == 0) {
+//         /* add one node that corresponds to our
+//          * current position estimate.          */
+//         geometry_msgs::msg::PoseStamped pose;
+//         pose.pose = transformed.pose;
+//         msg.poses.push_back(pose);
+//      }
 
       /* set generic values for the path */
       msg.header.stamp = this->get_clock()->now();

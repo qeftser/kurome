@@ -129,6 +129,21 @@ private:
       return false;
    }
 
+   /* check if the path is valid */
+   inline bool check_path_valid() {
+      node * curr = path;
+
+      while (curr->next) {
+
+         if (curr->bubble_rad < 1.5) {
+            return false;
+         }
+
+         curr = curr->next;
+      }
+      return true;
+   }
+
    /* return the closest obstacle to a given point */
    inline point closest_obstacle(const point & p) {
       /* the range around us to search in */
@@ -346,7 +361,7 @@ private:
             atan2(curr_node->pos.y - curr_pose.pos.y, curr_node->pos.x - curr_pose.pos.x)-curr_pose.theta;
 
       if (fabs(off_angle)>0.1) {
-         return velocity_2d{0,desired_speed * (off_angle < 0 ? -1 : 1)};
+         return velocity_2d{0,desired_speed * (off_angle < 0.1 ? -1 : 1)};
       }
 
       return velocity_2d{desired_speed,0};
@@ -432,7 +447,7 @@ public:
 
    bool propose_path(const nav_msgs::msg::Path & msg) override {
 
-      if (valid_path)
+      if (valid_path && check_path_valid())
          return false; /* reject path */
 
       mut.lock();
@@ -640,16 +655,9 @@ update_step:
        * smoothing on it.                                           */
       if (is_path_valid() && path) {
 
-         node * curr = path;
-
-         while (curr->next) {
-
-            if (is_collision(curr->pos,curr->next->pos)) {
-               invalidate_path();
-               return;
-            }
-
-            curr = curr->next;
+         if (!check_path_valid()) {
+            invalidate_path();
+            return;
          }
 
          for (int i = 0; i < cycle_count; ++i) {
