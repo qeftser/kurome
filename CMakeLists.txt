@@ -76,9 +76,14 @@ add_executable(pose_publisher src/pose_publisher.cpp)
 target_link_libraries(pose_publisher kurome_base)
 ament_target_dependencies(pose_publisher rclcpp geometry_msgs tf2 tf2_ros tf2_geometry_msgs)
 
+# the local mask
+add_executable(local_mask src/local_mask.cpp)
+target_link_libraries(local_mask kurome_base)
+ament_target_dependencies(local_mask rclcpp sensor_msgs tf2 tf2_ros tf2_geometry_msgs)
+
 
 install(TARGETS brain wall_filter pino yoriko misao
-                the_iron_rod hardcoded_path_publisher matcher_test pose_publisher
+                the_iron_rod hardcoded_path_publisher matcher_test pose_publisher local_mask
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch config
         DESTINATION share/${PROJECT_NAME})

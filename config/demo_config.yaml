@@ -6,7 +6,7 @@
     visualization_topic: "pino/visual"
     beacon_in: "beacon"
     odom_in: "odom"
-    scan_in: "/scan"
+    scan_in: "scan"
     cloud_in: "points"
     use_odom_vel: true
     vel_in: "cmd_vel"
@@ -73,4 +73,10 @@
     produce_map_frame: true
     odom_pose_out: "odom_pose"
     map_pose_out: "map_pose"
+
+/kurome/local_mask:
+  ros__parameters:
+    scan_in: "/scan"
+    scan_out: "scan"
+    cull_dist: 1.0
 

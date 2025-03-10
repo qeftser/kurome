@@ -90,6 +90,14 @@ def generate_launch_description():
         parameters=[LaunchConfiguration('config')]
     )
 
+    mask_node = launch_ros.actions.Node(
+        package='kurome',
+        executable='local_mask',
+        namespace='kurome',
+        name='local_mask',
+        parameters=[LaunchConfiguration('config')]
+    )
+
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(name='model', default_value=default_model_path,
                                             description='Absolute path to robot urdf file'),
@@ -110,5 +118,6 @@ def generate_launch_description():
         yoriko_node,
         misao_node,
         pose_publisher_node,
+        mask_node,
         rviz_node
     ])
