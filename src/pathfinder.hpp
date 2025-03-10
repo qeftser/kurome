@@ -5,6 +5,7 @@
 #include "kurome.h"
 #include <cstddef>
 #include <mutex>
+#include <cmath>
 
 #include <SFML/Graphics.hpp>
 
@@ -117,47 +118,59 @@ private:
    void compute_circle(int radius) {
       circle_vals.clear();
 
-      int t1, t2, x, y = 0;
-      x = radius;
-      t1 = radius / 16;
+      int radius_sqr = radius * radius;
 
-      while (x >= y) {
-            /* we are computing the circle on a vector
-             * so we multiply by x length to get the
-             * y position.                            */
-            circle_vals.push_back({x,y});
-            /* fill out all 8 circle values */
-            circle_vals.push_back({y,x});
-            circle_vals.push_back({-x,y});
-            circle_vals.push_back({-y,x});
-            circle_vals.push_back({x,-y});
-            circle_vals.push_back({y,-x});
-            circle_vals.push_back({-x,-y});
-            circle_vals.push_back({-y,-x});
+      for (int x = -radius; x < radius; ++x) {
+         int hh = (int)sqrt(radius_sqr - x*x);
+         int rx = x;
+         int ph = hh;
 
-         /* update values and compute error */
-         t1 = t1 + y + 1;
-         t2 = t1 - x;
-         if (t2 >= 0) {
-            t1 = t2;
-            x = x - 1;
+         for (int y = -hh; y < ph; ++y)
+            circle_vals.push_back({rx,y});
 
-            /* we also need to add more circle values
-             * here, which is a slight deviation from
-             * the normal algorithm, but nessesary to
-             * avoid clipping through walls during the
-             * pathfinding procedures                 */
-            circle_vals.push_back({x,y});
-            circle_vals.push_back({y,x});
-            circle_vals.push_back({-x,y});
-            circle_vals.push_back({-y,x});
-            circle_vals.push_back({x,-y});
-            circle_vals.push_back({y,-x});
-            circle_vals.push_back({-x,-y});
-            circle_vals.push_back({-y,-x});
-         }
-         y = y + 1;
       }
+
+//      int t1, t2, x, y = 0;
+//      x = radius;
+//      t1 = radius / 16;
+//
+//      while (x >= y) {
+//            /* we are computing the circle on a vector
+//             * so we multiply by x length to get the
+//             * y position.                            */
+//            circle_vals.push_back({x,y});
+//            /* fill out all 8 circle values */
+//            circle_vals.push_back({y,x});
+//            circle_vals.push_back({-x,y});
+//            circle_vals.push_back({-y,x});
+//            circle_vals.push_back({x,-y});
+//            circle_vals.push_back({y,-x});
+//            circle_vals.push_back({-x,-y});
+//            circle_vals.push_back({-y,-x});
+//
+//         /* update values and compute error */
+//         t1 = t1 + y + 1;
+//         t2 = t1 - x;
+//         if (t2 >= 0) {
+//            t1 = t2;
+//            x = x - 1;
+//
+//            /* we also need to add more circle values
+//             * here, which is a slight deviation from
+//             * the normal algorithm, but nessesary to
+//             * avoid clipping through walls during the
+//             * pathfinding procedures                 */
+//            circle_vals.push_back({x,y});
+//            circle_vals.push_back({y,x});
+//            circle_vals.push_back({-x,y});
+//            circle_vals.push_back({-y,x});
+//            circle_vals.push_back({x,-y});
+//            circle_vals.push_back({y,-x});
+//            circle_vals.push_back({-x,-y});
+//            circle_vals.push_back({-y,-x});
+//         }
+//         y = y + 1;
+//      }
 
    }
 

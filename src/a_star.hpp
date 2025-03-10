@@ -25,11 +25,17 @@ private:
       long dist;
    };
 
+   static const int step_cost = 3.0;
+
+   static inline long cost(const node * n) {
+      return n->dist + n->weight;
+   }
+
    /* compare two nodes based on their weights. Used as 
     * the priority queue comparison operator.          */
    struct cmp_node {
       bool operator()(const node * n1, const node * n2) const {
-         if (n1->dist > n2->dist)
+         if (cost(n1) > cost(n2))
             return true;
          return false;
       }
@@ -266,7 +272,8 @@ from_start:
       updates_since = 0;
 
       /* set the head's weight */
-      head->weight = head->dist = block_dist2(head->pos,goal_block);
+      head->weight = 0.0;
+      head->dist = sqrt(block_dist2(head->pos,goal_block));
 
       /* seed the algorithm */
       best_at[long_from_ints(head->pos.x,head->pos.y)] = head;
@@ -314,8 +321,14 @@ from_start:
          for (int x = -1; x <= 1; ++x) {
             for (int y = -1; y <= 1; ++y) {
 
+               if (!x && !y)
+                  continue;
+
+
                block new_pos = block{curr->pos.x + x,
                                      curr->pos.y + y};
+
+               int local_step = ((double)step_cost * (x && y ? 1.4 : 1.0));
 
                /* if we are better than the previous value
                 * at this position, replace it, otherwise
@@ -325,11 +338,12 @@ from_start:
                old = best_at.count(long_from_ints(new_pos.x,new_pos.y)) ? 
                      best_at[long_from_ints(new_pos.x,new_pos.y)] : NULL;
                if (old) {
-                   if (curr->weight + block_dist2(new_pos,goal_block) < old->weight) {
+                   if (sqrt(block_dist2(new_pos,goal_block)) + curr->weight + local_step < cost(old)) {
 
                      old->next = curr;
-                     old->weight = old->dist = block_dist2(new_pos,goal_block);
-                     old->weight += curr->weight;
+                     old->dist = sqrt(block_dist2(new_pos,goal_block));
+                     old->weight = curr->weight + local_step;
+                     //old->weight = curr->weight + old->dist;
 
                      /* add this value to the queue if it is not already in it */
                      if (!seen_nodes.count(ptr_to_long(old))) {
@@ -342,8 +356,9 @@ from_start:
                   node * new_node = new node{};
                   new_node->next = curr;
                   new_node->pos = new_pos;
-                  new_node->weight = new_node->dist = block_dist2(new_pos,goal_block);
-                  new_node->weight += curr->weight;
+                  new_node->dist = sqrt(block_dist2(new_pos,goal_block));
+                  new_node->weight = curr->weight + local_step;
+                  //new_node->weight = curr->weight + new_node->dist;
 
                   /* add this option to the algorithm */
                   seen_nodes.insert(ptr_to_long(new_node));

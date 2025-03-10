@@ -109,7 +109,7 @@ public:
       double x_y_range;
    };
 
-   static constexpr matcher_params default_params = { 0.30, 2.1 };
+   static constexpr matcher_params default_params = { 0.3, 2.1 };
 
    double match_scan(const LidarData & scan, const LidarData & other,
                      pose_2d & guess_ret_pose, Covariance3 & ret_covariance) override {

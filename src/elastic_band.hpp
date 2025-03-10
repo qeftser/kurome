@@ -302,7 +302,8 @@ private:
          /* if our nodes are too far apart, but there is still 
           * collision free area between them, add a node.     */
          if (sqrt(point_dist2(curr->pos,curr->next->pos)) > 
-             (curr->bubble_rad + curr->next->bubble_rad) / 2.0) {
+             (curr->bubble_rad + curr->next->bubble_rad) / 2.0 &&
+              curr->bubble_rad >= 1.0) {
 
             node * new_node = new node{ {(curr->pos.x + curr->next->pos.x) / 2.0,
                                          (curr->pos.y + curr->next->pos.y) / 2.0 },
@@ -361,7 +362,7 @@ private:
             atan2(curr_node->pos.y - curr_pose.pos.y, curr_node->pos.x - curr_pose.pos.x)-curr_pose.theta;
 
       if (fabs(off_angle)>0.1) {
-         return velocity_2d{0,desired_speed * (off_angle < 0.1 ? -1 : 1)};
+         return velocity_2d{0,desired_speed * (off_angle < 0.0 ? -1 : 1)};
       }
 
       return velocity_2d{desired_speed,0};
@@ -420,7 +421,6 @@ private:
       */
 
    }
-
 
 public:
 

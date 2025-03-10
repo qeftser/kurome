@@ -48,14 +48,14 @@ public:
       /* interval at which to publish the full map, in seconds */
       this->declare_parameter("map_publish_interval",1.0);
       /* whether to publish visualization data of the system */
-      this->declare_parameter("publish_visualization",false);
+      this->declare_parameter("publish_visualization",true);
       /* topic to publish the visualization on if it is being used */
       this->declare_parameter("visualization_topic","pino/visual");
 
       /* topic to listen for beacon odometry on */
       this->declare_parameter("beacon_in","beacon");
       /* topic to listen for odometry on */
-      this->declare_parameter("odom_in","odom");
+      this->declare_parameter("odom_in","demo/odom");
       /* topic to listen for incoming laser scans on */
       this->declare_parameter("scan_in","scan");
       /* topic to listen for incoming point cloud data on */
@@ -105,7 +105,7 @@ public:
       this->declare_parameter("bin_size",1.0); /* meters */
       this->declare_parameter("linear_update_dist",0.3); /* meters */
       this->declare_parameter("angular_update_dist",0.3); /* radians */
-      this->declare_parameter("lidar_acceptance_threshold",0.5); /* probability */
+      this->declare_parameter("lidar_acceptance_threshold",0.3); /* probability */
       this->declare_parameter("point_cloud_acceptance_threshold",0.5); /* probability */
       this->declare_parameter("node_association_dist",0.5); /* meters */
 
