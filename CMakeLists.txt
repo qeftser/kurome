@@ -19,12 +19,22 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_sensor_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
+find_package(rclcpp_components REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
 find_package(Ceres REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 
-#find_package(GraphSlamBackend REQUIRED)
-
 find_package(SFML COMPONENTS window graphics system)
+
+# generate custom messages
+rosidl_generate_interfaces(${PROJECT_NAME}
+   "msg/Rectangle.msg"
+   "msg/CompetitionArea.msg"
+   DEPENDENCIES builtin_interfaces std_msgs geometry_msgs
+)
+
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 add_library(kurome_base STATIC src/kurome.cpp)
 target_link_libraries(kurome_base Eigen3::Eigen)
@@ -32,6 +42,7 @@ ament_target_dependencies(kurome_base rclcpp sensor_msgs geometry_msgs visualiza
 
 # brain node
 add_executable(brain src/brain.cpp)
+target_link_libraries(brain kurome_base "${cpp_typesupport_target}")
 ament_target_dependencies(brain rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
 
 # wall filter node
@@ -80,6 +91,7 @@ ament_target_dependencies(pose_publisher rclcpp geometry_msgs tf2 tf2_ros tf2_ge
 add_executable(local_mask src/local_mask.cpp)
 target_link_libraries(local_mask kurome_base)
 ament_target_dependencies(local_mask rclcpp sensor_msgs tf2 tf2_ros tf2_geometry_msgs)
+
 
 
 install(TARGETS brain wall_filter pino yoriko misao
