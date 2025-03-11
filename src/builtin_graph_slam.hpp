@@ -334,45 +334,6 @@ repeat:
             nodes.in_range(observation->global_pose_estimate.pos,node_association_dist,&nearby);
 
             /* collect lidar scan matching results */
-            /*
-            double lidar_certainty;
-            for (node * n : nearby) {
-
-               Covariance3 measurement_covariance;
-               pose_2d measurement = a_from_b(n->observation->current_odometry,
-                                              observation->current_odometry);
-//               measurement = {{0,0},0};
-               std::vector<std::pair<const LidarData *,pose_2d>> input;
-
-               for (Observation * o : recent_observations) {
-                  input.push_back(std::make_pair(&o->laser_scan,
-                                        a_from_b(o->current_odometry,observation->current_odometry)));
-               }
-               input.push_back(std::make_pair(&n->observation->laser_scan,measurement));
-
-               printf("seed       : %f %f %f\n",measurement.pos.x,measurement.pos.y,measurement.theta);
-               lidar_certainty = lidar_matcher->match_scan(observation->laser_scan,input,
-                                                           measurement, measurement_covariance);
-               printf("lidar match: %f %f %f %f\n",measurement.pos.x,measurement.pos.y,measurement.theta,lidar_certainty);
-               pose_2d odom_ver = a_from_b(n->observation->current_odometry,
-                                           observation->current_odometry);
-               printf("odom version %f %f %f\n",odom_ver.pos.x,odom_ver.pos.y,odom_ver.theta);
-
-               if (lidar_certainty > lidar_acceptance_threshold) {
-
-                  / add an edge to the graph /
-                  ceres::CostFunction * cost_function = ErrorTerm::create(measurement,measurement_covariance);
-                  ceres::ResidualBlockId id = 
-                     graph.AddResidualBlock(cost_function, loss_function, 
-                                            &new_node->o_pose.pos.x, &new_node->o_pose.pos.y,
-                                            &new_node->o_pose.theta,
-                                            &n->o_pose.pos.x, &n->o_pose.pos.y,&n->o_pose.theta);
-                  graph.SetManifold(&new_node->o_pose.theta,manifold);
-                  graph.SetManifold(&n->o_pose.theta,manifold);
-                  edge_list.push_back({id,n->id,new_node->id});
-               }
-            }
-         */
             {
                double lidar_certainty;
                std::vector<std::pair<const LidarData *,pose_2d>> input;
@@ -387,8 +348,10 @@ repeat:
 
                pose_2d measurement = {{0,0},0};
                Covariance3 measurement_covariance;
+               /*
                lidar_certainty = lidar_matcher->match_scan(observation->laser_scan,input,
                                                            measurement,measurement_covariance);
+                                                           */
                if (lidar_certainty > lidar_acceptance_threshold) {
 
                   for (node * n : nearby) {

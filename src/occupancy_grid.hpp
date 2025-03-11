@@ -104,17 +104,12 @@ public:
 
       std::unordered_set<int> seen;
 
-      int x1 = (pose.pos.x / resolution) - x_min;
-      int y1 = (pose.pos.y / resolution) - y_min;
-
-
       std::vector<std::pair<int,int>> locations;
 
       int new_x_min = 0;
       int new_y_min = 0;
       int new_x_len = x_len;
       int new_y_len = y_len;
-
 
       bool size_change = false;
 
@@ -182,6 +177,10 @@ public:
          y_min = new_y_min;
       }
 
+      int x1 = (pose.pos.x / resolution);
+      int y1 = (pose.pos.y / resolution);
+
+
       for (std::pair<int,int> & p : locations) {
 
          int x0 = std::get<0>(p);
@@ -237,7 +236,8 @@ public:
             }
          }
       }
-      (*this)(0,0) = 0; /* kludge solution */
+      //(*this)(0,0) = 0; /* kludge solution */
+      //(*this)(x1,y1) = 0;
    }
 
    /* insert a point cloud into this occupancy grid, cutting out any values 

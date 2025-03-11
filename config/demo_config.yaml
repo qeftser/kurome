@@ -22,8 +22,8 @@
     angular_update_dist: 0.3
     lidar_acceptance_threshold: 1.1
     point_cloud_acceptance_threshold: 0.7
-    node_association_dist: 0.5
-    recent_length: 7
+    node_association_dist: 0.25
+    recent_length: 3
     loop_closure_dist: 1
 
 /kurome/yoriko:
@@ -36,7 +36,7 @@
     collision_radius: 0.5
     publish_rate: 0.1
     launch_gui: true
-    obstacle_threshold: 60
+    obstacle_threshold: 30
     allow_out_of_bounds_goal: true
     queue_limit: 40000
     backtrack_count: -1
@@ -49,7 +49,7 @@
     vel_out: "cmd_vel"
     map_in: "map"
     publish_rate: 0.1
-    obstacle_threshold: 60
+    obstacle_threshold: 30
     launch_gui: true
     run_visualization: true
     visualization_topic: "misao/visual"
@@ -78,5 +78,5 @@
   ros__parameters:
     scan_in: "/scan"
     scan_out: "scan"
-    cull_dist: 1.0
+    cull_dist: 0.75
 

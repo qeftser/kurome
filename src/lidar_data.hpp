@@ -17,7 +17,8 @@ private:
       int entries = (msg.angle_max - msg.angle_min) / msg.angle_increment;
       double angle = msg.angle_min;
 
-      points = std::vector<point>(entries);
+      points = std::vector<point>();
+      points.reserve(entries);
 
       for (int i = 0; i < entries; ++i) {
 
@@ -25,6 +26,7 @@ private:
 
          if (msg.ranges[i] < msg.range_min || msg.ranges[i] > msg.range_max)
             continue;
+
 
          points.push_back(point{ msg.ranges[i] * cos(angle), msg.ranges[i] * sin(angle) });
 

@@ -9,6 +9,8 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2/exceptions.h"
 
+#include <cassert>
+
 /* Very basic node that culls sensor readings that are off
  * of the robot body.                                    */
 
@@ -63,15 +65,14 @@ private:
        * as a solution for now.                          */
 
       int entries = (out.angle_max - out.angle_min) / out.angle_increment;
-      double angle;
       double cutoff = this->get_parameter("cull_dist").as_double();
 
       for (int i = 0; i < entries; ++i) {
 
-         angle = out.angle_min + out.angle_increment * i;
-
          if (out.ranges[i] < cutoff || out.ranges[i] > out.range_max)
-            out.ranges[i] = INFINITY;
+            out.ranges[i] = 1000.0;
+
+         assert(out.ranges[i] > 0.5);
 
       }
 
