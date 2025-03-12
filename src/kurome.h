@@ -91,6 +91,11 @@ struct point3 {
 #define ptr_to_long(ptr) \
    ((long)(ptr))
 
+/* minimum between two numerical values */
+#define minimum(x,y) ((x) < (y) ? (x) : (y))
+/* maximum between two numerical values */
+#define maximum(x,y) ((x) > (y) ? (x) : (y))
+
 /* Return a vector of strings that are the individual parts
  * of the passed value str, but split along the passed string
  * delimiter. Do not include the delimiter in the returned values. */

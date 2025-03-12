@@ -38,7 +38,8 @@ rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typ
 
 add_library(kurome_base STATIC src/kurome.cpp)
 target_link_libraries(kurome_base Eigen3::Eigen)
-ament_target_dependencies(kurome_base rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs tf2 tf2_ros)
+ament_target_dependencies(kurome_base rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs 
+                          tf2 tf2_ros tf2_geometry_msgs)
 
 # brain node
 add_executable(brain src/brain.cpp)
