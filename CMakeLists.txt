@@ -53,7 +53,7 @@ ament_target_dependencies(wall_filter rclcpp sensor_msgs geometry_msgs visualiza
 
 # pino node
 add_executable(pino src/pino.cpp)
-target_link_libraries(pino graph_slam_backend Ceres::ceres Eigen3::Eigen kurome_base)
+target_link_libraries(pino Ceres::ceres Eigen3::Eigen kurome_base)
 ament_target_dependencies(pino rclcpp sensor_msgs geometry_msgs visualization_msgs nav_msgs
                           tf2 tf2_ros tf2_geometry_msgs tf2_sensor_msgs)
 

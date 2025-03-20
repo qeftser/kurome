@@ -29,7 +29,6 @@
 #include "kurome.h"
 #include "occupancy_grid.hpp"
 #include "slam_system.hpp"
-#include "qeftser_graph_slam.hpp"
 #include "builtin_graph_slam.hpp"
 
 /* The SLAM system for Kurome. This is an implimentation of the GraphSLAM
@@ -162,18 +161,7 @@ public:
                      this->get_parameter("map_publish_interval").as_double()))),
             std::bind(&Pino::broadcast_map_frame, this));
 
-      if (this->get_parameter("algorithm").as_string() == "qeftser") {
-         slam_system = new QeftserGraphSlam(this->get_clock(),
-               new CorrelativeLidarMatcher(),
-               new DummyPointCloudMatcher(),
-               this->get_parameter("bin_size").as_double(),
-               this->get_parameter("linear_update_dist").as_double(), 
-               this->get_parameter("angular_update_dist").as_double(),
-               this->get_parameter("lidar_acceptance_threshold").as_double(), 
-               this->get_parameter("point_cloud_acceptance_threshold").as_double(),
-               this->get_parameter("node_association_dist").as_double());
-      }
-      else if (this->get_parameter("algorithm").as_string() == "builtin") {
+      if (this->get_parameter("algorithm").as_string() == "builtin") {
          slam_system = new BuiltinGraphSlam(this->get_clock(),
                new CorrelativeLidarMatcher(),
                new DummyPointCloudMatcher(),
@@ -186,6 +174,8 @@ public:
                this->get_parameter("recent_length").as_int(),
                this->get_parameter("loop_closure_dist").as_int());
       }
+      else
+         RCLCPP_ERROR(this->get_logger(),"No valid slam system selected. Options are: [ builtin ]\n");
 
       if (this->get_parameter("aggregate_sensor_data").as_bool()) {
          observation_callback = this->create_wall_timer(
