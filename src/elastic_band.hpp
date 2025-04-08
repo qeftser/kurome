@@ -593,9 +593,9 @@ public:
       point in_frame = { curr->next->pos.x*cos(curr_pose.theta) - curr->next->pos.y*sin(curr_pose.theta),
                          curr->next->pos.y*sin(curr_pose.theta) + curr->next->pos.y*cos(curr_pose.theta) };
 
+      /*
       double theta = atan2(in_frame.y - curr->next->pos.y, in_frame.x - curr->next->pos.x);
 
-      /*
       curr_pose.theta = curr_pose.theta + theta;
       curr_pose.theta = atan2(sin(curr_pose.theta),cos(curr_pose.theta));
       */
@@ -615,8 +615,6 @@ public:
          }
 
          update = compute_velocity_output(curr_pose,curr);
-
-update_step:
 
          printf("vel update: %f %f\n",update.linear,update.angular);
 

@@ -206,7 +206,7 @@ private:
     * Will kind of function like a circular queue */
    std::list<Observation *> recent_observations;
    /* number of recent observations to keep in the buffer */
-   int recent_length;
+   unsigned long recent_length;
 
    /* queue of observations that need to be processed */
    LockedQueue<std::pair<Observation *,bool>> incoming_observations;
@@ -335,7 +335,7 @@ repeat:
 
             /* collect lidar scan matching results */
             {
-               double lidar_certainty;
+               double lidar_certainty = 0.0;
                std::vector<std::pair<const LidarData *,pose_2d>> input;
                for (Observation * o : recent_observations) {
                   input.push_back(std::make_pair(&o->laser_scan,
@@ -475,12 +475,11 @@ public:
                     double bin_size, double linear_update_dist, double angular_update_dist,
                     double lidar_acceptance_threshold, double point_cloud_acceptance_threshold,
                     double node_association_dist, int recent_length, int loop_closure_dist)
-      : SlamSystem(clock,lidar_matcher,point_cloud_matcher), nodes(bin_size),
-        linear_update_dist(linear_update_dist), angular_update_dist(angular_update_dist),
-        lidar_acceptance_threshold(lidar_acceptance_threshold), 
+      : SlamSystem(clock,lidar_matcher,point_cloud_matcher), nodes(bin_size), 
+        recent_length(recent_length), linear_update_dist(linear_update_dist), 
+        angular_update_dist(angular_update_dist), lidar_acceptance_threshold(lidar_acceptance_threshold),
         point_cloud_acceptance_threshold(point_cloud_acceptance_threshold),
-        node_association_dist(node_association_dist), recent_length(recent_length),
-        loop_closure_dist(loop_closure_dist) {
+        node_association_dist(node_association_dist), loop_closure_dist(loop_closure_dist) {
 
       /* initialize the graph */
 

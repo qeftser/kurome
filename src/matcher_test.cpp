@@ -73,7 +73,9 @@ private:
 
       pose_2d pose;
       Covariance3 covariance;
+      /*
       Information3 information;
+      */
       double certainty;
       clock_t tStart;
       LidarData data(msg);
@@ -84,7 +86,7 @@ private:
                             //0.0 };
       LidarData move(msg,rand_move);
       LidarData gauss(msg);
-      for (int i = 0; i < gauss.points.size(); ++i) {
+      for (unsigned int i = 0; i < gauss.points.size(); ++i) {
          gauss.points[i].x += r.d(r.gen);
          gauss.points[i].y += r.d(r.gen);
       }

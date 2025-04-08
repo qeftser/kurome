@@ -331,7 +331,9 @@ private:
 
          printf("arc_l : %f\n",arc_length);
 
+         /*
          double time = arc_length / speed;
+         */
 
          /* compute the speed given that value */
          double w = arc_length / speed;

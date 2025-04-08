@@ -84,23 +84,6 @@ public:
       /* notify of update */
       updates_since |= AS_update_map;
 
-      /*
-      /* There is a new map. Recompute the nessesary
-       * size for the vector best_at.               /
-      if (map.info.resolution != grid_metadata.resolution ||
-          map.info.width != grid_metadata.width           ||
-          map.info.height != grid_metadata.height           ) {
-
-         /* ensure control over the memory /
-         mut.lock();
-
-         best_at.clear();
-
-         /* release control over memory /
-         mut.unlock();
-      }
-      */
-
       /* load the map in using default behavior */
       PathfinderBase::load_map(map,occupant_cutoff);
 
@@ -134,7 +117,6 @@ public:
        * goal to the origin here.             */
       block goal_block = { (int)floor(origin.x), (int)floor(origin.y) };
       node * curr,* head = NULL;
-      int idx;
 
       /* prepare the storage structures */
       struct cmp_node cmp;

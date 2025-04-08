@@ -24,6 +24,7 @@ private:
 
    std::queue<point,std::vector<point>>  goal_queue;
    std::vector<std::pair<dig_area,bool>> dig_zones;
+   geometry_msgs::msg::Pose start_pose;
 
    void initialize() {
    }

@@ -105,9 +105,9 @@ public:
          map = (uint8_t *)calloc(sizeof(uint8_t),(1 + (p_high.x - p_low.x))*(1 + (p_high.y - p_low.y)));
       }
 
-      for (int y = p_low.y*msg.info.width, y_loc = 0; y <= p_high.y*msg.info.width;
+      for (unsigned int y = p_low.y*msg.info.width, y_loc = 0; y <= p_high.y*msg.info.width;
            y += msg.info.width, y_loc += (1 + (p_high.x - p_low.x))) {
-         for (int x = p_low.x, x_loc = 0; x <= p_high.x; ++x, ++x_loc) {
+         for (unsigned int x = p_low.x, x_loc = 0; x <= p_high.x; ++x, ++x_loc) {
 
             map[x_loc + y_loc] = (msg.data[x + y] >= obstacle_threshold ? 1 : 0);
 

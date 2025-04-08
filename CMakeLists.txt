@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(kurome C CXX)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-gdwarf-4 -Wall -Wextra -Wpedantic -std=c++17)
+   add_compile_options(-gdwarf-4 -Wall -Wextra -Wpedantic -std=c++17 -Wno-gnu-anonymous-struct -Wno-nested-anon-types)
 endif()
 
 # install dependencies

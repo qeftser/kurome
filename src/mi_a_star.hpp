@@ -78,9 +78,9 @@ private:
    /* returns 1 if the given index is
     * in the bounds of the map, 0 otherwise */
    int in_bounds(const point & p) {
-      if ((int)p.x < 0 || (int)p.y < 0 ||
-          (int)p.x >= grid_metadata.width ||
-          (int)p.y >= grid_metadata.height)
+      if (p.x < 0 || p.y < 0 ||
+          p.x >= grid_metadata.width ||
+          p.y >= grid_metadata.height)
          return 0;
       return 1;
    }
