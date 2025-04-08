@@ -445,7 +445,7 @@ repeat:
 
          nodes.clear();
 
-         OccupancyGrid * new_map = new OccupancyGrid(0.1,20,-3);
+         OccupancyGrid * new_map = new OccupancyGrid(0.1,20,-5);
          for (size_t i = 0; i < node_list.size(); ++i) {
 
            node_list[i]->pose = node_list[i]->o_pose;

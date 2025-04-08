@@ -5,6 +5,7 @@
 #include "kurome.h"
 #include <cmath>
 #include <cstring>
+#include <cassert>
 
 /* An abstraction over the PointCloud2 message ros2
  * gives us. This data is given in 3d coordinates
@@ -55,9 +56,14 @@ public:
 
             point3 new_point;
 
-            memcpy(&new_point.x,&msg.data[i+x_off],x_size); /* x value */
-            memcpy(&new_point.y,&msg.data[i+y_off],y_size); /* y value */
-            memcpy(&new_point.z,&msg.data[i+z_off],z_size); /* z value */
+            float v;
+
+            memcpy(&v,&msg.data[i+x_off],x_size); /* x value */
+            new_point.x = v;
+            memcpy(&v,&msg.data[i+y_off],y_size); /* y value */
+            new_point.y = v;
+            memcpy(&v,&msg.data[i+z_off],z_size); /* z value */
+            new_point.z = v;
 
             points.push_back(new_point);
 

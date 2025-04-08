@@ -450,7 +450,6 @@ private:
       static int fail_count = 0;
       Observation * observation = NULL;
 
-
       /* convert the point cloud into the
        * frame of reference for base_link */
       try {

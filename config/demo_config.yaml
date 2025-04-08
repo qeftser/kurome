@@ -7,14 +7,14 @@
     beacon_in: "beacon"
     odom_in: "odom"
     scan_in: "scan"
-    cloud_in: "points"
+    cloud_in: "cloud"
     use_odom_vel: true
     vel_in: "cmd_vel"
     time_error: 0.01
     beacon_lost_time: 0.25
     fix_beacon_nodes: true
     estimate_movement_updates: false
-    aggregate_sensor_data: true
+    aggregate_sensor_data: false
     aggregation_interval: 0.1
     algorithm: "builtin"
     bin_size: 1.0
@@ -55,7 +55,7 @@
     visualization_topic: "misao/visual"
     simulate_trajectory: false
     trajectory_topic: "misao/trajectory"
-    collision_radius: 0.3
+    collision_radius: 0.4
     algorithm: "elastic_band"
     band_length: -1
     influence_range: 0.75

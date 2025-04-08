@@ -6,6 +6,7 @@
 #include "lidar_data.hpp"
 #include "point_cloud_data.hpp"
 #include <unordered_set>
+#include <cassert>
 #include <cstring>
 
 /* A class that will hopefully be useful for me. Allows creation
@@ -149,7 +150,6 @@ public:
 
       if (size_change) {
 
-
          int x_change =  - new_x_min;
          int y_change =  - new_y_min;
 
@@ -242,10 +242,144 @@ public:
 
    /* insert a point cloud into this occupancy grid, cutting out any values 
     * that appear far enough away from the groud of the robot (0,0).       */
-   void add_point_cloud(const PointCloudData & points, const pose_2d & pose, double ground_dist_cutoff = 0.1) {
-      (void)points;
-      (void)pose;
-      (void)ground_dist_cutoff;
+   void add_point_cloud(const PointCloudData & points, const pose_2d & pose, 
+                       double ground_dist_cutoff = 0.2, double height_max_cutoff = 2.0) {
+
+      std::unordered_set<int> seen;
+
+      std::vector<std::pair<int,int>> locations;
+
+      int new_x_min = 0;
+      int new_y_min = 0;
+      int new_x_len = x_len;
+      int new_y_len = y_len;
+
+      bool size_change = false;
+
+      for (const point3 & p : points.points) {
+
+         if (std::fabs(p.z) < ground_dist_cutoff || p.z > height_max_cutoff)
+            continue;
+
+         point moved;
+         if (memcmp(&zero_ref,&p.pos_2d,sizeof(point)) != 0)
+            moved = point{ p.x * cos(pose.theta) - p.y * sin(pose.theta) + pose.pos.x,
+                           p.x * sin(pose.theta) + p.y * cos(pose.theta) + pose.pos.y };
+         else
+            moved = p.pos_2d;
+
+         int x = (moved.x / resolution) - x_min;
+
+         if (x < new_x_min) {
+            new_x_min = x;
+            size_change = true;
+         }
+         else if (x >= new_x_len) {
+            new_x_len = x + 1;
+            size_change = true;
+         }
+
+         int y = (moved.y / resolution) - y_min;
+
+         if (y < new_y_min) {
+            new_y_min = y;
+            size_change = true;
+         }
+         else if (y >= new_y_len) {
+            new_y_len = y + 1;
+            size_change = true;
+         }
+
+         locations.push_back(std::make_pair(x + x_min, y + y_min));
+      }
+
+      if (size_change) {
+
+         int x_change = - new_x_min;
+         int y_change = - new_y_min;
+
+         new_x_len += x_change;
+         new_y_len += y_change;
+
+         new_x_min = x_min + new_x_min;
+         new_y_min = y_min + new_y_min;
+
+         int8_t * new_grid = (int8_t *)calloc(sizeof(int8_t),new_x_len*new_y_len);
+
+         for (int x = 0; x < x_len; ++x) {
+            for (int y = 0, y2 = y_change*new_x_len; y < y_len*x_len; y += x_len, y2 += new_x_len) {
+               new_grid[ x + x_change + y2] = grid[x + y];
+            }
+         }
+
+         free(grid);
+         grid = new_grid;
+
+
+         x_len = new_x_len;
+         y_len = new_y_len;
+         x_min = new_x_min;
+         y_min = new_y_min;
+      }
+
+      int x1 = (pose.pos.x / resolution);
+      int y1 = (pose.pos.y / resolution);
+
+      for (std::pair<int,int> & p : locations) {
+
+         int x0 = std::get<0>(p);
+         int y0 = std::get<1>(p);
+
+
+         int dx = abs(x1 - x0);
+         int sx = x0 < x1 ? 1 : -1;
+         int dy = -abs(y1 - y0);
+         int sy = y0 < y1 ? 1 : -1;
+         int error = dx + dy;
+
+         /* update the obstacle position as occupied */
+         {
+            int target = (*this)(x0,y0);
+
+            target += positive_update;
+            target = (target > 100 ? 100 : target);
+
+            (*this)(x0,y0) = target;
+            seen.insert(deref_location(x0,y0));
+         }
+
+
+         /* update the points in the obstacle's line 
+          * of sight as free space.                 */              
+         while (true) {
+
+            int loc = deref_location(x0,y0);
+            if (!seen.count(loc)) {
+               int target = (*this)(x0,y0);
+
+               target += negative_update;
+               target = (target < 0 ? 0 : target);
+
+               (*this)(x0,y0) = target;
+               seen.insert(loc);
+            }
+
+            if (x0 == x1 && y0 == y1)
+               break;
+
+            int e2 = 2 * error;
+
+            if (e2 >= dy) {
+               error = error + dy;
+               x0 = x0 + sx;
+            }
+
+            if (e2 <= dx) {
+               error = error + dx;
+               y0 = y0 + sy;
+            }
+         }
+      }
    }
 
 };
