@@ -258,7 +258,6 @@ private:
 
    void collect_goal(const geometry_msgs::msg::PoseStamped & msg) {
 
-
       /* do not use the message if it has the same
        * goal as the previous message that was recieved */
       if (msg.pose.position == goal.pose.position)

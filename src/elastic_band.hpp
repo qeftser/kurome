@@ -361,6 +361,11 @@ private:
       double off_angle = 
             atan2(curr_node->pos.y - curr_pose.pos.y, curr_node->pos.x - curr_pose.pos.x)-curr_pose.theta;
 
+      /* deal with gimbal lock (singularities) */
+      if (fabs(off_angle)>3.0) {
+         return velocity_2d{0,desired_speed * (-1)};
+      }
+
       if (fabs(off_angle)>0.1) {
          return velocity_2d{0,desired_speed * (off_angle < 0.0 ? -1 : 1)};
       }

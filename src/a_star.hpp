@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
+#include <cassert>
 
 class AStar : public PathfinderBase {
 private:
@@ -99,7 +100,7 @@ public:
    }
 
    void set_goal(const geometry_msgs::msg::Pose & pose) override {
-      
+
       /* notify of update */
       updates_since |= AS_update_goal;
 
@@ -108,6 +109,8 @@ public:
    }
 
    nav_msgs::msg::Path get_path() override {
+
+      bool found_open = false;
 
       if (no_goal)
          return nav_msgs::msg::Path();
@@ -128,7 +131,7 @@ public:
       if (updates_since == AS_update_none)
          goto transform_path;
 
-      if (in_bounds(goal_block) && grid[block_pos(goal_block)])
+      if (grid_length && in_bounds(goal_block) && grid[block_pos(goal_block)])
          goto no_path;
 
       /* check if the goal has changed. If so, we are
@@ -245,6 +248,7 @@ from_start:
          head->pos = { (int)floor(goal.x), (int)floor(goal.y) };
       }
 
+
       /* clear out old values from the best_at vector */
       mut.lock();
       best_at.clear();
@@ -260,6 +264,7 @@ from_start:
       /* seed the algorithm */
       best_at[long_from_ints(head->pos.x,head->pos.y)] = head;
       node_queue.push(head);
+
 
       /* perform the A* search 
        * There is a hard cap on nodes to avoid
@@ -334,7 +339,7 @@ from_start:
                      }
                   }
                }
-               else if (!in_bounds(new_pos) || !grid[block_pos(new_pos)]) {
+               else if (!in_bounds(new_pos) || (!grid[block_pos(new_pos)] || !found_open)) {
                   node * new_node = new node{};
                   new_node->next = curr;
                   new_node->pos = new_pos;
@@ -348,6 +353,9 @@ from_start:
                   allocated_nodes.push_back(new_node);
                   best_at[long_from_ints(new_pos.x,new_pos.y)] = new_node;
                }
+
+               if (!found_open && in_bounds(new_pos) && !grid[block_pos(new_pos)])
+                  found_open = true;
             }
          }
       }

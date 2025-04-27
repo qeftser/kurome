@@ -37,6 +37,8 @@ protected:
    uint8_t * grid_flag = NULL;
    /* length of the vector */
    int grid_length = 0;
+   /* whether or not we have a grid */
+   int no_grid = true;
 
    /* Information about the grid that is 
     * useful to have.                   */
@@ -44,10 +46,10 @@ protected:
 
    /* info for indexing into the local map */
    struct {
-      int x_off;
-      int y_off;
-      int x_len;
-      int y_len;
+      int x_off = 0.0;
+      int y_off = 0.0;
+      int x_len = 0.0;
+      int y_len = 0.0;
    } grid_bound;
 
    /* where the root node is located */
@@ -203,6 +205,8 @@ public:
          /* ensure we have full hold of the map */
          mut.lock();
 
+         no_grid = false;
+
          /* get rid of the old vector */
          free(grid);
          free(grid_flag);
@@ -316,6 +320,8 @@ public:
 
          mut.lock();
 
+         no_grid = false;
+
          free(grid);
          free(grid_flag);
 
@@ -395,20 +401,34 @@ public:
 
    /* Set the new origin for our pathfinder */
    virtual void set_origin(const geometry_msgs::msg::Pose & pose) {
+
+      if (no_grid)
+         return;
+
       origin.x = (pose.position.x) / grid_metadata.resolution;
       origin.y = (pose.position.y) / grid_metadata.resolution;
    }
 
    /* Set the new goal for our pathfinder */
    virtual void set_goal(const geometry_msgs::msg::Pose & pose) {
-      goal.x = (pose.position.x) / grid_metadata.resolution;
-      goal.y = (pose.position.y) / grid_metadata.resolution;
+
+      if (no_grid)
+         return;
+
+      goal.x = ((pose.position.x) / grid_metadata.resolution);
+      goal.y = ((pose.position.y) / grid_metadata.resolution);
+
+      int goal_px = goal.x - (grid_metadata.origin.position.x / grid_metadata.resolution);
+      int goal_py = goal.y - (grid_metadata.origin.position.y / grid_metadata.resolution);
 
       /* if we are out of bounds or in a colliding area, do not
        * set it as a valid goal for the system.                */
       if ((!accept_out_of_bounds_goal && 
-           in_bounds(goal)) ||
-         (grid && grid[(int)(goal.x + (goal.y * grid_metadata.width))])) {
+           grid_length && !in_bounds(goal)) /* ||
+          (grid_length in_bounds(goal) 
+          && grid[(int)(goal_px + (goal_py * grid_metadata.width))])) {
+         */
+         ){
          no_goal = true;
       }
       else /* goal is valid */

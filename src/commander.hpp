@@ -32,13 +32,12 @@ protected:
    kurome::msg::CompetitionArea arena;
 
    /* internal map of just the arena */
-   uint8_t * map = NULL;
+   nav_msgs::msg::OccupancyGrid const * map = NULL;
 
-   /* measures of the internal arena size */
-   peg p_low, p_high;
-
-   point off_index;
    double last_res;
+   int last_obs_threshold;
+   int last_width;
+   peg last_offset;
 
    /* requested size of the dig samples to retrieve */
    double sample_x;
@@ -70,11 +69,12 @@ public:
    /* notify the commander of the robot's current position in the environment */
    virtual void update_position(pose_2d & pose) = 0;
 
-   /* return the position in the map given a value in real space */
-   peg operator()(point pos) {
-      pos.x -= off_index.x;
-      pos.y -= off_index.y;
-      return peg{(int)floor(pos.x/last_res),(int)floor(pos.y/last_res)};
+   /* return whether the given area on the map has an obstcle,*/
+   int obs(double x, double y) {
+      int idx = (x / last_res) - last_offset.x + ((((int)(y / last_res)) - last_offset.y) * last_width);
+      if (map && idx < map->data.size() && map->data[idx] > last_obs_threshold)
+         return 1;
+      return 0;
    }
 
    /* cut out the portion of the map that we want and load it into our internal representation
@@ -83,38 +83,17 @@ public:
     * commands given the new map data.                                                          */
    void update_map(const nav_msgs::msg::OccupancyGrid & msg, int obstacle_threshold) {
 
-      off_index = { floor((arena.arena.origin.x - msg.info.origin.position.x)),
-                    floor((arena.arena.origin.y - msg.info.origin.position.y)) };
-      off_index = { minimum(0.0,off_index.x), minimum(0.0,off_index.y) };
-      double last_res = msg.info.resolution;
+      map = &msg;
+      last_res = map->info.resolution;
+      last_width = map->info.width;
+      last_obs_threshold = obstacle_threshold;
 
-      peg a_l = { (int)floor((arena.arena.origin.x - msg.info.origin.position.x) / msg.info.resolution),
-                  (int)floor((arena.arena.origin.y - msg.info.origin.position.y) / msg.info.resolution) };
-      peg a_h = { (int)ceil ((arena.arena.origin.x + arena.arena.width
-                              - msg.info.origin.position.x              ) / msg.info.resolution),
-                  (int)ceil ((arena.arena.origin.y + arena.arena.height
-                              - msg.info.origin.position.y              ) / msg.info.resolution) };
-
-      peg p_low_new  = { maximum(a_l.x,0), maximum(a_l.y,0) };
-      peg p_high_new = { minimum(a_h.x,(int)msg.info.width), minimum(a_h.y,(int)msg.info.height) };
-
-      if (memcmp(&p_low_new,&p_low,sizeof(peg)) || memcmp(&p_high_new,&p_high,sizeof(peg))) {
-         free(map);
-         p_low  = p_low_new;
-         p_high = p_high_new;
-         map = (uint8_t *)calloc(sizeof(uint8_t),(1 + (p_high.x - p_low.x))*(1 + (p_high.y - p_low.y)));
-      }
-
-      for (unsigned int y = p_low.y*msg.info.width, y_loc = 0; y <= p_high.y*msg.info.width;
-           y += msg.info.width, y_loc += (1 + (p_high.x - p_low.x))) {
-         for (unsigned int x = p_low.x, x_loc = 0; x <= p_high.x; ++x, ++x_loc) {
-
-            map[x_loc + y_loc] = (msg.data[x + y] >= obstacle_threshold ? 1 : 0);
-
-         }
-      }
+      last_offset.x = (int)std::floor(map->info.origin.position.x / last_res);
+      last_offset.y = (int)std::floor(map->info.origin.position.y / last_res);
 
       acknowledge_map();
+
+      map = NULL;
    }
 
    /* perform the basic visualization operations and then call the child commander for it's specific
@@ -143,8 +122,8 @@ public:
       marker.color.b = 0.0;
       marker.scale.x = arena.arena.width;
       marker.scale.y = arena.arena.height;
-      marker.pose.position.x = (arena.arena.origin.x - (arena.arena.width  / 2.0));
-      marker.pose.position.y = (arena.arena.origin.y - (arena.arena.height / 2.0));
+      marker.pose.position.x = (arena.arena.origin.x + (arena.arena.width  / 2.0));
+      marker.pose.position.y = (arena.arena.origin.y + (arena.arena.height / 2.0));
       msg.markers.push_back(marker);
 
       /* add dig area */
@@ -154,8 +133,8 @@ public:
       marker.color.b = 0.0;
       marker.scale.x = arena.dig.width;
       marker.scale.y = arena.dig.height;
-      marker.pose.position.x = (arena.dig.origin.x - (arena.dig.width  / 2.0));
-      marker.pose.position.y = (arena.dig.origin.y - (arena.dig.height / 2.0));
+      marker.pose.position.x = (arena.dig.origin.x + (arena.dig.width  / 2.0));
+      marker.pose.position.y = (arena.dig.origin.y + (arena.dig.height / 2.0));
       msg.markers.push_back(marker);
 
       /* add dump area */
@@ -165,8 +144,8 @@ public:
       marker.color.b = 1.0;
       marker.scale.x = arena.dump.width;
       marker.scale.y = arena.dump.height;
-      marker.pose.position.x = (arena.dump.origin.x - (arena.dump.width  / 2.0));
-      marker.pose.position.y = (arena.dump.origin.y - (arena.dump.height / 2.0));
+      marker.pose.position.x = (arena.dump.origin.x + (arena.dump.width  / 2.0));
+      marker.pose.position.y = (arena.dump.origin.y + (arena.dump.height / 2.0));
       msg.markers.push_back(marker);
 
       /* pass to child commander */

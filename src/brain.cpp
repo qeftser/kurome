@@ -71,7 +71,7 @@ public:
 
       /* interval and location to publish the goal */
       this->declare_parameter("goal_out","goal");
-      this->declare_parameter("goal_publish_interval",0.1);
+      this->declare_parameter("goal_publish_interval",0.5);
 
       /* the algorithm or module to use to command
        * the robot.                               */
@@ -82,14 +82,18 @@ public:
       this->declare_parameter("obstacle_threshold",30);
 
       /* the width and height of a sample area */
-      this->declare_parameter("sample_width",0.1);
-      this->declare_parameter("sample_height",0.1);
+      this->declare_parameter("sample_width",0.35);
+      this->declare_parameter("sample_height",0.65);
 
       /* the topic to recieve odometry on */
       this->declare_parameter("odom_in","odom");
 
       /* the topic to recieve the map on */
       this->declare_parameter("map_in","map");
+
+      /* the distance from a element on the path to consider it
+       * reached and advance to the next one.                  */
+      this->declare_parameter("advance_distance",0.2);
 
       /* set all callbacks */
 
@@ -110,10 +114,10 @@ public:
       if (this->get_parameter("publish_visualization").as_bool()) {
 
          visual_out = this->create_publisher<visualization_msgs::msg::MarkerArray>(
-               this->get_parameter("visualization_topic").as_string(), 10);
+               this->get_parameter("visualization_out").as_string(), 10);
          visual_callback = this->create_wall_timer(
                std::chrono::milliseconds(((long)(1000.0 *
-                     this->get_parameter("visual_publish_interval").as_double()))),
+                     this->get_parameter("visualization_publish_interval").as_double()))),
                std::bind(&Brain::publish_visual, this));
       }
 
@@ -143,11 +147,15 @@ public:
       arena.dump.width     = this->get_parameter("dump_width").as_double();
       arena.dump.height    = this->get_parameter("dump_height").as_double();
 
+      sleep(1);
+
       /* setup the commander */
       if (this->get_parameter("algorithm").as_string() == "static_box") {
          commander = new StaticBoxDigger(arena,
                                          this->get_parameter("sample_width").as_double(),
-                                         this->get_parameter("sample_height").as_double());
+                                         this->get_parameter("sample_height").as_double(),
+                                         {{0.1,0.1}},
+                                         this->get_parameter("advance_distance").as_double());
       }
 
    }

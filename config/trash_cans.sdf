@@ -1,0 +1,689 @@
+<sdf version='1.7'>
+  <world name='default'>
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
+    </light>
+    <model name='ground_plane'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <cast_shadows>0</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <physics type='ode'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+    <audio>
+      <device>default</device>
+    </audio>
+    <wind/>
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+    <model name='first_2015_trash_can'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>0.378754 -1.11634 0 0 -0 0</pose>
+    </model>
+    <model name='first_2015_trash_can_clone'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>2.97564 2.78277 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <model name='first_2015_trash_can_clone_0'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>2.38473 5.53405 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <model name='first_2015_trash_can_clone_1'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>4.70847 2.37018 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <model name='first_2015_trash_can_clone_2'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>5.36323 4.86861 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <model name='first_2015_trash_can_clone_3'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>8.98485 8.09721 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <model name='first_2015_trash_can_clone_4'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>7.77476 5.94813 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <model name='first_2015_trash_can_clone_5'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>5.52236 7.98393 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <model name='first_2015_trash_can_clone_6'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>8.70387 2.34456 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <model name='first_2015_trash_can_clone_7'>
+      <link name='link'>
+        <inertial>
+          <pose>0 0 0.3683 0 -0 0</pose>
+          <mass>4.83076</mass>
+          <inertia>
+            <ixx>0.281534</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.281534</iyy>
+            <iyz>0</iyz>
+            <izz>0.126223</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <mesh>
+              <uri>model://first_2015_trash_can/meshes/trash_can.dae</uri>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <pose>3.10554 7.84287 -1e-06 -1.2e-05 1.1e-05 -0.000176</pose>
+    </model>
+    <state world_name='default'>
+      <sim_time>83 716000000</sim_time>
+      <real_time>84 391611662</real_time>
+      <wall_time>1744324362 425496566</wall_time>
+      <iterations>83716</iterations>
+      <model name='first_2015_trash_can'>
+        <pose>1.00016 0.999981 -8e-06 -8e-06 1.4e-05 -0.000935</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>1.00016 0.999981 -8e-06 -8e-06 1.4e-05 -0.000935</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 -9.8 0 -0 0</acceleration>
+          <wrench>0 0 -47.3414 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone'>
+        <pose>2.97578 2.78275 1e-06 -2.5e-05 1.4e-05 -0.00071</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>2.97578 2.78275 1e-06 -2.5e-05 1.4e-05 -0.00071</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>-0.857801 -3.03071 -2.28863 -1.26819 -0.828459 3.13759</acceleration>
+          <wrench>-4.14383 -14.6407 -11.0558 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone_0'>
+        <pose>2.38483 5.53403 -4e-06 1.5e-05 1.8e-05 -0.000788</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>2.38483 5.53403 -4e-06 1.5e-05 1.8e-05 -0.000788</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>2.48244 -0.36038 -3.88106 0.953706 0.444917 0.021372</acceleration>
+          <wrench>11.9921 -1.74091 -18.7485 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone_1'>
+        <pose>4.70859 2.37016 -1e-06 -1.7e-05 6e-06 -0.000856</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>4.70859 2.37016 -1e-06 -1.7e-05 6e-06 -0.000856</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>2.95038 -0.430416 -2.74875 -2.01101 1.36607 -3.09934</acceleration>
+          <wrench>14.2526 -2.07924 -13.2786 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone_2'>
+        <pose>5.36332 4.8686 -4e-06 -2e-06 3e-06 -0.000521</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>5.36332 4.8686 -4e-06 -2e-06 3e-06 -0.000521</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>-2.11037 0.305796 -4.65777 -0.829355 0.554733 0.000617</acceleration>
+          <wrench>-10.1947 1.47723 -22.5006 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone_3'>
+        <pose>8.98492 8.09719 -1e-06 -2e-06 7e-06 -0.000698</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>8.98492 8.09719 -1e-06 -2e-06 7e-06 -0.000698</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>6.20761 -0.894043 5.00906 -0.713553 -1.14701 3.14125</acceleration>
+          <wrench>29.9875 -4.3189 24.1976 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone_4'>
+        <pose>7.77484 5.94812 3e-06 -2e-05 -1.2e-05 -0.000467</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>7.77484 5.94812 3e-06 -2e-05 -1.2e-05 -0.000467</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>3.6809 -0.531497 -1.02765 -1.72375 -0.536013 -3.12206</acceleration>
+          <wrench>17.7816 -2.56753 -4.96431 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone_5'>
+        <pose>5.52241 7.98393 -4e-06 2e-06 3e-06 -0.000361</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>5.52241 7.98393 -4e-06 2e-06 3e-06 -0.000361</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>-2.54511 2.23467 -1.64785 0.215602 -0.627282 5e-06</acceleration>
+          <wrench>-12.2948 10.7951 -7.96038 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone_6'>
+        <pose>8.70389 2.34455 -0 -1.5e-05 1.6e-05 -0.000363</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>8.70389 2.34455 -0 -1.5e-05 1.6e-05 -0.000363</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>-3.08632 -4.89888 4.08489 -2.40065 -1.04279 -3.14018</acceleration>
+          <wrench>-14.9093 -23.6653 19.7331 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='first_2015_trash_can_clone_7'>
+        <pose>3.10555 7.84287 -2e-06 8e-06 8e-06 -0.000291</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>3.10555 7.84287 -2e-06 8e-06 8e-06 -0.000291</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>4.68925 -0.376282 3.74492 0.924688 0.205273 0.184847</acceleration>
+          <wrench>22.6527 -1.81773 18.0908 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='ground_plane'>
+        <pose>0 0 0 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose>0 0 0 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <light name='sun'>
+        <pose>0 0 10 0 -0 0</pose>
+      </light>
+    </state>
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>17.3032 -4.31362 10.306 0 0.275643 2.35619</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+  </world>
+</sdf>
