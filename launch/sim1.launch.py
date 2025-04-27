@@ -63,6 +63,7 @@ def generate_launch_description():
         executable='pino',
         namespace='kurome',
         name='pino',
+        prefix='valgrind -s',
         parameters=[LaunchConfiguration('config')]
     )
 

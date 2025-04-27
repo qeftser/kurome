@@ -26,6 +26,8 @@
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 
+#include "std_msgs/msg/empty.hpp"
+
 #include "kurome.h"
 #include "occupancy_grid.hpp"
 #include "slam_system.hpp"
@@ -54,11 +56,14 @@ public:
       /* topic to listen for beacon odometry on */
       this->declare_parameter("beacon_in","beacon");
       /* topic to listen for odometry on */
-      this->declare_parameter("odom_in","demo/odom");
+      this->declare_parameter("odom_in","odom");
       /* topic to listen for incoming laser scans on */
       this->declare_parameter("scan_in","scan");
       /* topic to listen for incoming point cloud data on */
       this->declare_parameter("cloud_in","points");
+
+      /* topic to listen on for a reset input */
+      this->declare_parameter("reset_in","pino/reset");
 
       /* whether to use the odometry estimate of velocity
        * or another, seperate subscription to a twist topic */
@@ -144,6 +149,10 @@ public:
       cloud_in = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             this->get_parameter("cloud_in").as_string(), 10,
             std::bind(&Pino::collect_cloud, this, _1));
+
+      reset_in = this->create_subscription<std_msgs::msg::Empty>(
+            this->get_parameter("reset_in").as_string(), 10,
+            std::bind(&Pino::reset_callback, this, _1));
 
       if (this->get_parameter("use_odom_vel").as_bool() == false) {
          vel_in = this->create_subscription<geometry_msgs::msg::Twist>(
@@ -232,6 +241,13 @@ private:
     * Used for state estimation in place of odometry velocity if
     * the appropriate parameter is set.                           */
    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr vel_in;
+
+   /* Input that triggers a flushing and reset of the internal
+    * SLAM system. This allows the brain to dump the map and all
+    * previous observations in an attempt to recover control if 
+    * the robot has become stuck for some reason. It is crude but 
+    * should be our best option for competition.                 */
+   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr reset_in;
 
    /* =================== transforms =================== */
    /* Publish the map -> odom transformation as described in REP 105.
@@ -502,6 +518,14 @@ private:
       slam_system->insert_observation(std::get<0>(current_observation),std::get<1>(current_observation));
 
       current_observation = std::make_pair(nullptr,false);
+
+   }
+
+   void reset_callback(const std_msgs::msg::Empty & msg) {
+
+      (void)msg;
+
+      slam_system->reset();
 
    }
 

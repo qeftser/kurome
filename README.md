@@ -115,13 +115,14 @@ the map -> odom transformation.
 
 #### Subscriptions
 
-| Type                         | Description                                                       |
-|------------------------------|-------------------------------------------------------------------|
-| [nav_msgs/Odometry][1]       | The pose estimate from the associated beacon                      |
-| [nav_msgs/Odometry][1]       | The pose estimate from the associated odometry                    |
-| [sensor_msgs/LaserScan][2]   | Input from all laser sensors on the robot                         |
-| [sensor_msgs/PointCloud2][3] | Input from all the point cloud sensors on the robot               |
-| [geometry_msgs/Twist][4]     | Velocity input. Used instead of odometry if use_odom_vel is false |
+| Type                         | Description                                                            |
+|------------------------------|------------------------------------------------------------------------|
+| [nav_msgs/Odometry][1]       | The pose estimate from the associated beacon                           |
+| [nav_msgs/Odometry][1]       | The pose estimate from the associated odometry                         |
+| [sensor_msgs/LaserScan][2]   | Input from all laser sensors on the robot                              |
+| [sensor_msgs/PointCloud2][3] | Input from all the point cloud sensors on the robot                    |
+| [geometry_msgs/Twist][4]     | Velocity input. Used instead of odometry if use_odom_vel is false      |
+| [std_msgs/msg/Empty][10]     | Flush all nodes and reset the pose graph when this message is recieved |
 
 #### Publishers
 
@@ -389,4 +390,5 @@ The smoother and path follower is named after Misao Amano, a character from the 
 [7]: https://github.com/ros2/common_interfaces/blob/rolling/geometry_msgs/msg/TransformStamped.msg
 [8]: https://github.com/ros2/common_interfaces/blob/rolling/geometry_msgs/msg/PoseStamped.msg
 [9]: https://github.com/ros2/common_interfaces/blob/rolling/nav_msgs/msg/Path.msg
+[10]: https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Empty.msg
 

@@ -8,6 +8,7 @@
     odom_in: "odom"
     scan_in: "scan"
     cloud_in: "cloud"
+    reset_in: "pino/reset"
     use_odom_vel: true
     vel_in: "cmd_vel"
     time_error: 0.01

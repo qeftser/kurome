@@ -183,6 +183,9 @@ private:
    ceres::Problem graph;
    /* settings for the solver to use */
    ceres::Solver::Options options;
+   /* settings for the problem to
+    * use when it is defined     */
+   ceres::Problem::Options p_options;
    /* constraints for the pose graph */
    ceres::Manifold * manifold = AngleManifold::create();
    ceres::LossFunction * loss_function = nullptr;
@@ -487,6 +490,11 @@ public:
       options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
       options.preconditioner_type = ceres::SCHUR_JACOBI; /* a la slam_toolbox */
 
+      p_options.loss_function_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
+      p_options.manifold_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
+
+      graph = ceres::Problem(p_options);
+
       best_map = new OccupancyGrid(0.1,20,-20);
 
       graph_manager = std::thread(&BuiltinGraphSlam::manage_graph, this);
@@ -580,6 +588,31 @@ public:
          return std::make_pair(pose_2d{{0,0},0},pose_2d{{0,0},0});
 
       return std::make_pair(last->pose,last->observation->current_odometry);
+   }
+
+   void reset() override {
+      graph_lock.lock();
+      map_lock.lock();
+
+      delete best_map;
+      best_map = NULL;
+
+      for (node * n : node_list)
+         delete n;
+
+      last_node.store(NULL);
+
+      node_list.clear();
+      edge_list.clear();
+      fixed_nodes.clear();
+      nodes.clear();
+
+      graph = ceres::Problem(p_options);
+
+      best_map = new OccupancyGrid(0.1,20,-20);
+
+      map_lock.unlock();
+      graph_lock.unlock();
    }
 
 };
