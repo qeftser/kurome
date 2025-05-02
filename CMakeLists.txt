@@ -101,4 +101,6 @@ install(TARGETS brain wall_filter pino yoriko misao
 install(DIRECTORY launch config
         DESTINATION share/${PROJECT_NAME})
 
+ament_export_dependencies(rosidl_default_runtime)
+
 ament_package()
